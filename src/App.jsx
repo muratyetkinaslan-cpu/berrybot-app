@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useData } from "./useData";
+import { useData, getLocalPhoto } from "./useData";
 
 // ═══════════════════════════════════════════════════════════
 //  BerryBot LMS — Production (Supabase)
@@ -591,11 +591,17 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
   const[imgZoom,setImgZoom]=useState(false);
   const[imgLoaded,setImgLoaded]=useState(false);
   const[imgError,setImgError]=useState(false);
-  const[photo,setPhoto]=useState(null); // base64 of uploaded photo
+  const[photo,setPhoto]=useState(null);
   const[photoPreview,setPhotoPreview]=useState(null);
+  const[savedPhoto,setSavedPhoto]=useState(null); // loaded from IndexedDB
   const tp=prog[user.id]?.[t.id]||{};
   const imgSrc=`/tasks/gorev_${t.id}/gorsel.jpg`;
   const hasHelp=prog[user.id]?.helpRequest;
+
+  // Load saved photo from IndexedDB
+  useEffect(()=>{
+    if(tp.photo){getLocalPhoto(user.id,t.id).then(p=>setSavedPhoto(p));}
+  },[user.id,t.id,tp.photo]);
 
   // Handle photo upload from file input or camera
   const handlePhotoUpload=(e)=>{
@@ -719,7 +725,8 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
       <div style={{fontSize:48}}>⏳</div>
       <div style={{fontSize:20,color:T.pl,marginTop:10,fontWeight:700}}>Eğitmen onayı bekleniyor...</div>
       <div style={{fontSize:14,color:T.tm,marginTop:6}}>Fotoğrafın gönderildi. Eğitmenin incelemesini bekle.</div>
-      {tp.photo&&<div style={{marginTop:14,borderRadius:12,overflow:"hidden",border:`1px solid ${T.border}`,display:"inline-block"}}><img src={tp.photo} alt="Gönderilen" style={{maxWidth:300,maxHeight:200,objectFit:"contain",background:T.dark}}/></div>}
+      {tp.photo&&savedPhoto&&<div style={{marginTop:14,borderRadius:12,overflow:"hidden",border:`1px solid ${T.border}`,display:"inline-block"}}><img src={savedPhoto} alt="Gönderilen" style={{maxWidth:300,maxHeight:200,objectFit:"contain",background:T.dark}}/></div>}
+      {tp.photo&&!savedPhoto&&<div style={{marginTop:10,fontSize:13,color:T.ok}}>📸 Fotoğraf bu cihazda kayıtlı</div>}
     </div></Card>}
 
     {/* ── APPROVED ── */}
@@ -833,10 +840,10 @@ function PendingReviews({user,users,prog,onApprove,onReject}){
             <div style={{fontSize:13,color:T.tm,marginBottom:4}}>Bekleme: {fd(Date.now()-(d.completedAt||Date.now()))}</div>
             {dur&&<div style={{fontSize:13,color:T.ok,marginBottom:6}}>⏱ Tamamlama süresi: {dur}</div>}
 
-            {/* Student's uploaded photo */}
-            {d.photo&&<div style={{marginBottom:10}}>
-              <div style={{fontSize:13,fontWeight:600,color:T.ts,marginBottom:4}}>📸 Öğrencinin Fotoğrafı:</div>
-              <img src={d.photo} onClick={()=>setZoomPhoto(d.photo)} style={{maxWidth:280,maxHeight:180,objectFit:"contain",borderRadius:10,border:`2px solid ${T.border}`,cursor:"zoom-in",background:T.dark}}/>
+            {/* Student's photo is stored locally on their device */}
+            {d.photo&&<div style={{marginBottom:10,padding:"10px 14px",borderRadius:10,background:T.ok+"10",border:`1px solid ${T.ok}33`}}>
+              <div style={{fontSize:14,fontWeight:600,color:T.ok}}>📸 Öğrenci fotoğraf yükledi</div>
+              <div style={{fontSize:12,color:T.ts,marginTop:2}}>Fotoğraf öğrencinin cihazında. Kontrol etmek için öğrenciye gidin.</div>
             </div>}
 
             {/* Answer key */}

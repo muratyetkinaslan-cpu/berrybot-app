@@ -1,6 +1,41 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as db from './db';
 
+// ═══ LOCAL PHOTO STORAGE (IndexedDB) ═══
+// Photos stay on each device, never sent to Supabase DB
+const DB_NAME = 'berrybot_photos';
+const STORE_NAME = 'photos';
+
+function openPhotoDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(STORE_NAME);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function saveLocalPhoto(studentId, taskId, base64Data) {
+  try {
+    const db = await openPhotoDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(base64Data, `${studentId}_${taskId}`);
+    console.log('📸 Photo saved locally:', studentId, taskId);
+  } catch (e) { console.warn('Photo save failed:', e); }
+}
+
+export async function getLocalPhoto(studentId, taskId) {
+  try {
+    const db = await openPhotoDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(`${studentId}_${taskId}`);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch { return null; }
+}
+
 const DEFAULT_CL = [
   { id:"c1", name:"Sınıf 1", instructorId:"i1", canvasH:700, tables:[], objects:[] },
   { id:"c2", name:"Sınıf 2", instructorId:"i2", canvasH:700, tables:[], objects:[] },
@@ -20,7 +55,6 @@ export function useData() {
     const u = user || currentUser;
     try {
       if (u?.role === 'student') {
-        // Student: only fetch OWN progress (36 rows) + meta
         const [sp, m] = await Promise.all([
           db.getStudentProgress(u.id),
           db.getAllMeta(),
@@ -28,7 +62,7 @@ export function useData() {
         setProgress(prev => ({ ...prev, [u.id]: sp }));
         setMeta(m);
       } else {
-        // Admin/instructor: fetch everything (paginated)
+        // Admin/instructor: fetch everything
         const [us, p, m, l, cl] = await Promise.all([
           db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
         ]);
@@ -105,9 +139,11 @@ export function useData() {
     db.startTask(sid, tid).then(after);
   }, [patch, after]);
 
-  const submitTask = useCallback((sid, tid, photo) => {
-    patch(sid, tid, { status: 'pending_review', completedAt: Date.now(), photo });
-    db.submitTask(sid, tid, photo).then(after);
+  const submitTask = useCallback((sid, tid, photoData) => {
+    patch(sid, tid, { status: 'pending_review', completedAt: Date.now(), photo: 'local' });
+    // Store photo locally in IndexedDB
+    if (photoData) saveLocalPhoto(sid, tid, photoData);
+    db.submitTask(sid, tid, !!photoData).then(after);
   }, [patch, after]);
 
   const approveTask = useCallback((sid, tid, note) => {

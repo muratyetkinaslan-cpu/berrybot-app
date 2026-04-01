@@ -42,7 +42,9 @@ export async function createUser(userData) {
 
 // ═══ PROGRESS ═══
 
-// Fetch ALL progress with pagination (Supabase max 1000 per query)
+const PROGRESS_COLS = 'student_id,task_id,status,started_at,completed_at,approved_at,instructor_note,photo';
+
+// Fetch ALL progress with pagination
 export async function getAllProgress() {
   const map = {};
   let from = 0;
@@ -52,7 +54,7 @@ export async function getAllProgress() {
   while (true) {
     const { data, error } = await supabase
       .from('bb_progress')
-      .select('*')
+      .select(PROGRESS_COLS)
       .range(from, from + PAGE - 1);
     
     if (error) { console.error('🔴 getAllProgress error:', error.message); break; }
@@ -67,19 +69,19 @@ export async function getAllProgress() {
     });
     
     total += data.length;
-    if (data.length < PAGE) break; // Last page
+    if (data.length < PAGE) break;
     from += PAGE;
   }
   
-  console.log('📦 getAllProgress:', total, 'rows loaded (paginated)');
+  console.log('📦 getAllProgress:', total, 'rows');
   return map;
 }
 
-// Fetch ONLY one student's progress (fast — 36 rows max)
+// Fetch ONLY one student's progress
 export async function getStudentProgress(studentId) {
   const { data, error } = await supabase
     .from('bb_progress')
-    .select('*')
+    .select(PROGRESS_COLS)
     .eq('student_id', studentId);
   
   if (error) { console.error('🔴 getStudentProgress error:', error.message); return {}; }
@@ -91,7 +93,6 @@ export async function getStudentProgress(studentId) {
       approvedAt: r.approved_at, instructorNote: r.instructor_note, photo: r.photo,
     };
   });
-  console.log('📦 getStudentProgress:', studentId, data?.length, 'rows');
   return map;
 }
 
@@ -123,9 +124,9 @@ export async function startTask(studentId, taskId) {
   return ok;
 }
 
-export async function submitTask(studentId, taskId, photoData) {
-  console.log('📤 submitTask:', { studentId, taskId, hasPhoto: !!photoData });
-  const ok = await updateStatus(studentId, taskId, { status: 'pending_review', completed_at: Date.now(), photo: photoData || null });
+export async function submitTask(studentId, taskId, hasPhoto) {
+  console.log('📤 submitTask:', { studentId, taskId, hasPhoto });
+  const ok = await updateStatus(studentId, taskId, { status: 'pending_review', completed_at: Date.now(), photo: hasPhoto ? 'local' : null });
   console.log('📤 submitTask result:', ok);
   if (!ok) return false;
   addLog({ type: 'task_completed', userId: studentId, taskId, detail: 'Fotoğraf yüklendi, onaya gönderildi' });
