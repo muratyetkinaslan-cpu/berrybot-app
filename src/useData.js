@@ -113,9 +113,19 @@ export function useData() {
   const approveTask = useCallback((sid, tid, note) => {
     if (!currentUser) return;
     patch(sid, tid, { status: 'approved', approvedAt: Date.now(), instructorNote: note||'Onaylandı ✓' });
-    if (tid < 36) patch(sid, tid+1, { status: 'active' });
-    db.approveTask(currentUser.id, sid, tid, note).then(after);
-  }, [currentUser, patch, after]);
+    // Unlock next task locally (unless already beyond locked)
+    if (tid < 36) {
+      const nextStatus = progress[sid]?.[tid+1]?.status;
+      if (!nextStatus || nextStatus === 'locked') {
+        patch(sid, tid+1, { status: 'active' });
+      }
+    }
+    db.approveTask(currentUser.id, sid, tid, note).then(() => {
+      // Reload quickly to get DB state
+      setTimeout(() => loadAll(), 500);
+      setTimeout(() => loadAll(), 2000);
+    });
+  }, [currentUser, patch, after, progress, loadAll]);
 
   const rejectTask = useCallback((sid, tid, note) => {
     if (!currentUser) return;

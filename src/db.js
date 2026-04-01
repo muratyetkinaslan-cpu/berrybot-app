@@ -1,8 +1,9 @@
+
+
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://byjxolgvqetwoxhcaemv.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hCkrcWh7auiz-tdqEfUp5Q_xgOWOMYz"
-
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══ USERS ═══
@@ -133,12 +134,24 @@ export async function submitTask(studentId, taskId, photoData) {
 
 export async function approveTask(instructorId, studentId, taskId, note) {
   await updateStatus(studentId, taskId, { status: 'approved', approved_at: Date.now(), instructor_note: note || 'Onaylandı ✓' });
-  // Unlock next
+  // Unlock next task — force active regardless of current status
   const nextId = taskId + 1;
   if (nextId <= 36) {
-    await supabase.from('bb_progress')
+    // First try update (task row should exist from seed)
+    const { data } = await supabase.from('bb_progress')
       .update({ status: 'active', updated_at: new Date().toISOString() })
-      .eq('student_id', studentId).eq('task_id', nextId).eq('status', 'locked');
+      .eq('student_id', studentId).eq('task_id', nextId)
+      .neq('status', 'approved') // don't overwrite already approved
+      .neq('status', 'in_progress') // don't overwrite in progress
+      .neq('status', 'pending_review') // don't overwrite pending
+      .select();
+    // If no row was updated (row might not exist), insert it
+    if (!data || data.length === 0) {
+      await supabase.from('bb_progress')
+        .upsert({ student_id: studentId, task_id: nextId, status: 'active', updated_at: new Date().toISOString() }, { onConflict: 'student_id,task_id' })
+        .then(({ error }) => { if (error) console.warn('unlock next:', error.message); });
+    }
+    console.log('🔓 Unlocked task', nextId, 'for', studentId, 'result:', data?.length);
   }
   addLog({ type: 'task_approved', userId: instructorId, targetUser: studentId, taskId, detail: `Görev ${taskId} onaylandı` });
 }
