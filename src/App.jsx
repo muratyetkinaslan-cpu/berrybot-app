@@ -433,18 +433,20 @@ function AdminClassroom({users,prog,classLayout,saveLayout,onClearHelp,onSel}){
     const currentSid=(cls.tables.find(t=>t.id===seatPicker.tableId))?.seats[seatPicker.seatIdx];
     const available=students.filter(s=>!assignedInClass.includes(s.id)||s.id===currentSid);
     return(
-      <div onClick={()=>setSeatPicker(null)} style={{position:"fixed",inset:0,zIndex:50,background:"#000a",display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <div onClick={e=>e.stopPropagation()} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:16,width:300}}>
-          <div style={{fontSize:14,fontWeight:700,color:T.orange,marginBottom:10}}>Koltuğa Öğrenci Ata</div>
-          {currentSid&&<button onClick={()=>clearSeat(seatPicker.tableId,seatPicker.seatIdx)} style={{width:"100%",padding:"8px",borderRadius:8,border:`1px solid ${T.err}44`,background:T.err+"15",color:T.err,cursor:"pointer",fontSize:12,marginBottom:8}}>🚫 Koltuğu Boşalt</button>}
-          {available.length===0&&<div style={{padding:12,textAlign:"center",color:T.tm,fontSize:12}}>Atanacak öğrenci yok</div>}
-          {available.map(s=>(
-            <button key={s.id} onClick={()=>assignSeat(seatPicker.tableId,seatPicker.seatIdx,s.id)} style={{width:"100%",padding:"8px 10px",borderRadius:8,border:`1px solid ${s.id===currentSid?T.orange+"66":T.border}`,background:s.id===currentSid?T.orange+"20":T.dark,color:T.tp,cursor:"pointer",fontSize:12,marginBottom:4,textAlign:"left",display:"flex",alignItems:"center",gap:8}}>
-              <div style={{width:28,height:28,borderRadius:"50%",background:T.orange+"20",color:T.orange,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:11,flexShrink:0}}>{s.name[0]}</div>
-              <div><div style={{fontWeight:600}}>{s.name}</div><div style={{fontSize:9,color:T.tm}}>{s.email}</div></div>
-            </button>
-          ))}
-          <button onClick={()=>setSeatPicker(null)} style={{width:"100%",marginTop:8,padding:"6px",borderRadius:8,border:`1px solid ${T.border}`,background:"transparent",color:T.ts,cursor:"pointer",fontSize:12}}>İptal</button>
+      <div onClick={()=>setSeatPicker(null)} style={{position:"fixed",inset:0,zIndex:50,background:"#000a",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+        <div onClick={e=>e.stopPropagation()} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:14,padding:16,width:340,maxHeight:"80vh",display:"flex",flexDirection:"column"}}>
+          <div style={{fontSize:16,fontWeight:700,color:T.orange,marginBottom:10,flexShrink:0}}>Koltuğa Öğrenci Ata</div>
+          {currentSid&&<button onClick={()=>clearSeat(seatPicker.tableId,seatPicker.seatIdx)} style={{width:"100%",padding:"10px",borderRadius:8,border:`1px solid ${T.err}44`,background:T.err+"15",color:T.err,cursor:"pointer",fontSize:14,marginBottom:8,flexShrink:0}}>🚫 Koltuğu Boşalt</button>}
+          {available.length===0&&<div style={{padding:16,textAlign:"center",color:T.tm,fontSize:14}}>Atanacak öğrenci yok</div>}
+          <div style={{overflowY:"auto",flex:1,minHeight:0}}>
+            {available.map(s=>(
+              <button key={s.id} onClick={()=>assignSeat(seatPicker.tableId,seatPicker.seatIdx,s.id)} style={{width:"100%",padding:"10px 12px",borderRadius:8,border:`1px solid ${s.id===currentSid?T.orange+"66":T.border}`,background:s.id===currentSid?T.orange+"20":T.dark,color:T.tp,cursor:"pointer",fontSize:14,marginBottom:5,textAlign:"left",display:"flex",alignItems:"center",gap:10}}>
+                <div style={{width:32,height:32,borderRadius:"50%",background:T.orange+"20",color:T.orange,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,flexShrink:0}}>{s.name[0]}</div>
+                <div><div style={{fontWeight:600}}>{s.name}</div><div style={{fontSize:11,color:T.tm}}>{s.email}</div></div>
+              </button>
+            ))}
+          </div>
+          <button onClick={()=>setSeatPicker(null)} style={{width:"100%",marginTop:10,padding:"8px",borderRadius:8,border:`1px solid ${T.border}`,background:"transparent",color:T.ts,cursor:"pointer",fontSize:14,flexShrink:0}}>İptal</button>
         </div>
       </div>
     );
