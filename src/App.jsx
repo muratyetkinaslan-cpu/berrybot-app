@@ -157,7 +157,7 @@ export default function App() {
   };
 
   const handleStartTask=(sId,tId)=>{startTask(sId,tId);};
-  const handleSubmitTask=(sId,tId,photo)=>{submitTask(sId,tId,photo);notify("Fotoğraf yüklendi! Onay bekleniyor.");};
+  const handleSubmitTask=(sId,tId,photo)=>{submitTask(sId,tId,photo);notify(photo?"Fotoğraf yüklendi! Onay bekleniyor.":"Onaya gönderildi!");};
   const handleApprove=(sId,tId,note)=>{approveTask(sId,tId,note);notify("Onaylandı!");};
   const handleReject=(sId,tId,note)=>{rejectTask(sId,tId,note);notify("Reddedildi.","err");};
   const handleResubmit=(sId,tId)=>{resubmitTask(sId,tId);};
@@ -728,6 +728,11 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
           </button>}
         </div>
 
+        {/* Submit without photo */}
+        {!photo&&<button onClick={()=>onSubmit(null)} style={{marginTop:10,padding:"10px 22px",borderRadius:10,border:`1px solid ${T.pl}44`,background:T.pl+"15",color:T.pl,cursor:"pointer",fontWeight:600,fontSize:14}}>
+          📤 Fotoğrafsız Onaya Gönder
+        </button>}
+
         <div style={{fontSize:12,color:T.tm,marginTop:10,display:"flex",alignItems:"center",gap:6}}>
           <I.Clock/> Başlangıç: {ft(tp.startedAt)}
         </div>
@@ -738,7 +743,7 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
     {tp.status===TS.PENDING&&<Card><div style={{textAlign:"center",padding:30}}>
       <div style={{fontSize:48}}>⏳</div>
       <div style={{fontSize:20,color:T.pl,marginTop:10,fontWeight:700}}>Eğitmen onayı bekleniyor...</div>
-      <div style={{fontSize:14,color:T.tm,marginTop:6}}>Fotoğrafın gönderildi. Eğitmenin incelemesini bekle.</div>
+      <div style={{fontSize:14,color:T.tm,marginTop:6}}>Eğitmenin incelemesini bekle.</div>
       {tp.photo&&savedPhoto&&<div style={{marginTop:14,borderRadius:12,overflow:"hidden",border:`1px solid ${T.border}`,display:"inline-block"}}><img src={savedPhoto} alt="Gönderilen" style={{maxWidth:300,maxHeight:200,objectFit:"contain",background:T.dark}}/></div>}
       {tp.photo&&!savedPhoto&&<div style={{marginTop:10,fontSize:13,color:T.ok}}>📸 Fotoğraf bu cihazda kayıtlı</div>}
     </div></Card>}

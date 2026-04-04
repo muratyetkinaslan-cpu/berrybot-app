@@ -140,8 +140,7 @@ export function useData() {
   }, [patch, after]);
 
   const submitTask = useCallback((sid, tid, photoData) => {
-    patch(sid, tid, { status: 'pending_review', completedAt: Date.now(), photo: 'local' });
-    // Store photo locally in IndexedDB
+    patch(sid, tid, { status: 'pending_review', completedAt: Date.now(), photo: photoData ? 'local' : null });
     if (photoData) saveLocalPhoto(sid, tid, photoData);
     db.submitTask(sid, tid, !!photoData).then(after);
   }, [patch, after]);
@@ -189,6 +188,11 @@ export function useData() {
     setClassLayout(layouts);
   }, []);
 
+  const setProgressTo = useCallback(async (sid, fromTask) => {
+    await db.setStudentProgressTo(sid, fromTask);
+    setTimeout(() => loadAll(), 500);
+  }, [loadAll]);
+
   // Merge progress + meta
   const merged = {};
   Object.keys(progress).forEach(sid => { merged[sid] = { ...progress[sid] }; });
@@ -202,6 +206,6 @@ export function useData() {
   return {
     loading, currentUser, users, progress: merged, logs, classLayout,
     login, logout, addUser, startTask, submitTask, approveTask,
-    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, refresh: loadAll,
+    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, refresh: loadAll,
   };
 }
