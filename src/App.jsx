@@ -140,7 +140,7 @@ export default function App() {
   const data = useData();
   const { loading, currentUser: user, users, progress: prog, logs, classLayout,
     login: doLogin, logout, addUser, startTask, submitTask, approveTask,
-    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, refresh } = data;
+    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, refresh } = data;
 
   const [page,setPage]=useState("dash");
   const [selS,setSelS]=useState(null);
@@ -192,7 +192,7 @@ export default function App() {
         {/* ──── ADMIN ──── */}
         {user.role===ROLES.ADMIN&&page==="dash"&&<AdminClassroom users={users} prog={prog} classLayout={classLayout} saveLayout={handleSaveLayout} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sd");}}/>}
         {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} onBack={()=>nav("dash")}/>}
-        {user.role===ROLES.ADMIN&&page==="users"&&<UserManager users={users} onAddUser={addUser}/>}
+        {user.role===ROLES.ADMIN&&page==="users"&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo}/>}
         {user.role===ROLES.ADMIN&&page==="audit"&&<AuditLog logs={logs} users={users}/>}
         {user.role===ROLES.ADMIN&&page==="tasks"&&<TaskBrowser showAns={false}/>}
 
@@ -929,11 +929,16 @@ function AuditLog({logs,users}){
 // ═══════════════════════════════════════
 //  ADMIN: USER MANAGER
 // ═══════════════════════════════════════
-function UserManager({users,onAddUser}){
+function UserManager({users,prog,onAddUser,onSetProgress}){
   const[showForm,setShowForm]=useState(false);
   const[name,setName]=useState("");const[email,setEmail]=useState("");const[pw,setPw]=useState("");
   const[role,setRole]=useState("student");const[grup,setGrup]=useState("Büyük");
   const[busy,setBusy]=useState(false);const[msg,setMsg]=useState(null);
+  // Progress setter
+  const[selStudent,setSelStudent]=useState(null);
+  const[selTask,setSelTask]=useState(1);
+  const[progMsg,setProgMsg]=useState(null);
+  const[progBusy,setProgBusy]=useState(false);
 
   const handleAdd=async()=>{
     if(!name.trim()||!email.trim()||!pw.trim()){setMsg("Tüm alanları doldur!");return;}
@@ -944,14 +949,34 @@ function UserManager({users,onAddUser}){
     else setMsg("Hata! Email zaten kayıtlı olabilir.");
   };
 
+  const handleSetProgress=async()=>{
+    if(!selStudent||!selTask)return;
+    setProgBusy(true);setProgMsg(null);
+    await onSetProgress(selStudent.id,selTask);
+    setProgBusy(false);
+    setProgMsg(`✓ ${selStudent.name}: Görev ${selTask}'den devam edecek (${selTask-1} görev onaylandı)`);
+  };
+
   const students=users.filter(u=>u.role==="student");
   const instructors=users.filter(u=>u.role==="instructor");
   const admins=users.filter(u=>u.role==="admin");
 
+  // Get current task for a student
+  const getCurrentTask=(sid)=>{
+    const sp=prog[sid]||{};
+    for(let i=1;i<=36;i++){
+      const st=sp[i]?.status;
+      if(!st||st===TS.LOCKED)return i;
+      if(st===TS.ACTIVE||st===TS.IN_PROGRESS||st===TS.PENDING||st===TS.REJECTED)return i;
+    }
+    return 36;
+  };
+  const getApprovedCount=(sid)=>TASKS.filter(t=>prog[sid]?.[t.id]?.status===TS.APPROVED).length;
+
   return(<div>
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-      <h1 style={{fontSize:20,fontWeight:800,color:T.orange,margin:0}}>👥 Kullanıcı Yönetimi</h1>
-      <button onClick={()=>setShowForm(!showForm)} style={{fontSize:13,padding:"8px 18px",borderRadius:10,border:`1px solid ${T.ok}44`,background:T.ok+"15",color:T.ok,cursor:"pointer",fontWeight:700}}>{showForm?"✕ Kapat":"+ Kullanıcı Ekle"}</button>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
+      <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:0}}>👥 Kullanıcı Yönetimi</h1>
+      <button onClick={()=>setShowForm(!showForm)} style={{fontSize:14,padding:"8px 20px",borderRadius:10,border:`1px solid ${T.ok}44`,background:T.ok+"15",color:T.ok,cursor:"pointer",fontWeight:700}}>{showForm?"✕ Kapat":"+ Kullanıcı Ekle"}</button>
     </div>
 
     {showForm&&<Card style={{marginBottom:16,borderColor:T.ok+"44"}}>
@@ -973,33 +998,94 @@ function UserManager({users,onAddUser}){
       </div>
     </Card>}
 
+    {/* ═══ GÖREV AYARLAMA ═══ */}
+    <Card style={{marginBottom:16,borderColor:T.warn+"44",border:`2px solid ${T.warn}33`}}>
+      <div style={{fontSize:18,fontWeight:700,color:T.warn,marginBottom:12}}>🔧 Öğrenci Görev Ayarla</div>
+      <div style={{fontSize:14,color:T.ts,marginBottom:12}}>Öğrenci seç → hangi görevden devam edecekse onu belirle. Önceki görevler otomatik "Onaylandı" olur.</div>
+
+      {/* Student selector */}
+      <div style={{fontSize:14,fontWeight:600,color:T.ts,marginBottom:6}}>1. Öğrenci Seç:</div>
+      {!selStudent ? (
+        <div style={{maxHeight:250,overflowY:"auto",borderRadius:10,border:`1px solid ${T.border}`,marginBottom:12}}>
+          {students.map(s=>{
+            const cnt=getApprovedCount(s.id);const cur=getCurrentTask(s.id);
+            return(
+              <button key={s.id} onClick={()=>{setSelStudent(s);setSelTask(cur);setProgMsg(null);}} style={{width:"100%",padding:"10px 14px",border:"none",borderBottom:`1px solid ${T.border}22`,background:"transparent",color:T.tp,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,fontSize:14}}>
+                <div style={{width:34,height:34,borderRadius:"50%",background:T.orange+"20",color:T.orange,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,flexShrink:0}}>{s.name[0]}</div>
+                <div style={{flex:1}}><div style={{fontWeight:600}}>{s.name}</div><div style={{fontSize:12,color:T.tm}}>{s.email}</div></div>
+                <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:700,color:T.orange}}>{cnt}/36</div><div style={{fontSize:11,color:T.tm}}>Görev {cur}</div></div>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,padding:"10px 14px",borderRadius:10,background:T.dark,border:`1px solid ${T.orange}44`}}>
+          <div style={{width:40,height:40,borderRadius:"50%",background:T.orange+"20",color:T.orange,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18}}>{selStudent.name[0]}</div>
+          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selStudent.name}</div><div style={{fontSize:13,color:T.tm}}>Şu an: {getApprovedCount(selStudent.id)}/36 onaylı — Görev {getCurrentTask(selStudent.id)}'de</div></div>
+          <button onClick={()=>{setSelStudent(null);setProgMsg(null);}} style={{padding:"6px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:"transparent",color:T.ts,cursor:"pointer",fontSize:13}}>Değiştir</button>
+        </div>
+      )}
+
+      {/* Task selector */}
+      {selStudent&&<>
+        <div style={{fontSize:14,fontWeight:600,color:T.ts,marginBottom:6}}>2. Hangi Görevden Devam Etsin?</div>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
+          <select value={selTask} onChange={e=>setSelTask(Number(e.target.value))} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:16,outline:"none",minWidth:200}}>
+            {TASKS.map(t=><option key={t.id} value={t.id}>Görev {t.id}: {t.title}</option>)}
+          </select>
+          <span style={{fontSize:14,color:T.tm}}>→ Görev 1-{selTask-1} onaylanır, {selTask} aktif olur</span>
+        </div>
+
+        {/* Quick buttons */}
+        <div style={{display:"flex",gap:4,marginBottom:12,flexWrap:"wrap"}}>
+          {[1,5,10,15,20,25,30,33,36].map(n=>(
+            <button key={n} onClick={()=>setSelTask(n)} style={{padding:"6px 12px",borderRadius:6,border:selTask===n?`2px solid ${T.orange}`:`1px solid ${T.border}`,background:selTask===n?T.orange+"20":"transparent",color:selTask===n?T.orange:T.ts,cursor:"pointer",fontSize:13,fontWeight:selTask===n?700:400}}>G.{n}</button>
+          ))}
+        </div>
+
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          <button onClick={handleSetProgress} disabled={progBusy} style={{padding:"12px 28px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.warn},${T.od})`,color:"#fff",fontSize:16,fontWeight:800,cursor:progBusy?"wait":"pointer"}}>
+            {progBusy?"Ayarlanıyor...":"🔧 Uygula"}
+          </button>
+          {progMsg&&<span style={{fontSize:14,color:T.ok,fontWeight:600}}>{progMsg}</span>}
+        </div>
+      </>}
+    </Card>
+
     {/* Stats */}
     <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
-      <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.orange}}>{students.length}</div><div style={{fontSize:13,color:T.ts}}>Öğrenci</div></Card>
-      <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.pl}}>{instructors.length}</div><div style={{fontSize:13,color:T.ts}}>Eğitmen</div></Card>
-      <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.ok}}>{admins.length}</div><div style={{fontSize:13,color:T.ts}}>Admin</div></Card>
+      <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.orange}}>{students.length}</div><div style={{fontSize:14,color:T.ts}}>Öğrenci</div></Card>
+      <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.pl}}>{instructors.length}</div><div style={{fontSize:14,color:T.ts}}>Eğitmen</div></Card>
+      <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.ok}}>{admins.length}</div><div style={{fontSize:14,color:T.ts}}>Admin</div></Card>
     </div>
 
     {/* Instructor list */}
-    <div style={{fontSize:15,fontWeight:700,color:T.pl,marginBottom:8}}>Eğitmenler</div>
+    <div style={{fontSize:16,fontWeight:700,color:T.pl,marginBottom:8}}>Eğitmenler</div>
     <Card style={{marginBottom:16}}>
-      {instructors.map(u=><div key={u.id} style={{padding:"8px 0",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <div><div style={{fontSize:14,fontWeight:600}}>{u.name}</div><div style={{fontSize:12,color:T.tm}}>{u.email}</div></div>
+      {instructors.map(u=><div key={u.id} style={{padding:"10px 0",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div><div style={{fontSize:15,fontWeight:600}}>{u.name}</div><div style={{fontSize:13,color:T.tm}}>{u.email}</div></div>
       </div>)}
-      {instructors.length===0&&<div style={{padding:12,color:T.tm,fontSize:13}}>Eğitmen yok</div>}
+      {instructors.length===0&&<div style={{padding:14,color:T.tm,fontSize:14}}>Eğitmen yok</div>}
     </Card>
 
     {/* Student list */}
-    <div style={{fontSize:15,fontWeight:700,color:T.orange,marginBottom:8}}>Öğrenciler ({students.length})</div>
+    <div style={{fontSize:16,fontWeight:700,color:T.orange,marginBottom:8}}>Öğrenciler ({students.length})</div>
     <Card>
-      <div style={{maxHeight:400,overflowY:"auto"}}>
-        {students.map((u,i)=><div key={u.id} style={{padding:"6px 0",borderBottom:`1px solid ${T.border}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <span style={{fontSize:12,color:T.tm,width:24,textAlign:"right"}}>{i+1}.</span>
-            <div><div style={{fontSize:13,fontWeight:600}}>{u.name}</div><div style={{fontSize:11,color:T.tm}}>{u.email}</div></div>
-          </div>
-          <span style={{fontSize:11,padding:"2px 8px",borderRadius:4,background:u.grup==="Kids"?T.cyan+"20":T.orange+"20",color:u.grup==="Kids"?T.cyan:T.orange}}>{u.grup||"Büyük"}</span>
-        </div>)}
+      <div style={{maxHeight:500,overflowY:"auto"}}>
+        {students.map((u,i)=>{
+          const cnt=getApprovedCount(u.id);const pct=Math.round(cnt/36*100);
+          return(<div key={u.id} style={{padding:"8px 0",borderBottom:`1px solid ${T.border}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:13,color:T.tm,width:28,textAlign:"right"}}>{i+1}.</span>
+              <div><div style={{fontSize:14,fontWeight:600}}>{u.name}</div><div style={{fontSize:12,color:T.tm}}>{u.email}</div></div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:13,color:T.orange,fontWeight:600}}>{cnt}/36</span>
+              <div style={{width:50,height:5,borderRadius:3,background:T.border,overflow:"hidden"}}><div style={{height:"100%",background:T.orange,width:`${pct}%`}}/></div>
+              <span style={{fontSize:12,padding:"2px 8px",borderRadius:4,background:u.grup==="Kids"?T.cyan+"20":T.orange+"20",color:u.grup==="Kids"?T.cyan:T.orange}}>{u.grup||"Büyük"}</span>
+            </div>
+          </div>);
+        })}
       </div>
     </Card>
   </div>);
