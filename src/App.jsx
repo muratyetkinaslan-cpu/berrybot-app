@@ -707,8 +707,8 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
 
       {/* UPLOAD PHOTO */}
       <Card>
-        <div style={{fontSize:16,fontWeight:700,color:T.ts,marginBottom:10}}>📸 Görev Fotoğrafı Yükle</div>
-        <div style={{fontSize:14,color:T.tm,marginBottom:12}}>Robotunu veya ekranını fotoğrafla ve buraya yükle.</div>
+        <div style={{fontSize:16,fontWeight:700,color:T.ts,marginBottom:6}}>📸 Görevi Tamamla</div>
+        <div style={{fontSize:14,color:T.tm,marginBottom:12}}>İstersen fotoğraf ekle, ya da direkt onaya gönder.</div>
 
         {/* Photo preview */}
         {photoPreview&&<div style={{marginBottom:12,borderRadius:12,overflow:"hidden",border:`2px solid ${T.ok}44`,position:"relative"}}>
@@ -719,19 +719,20 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
         {/* File input — accepts images, also camera on mobile */}
         <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
           <label style={{padding:"12px 24px",borderRadius:12,border:`2px dashed ${T.orange}55`,background:T.orange+"10",color:T.orange,cursor:"pointer",fontWeight:700,fontSize:16,display:"inline-flex",alignItems:"center",gap:8}}>
-            📷 Fotoğraf Seç
+            📷 Fotoğraf Seç (İsteğe Bağlı)
             <input type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} style={{display:"none"}}/>
           </label>
-
-          {photo&&<button onClick={()=>onSubmit(photo)} style={{padding:"12px 28px",borderRadius:12,border:"none",background:`linear-gradient(135deg,${T.ok},#22a55a)`,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:8,boxShadow:`0 4px 16px ${T.ok}44`}}>
-            ✓ Fotoğrafı Gönder & Onay İste
-          </button>}
         </div>
 
-        {/* Submit without photo */}
-        {!photo&&<button onClick={()=>onSubmit(null)} style={{marginTop:10,padding:"10px 22px",borderRadius:10,border:`1px solid ${T.pl}44`,background:T.pl+"15",color:T.pl,cursor:"pointer",fontWeight:600,fontSize:14}}>
-          📤 Fotoğrafsız Onaya Gönder
-        </button>}
+        {/* Submit buttons */}
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginTop:14}}>
+          {photo&&<button onClick={()=>onSubmit(photo)} style={{padding:"14px 28px",borderRadius:12,border:"none",background:`linear-gradient(135deg,${T.ok},#22a55a)`,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:8,boxShadow:`0 4px 16px ${T.ok}44`}}>
+            ✓ Fotoğrafla Gönder
+          </button>}
+          <button onClick={()=>onSubmit(null)} style={{padding:"14px 28px",borderRadius:12,border:"none",background:`linear-gradient(135deg,${T.pl},${T.purple})`,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:8,boxShadow:`0 4px 16px ${T.pl}44`}}>
+            ✓ Onaya Gönder {photo?"":"(Fotoğrafsız)"}
+          </button>
+        </div>
 
         <div style={{fontSize:12,color:T.tm,marginTop:10,display:"flex",alignItems:"center",gap:6}}>
           <I.Clock/> Başlangıç: {ft(tp.startedAt)}
