@@ -712,451 +712,525 @@ function MissionBoard({user,prog,onSel,onHelp}){
   const xp=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
   const lv=getLevel(xp);const nlv=getNextLevel(xp);
   const cnt=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
-  const cats=[...new Set(TASKS.map(t=>t.cat))];
   const lvProgress=nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100;
   const hasHelp=prog[user.id]?.helpRequest;
 
-  // ═══ Kategori temaları (renk + ikon + arka plan dekoru) ═══
-  const catThemes={
-    "RGB LED":{c:"#ff6b9d",bg:"#3a1a3a",icon:"💡",deco:["🌈","✨","💫"]},
-    "Motor":{c:"#fbbf24",bg:"#3a2a0a",icon:"⚙️",deco:["🏎️","🚗","🔄"]},
-    "Sensör+LED+Buzzer":{c:"#22d3ee",bg:"#0a2a3a",icon:"📡",deco:["🔔","🌡️","☀️"]},
-    "Işık Sensörü":{c:"#fde047",bg:"#3a2a0a",icon:"🔦",deco:["☀️","💡","🌞"]},
-    "IR Kumanda":{c:"#a78bfa",bg:"#1a0a3a",icon:"🎮",deco:["📡","🕹️","📶"]},
-    "Fonksiyon":{c:"#f472b6",bg:"#3a0a2a",icon:"📦",deco:["💻","⚡","🔧"]},
-    "Mesafe/Navigasyon":{c:"#34d399",bg:"#0a3a2a",icon:"🧭",deco:["🗺️","📏","🚀"]},
-    "Engel Algılama":{c:"#fb7185",bg:"#3a0a1a",icon:"🚧",deco:["🚦","⚠️","🛑"]},
-    "Çizgi Takip":{c:"#60a5fa",bg:"#0a1a3a",icon:"〰️",deco:["➡️","🛤️","🎯"]},
-    "Sumo Robot":{c:"#f87171",bg:"#3a0a0a",icon:"🤼",deco:["💥","🏆","🥋"]},
-    "Işık Takip":{c:"#facc15",bg:"#2a2a0a",icon:"🌟",deco:["💫","🌠","✨"]},
+  // Difficulty labels
+  const diffLabel=(d)=>{
+    if(d<=1)return{l:"KOLAY",c:"#22c55e",bg:"#1a4a2e"};
+    if(d===2)return{l:"ORTA",c:"#3b82f6",bg:"#1a2a4a"};
+    if(d===3)return{l:"ZOR",c:"#f59e0b",bg:"#3a2a0a"};
+    if(d===4)return{l:"ÇOK ZOR",c:"#ef4444",bg:"#3a1a1a"};
+    return{l:"USTA",c:"#a855f7",bg:"#2a1a3a"};
   };
+
+  // Category themes
+  const catThemes={
+    "RGB LED":{c:"#ff6b9d",bg:"#3a1a3a",icon:"💡",scene:"🌈"},
+    "Motor":{c:"#fbbf24",bg:"#3a2a0a",icon:"⚙️",scene:"🏎️"},
+    "Sensör+LED+Buzzer":{c:"#22d3ee",bg:"#0a2a3a",icon:"📡",scene:"🔔"},
+    "Işık Sensörü":{c:"#fde047",bg:"#3a2a0a",icon:"🔦",scene:"☀️"},
+    "IR Kumanda":{c:"#a78bfa",bg:"#1a0a3a",icon:"🎮",scene:"📡"},
+    "Fonksiyon":{c:"#f472b6",bg:"#3a0a2a",icon:"📦",scene:"💻"},
+    "Mesafe/Navigasyon":{c:"#34d399",bg:"#0a3a2a",icon:"🧭",scene:"🗺️"},
+    "Engel Algılama":{c:"#fb7185",bg:"#3a0a1a",icon:"🚧",scene:"⚠️"},
+    "Çizgi Takip":{c:"#60a5fa",bg:"#0a1a3a",icon:"〰️",scene:"🛤️"},
+    "Sumo Robot":{c:"#f87171",bg:"#3a0a0a",icon:"🤼",scene:"🏆"},
+    "Işık Takip":{c:"#facc15",bg:"#2a2a0a",icon:"🌟",scene:"💫"},
+  };
+
+  // Build positions for all 36 tasks on a horizontal map
+  // Use sine wave for vertical zigzag, group by category for color zones
+  const NODE_GAP=170;
+  const MAP_HEIGHT=480;
+  const PAD_X=80;
+  const positions=TASKS.map((t,i)=>{
+    const x=PAD_X+i*NODE_GAP;
+    // Sine wave between 100-380 y range
+    const y=MAP_HEIGHT/2+Math.sin(i*0.55)*150;
+    return{x,y,task:t,theme:catThemes[t.cat]||{c:T.orange,icon:"🎯",scene:"⭐"}};
+  });
+  const totalWidth=PAD_X*2+TASKS.length*NODE_GAP;
+
+  // Find category zones (start/end x positions)
+  const zones=[];
+  let curCat=null,zStart=0;
+  positions.forEach((p,i)=>{
+    if(p.task.cat!==curCat){
+      if(curCat)zones.push({cat:curCat,startX:zStart,endX:positions[i-1].x+NODE_GAP/2,theme:catThemes[curCat]});
+      curCat=p.task.cat;
+      zStart=p.x-NODE_GAP/2;
+    }
+  });
+  if(curCat)zones.push({cat:curCat,startX:zStart,endX:positions[TASKS.length-1].x+NODE_GAP/2,theme:catThemes[curCat]});
+
+  // Auto-scroll to current task on mount
+  const mapRef=useRef(null);
+  useEffect(()=>{
+    if(!mapRef.current)return;
+    // Find first non-locked, non-approved task (active/in_progress/pending)
+    const currentIdx=TASKS.findIndex(t=>{const s=sp[t.id]?.status;return s===TS.ACTIVE||s===TS.IN_PROGRESS||s===TS.PENDING;});
+    const targetIdx=currentIdx>=0?currentIdx:0;
+    const targetX=positions[targetIdx].x-mapRef.current.clientWidth/2+50;
+    mapRef.current.scrollTo({left:Math.max(0,targetX),behavior:"smooth"});
+  },[]);
 
   return(<div style={{position:"relative"}}>
     <style>{`
-      @keyframes float-mb { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-      @keyframes glow-mb { 0%,100%{box-shadow:0 0 20px var(--gc,#ff8800)aa,0 0 40px var(--gc,#ff8800)55} 50%{box-shadow:0 0 35px var(--gc,#ff8800)ee,0 0 60px var(--gc,#ff8800)88} }
-      @keyframes spin-mb { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-      @keyframes shine-mb { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-      @keyframes bounce-mb { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-6px) scale(1.08)} }
-      @keyframes confetti-mb { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(-50px) rotate(360deg);opacity:0} }
-      @keyframes shimmer-mb { 0%{background-position:-1000px 0} 100%{background-position:1000px 0} }
-      @keyframes popin-mb { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
-      @keyframes path-flow { 0%{stroke-dashoffset:40} 100%{stroke-dashoffset:0} }
-      @keyframes ring-pulse-mb { 0%{transform:scale(1);opacity:.8} 100%{transform:scale(1.8);opacity:0} }
-      @keyframes deco-drift { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(8px,-8px) rotate(8deg)} }
-      @keyframes star-twinkle { 0%,100%{opacity:.2;transform:scale(.9)} 50%{opacity:1;transform:scale(1.1)} }
+      @keyframes mb-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+      @keyframes mb-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+      @keyframes mb-shine { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+      @keyframes mb-bounce { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-5px) scale(1.06)} }
+      @keyframes mb-confetti { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(-40px) rotate(360deg);opacity:0} }
+      @keyframes mb-shimmer { 0%{background-position:-1000px 0} 100%{background-position:1000px 0} }
+      @keyframes mb-popin { 0%{transform:scale(0)} 60%{transform:scale(1.15)} 100%{transform:scale(1)} }
+      @keyframes mb-path-flow { 0%{stroke-dashoffset:50} 100%{stroke-dashoffset:0} }
+      @keyframes mb-ring-pulse { 0%{transform:scale(1);opacity:.8} 100%{transform:scale(1.7);opacity:0} }
+      @keyframes mb-twinkle { 0%,100%{opacity:.2} 50%{opacity:.8} }
+      @keyframes mb-bob { 0%,100%{transform:translate(0,0)} 50%{transform:translate(4px,-6px)} }
       .map-node{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
-      .map-node:hover{transform:scale(1.08) translateY(-4px)}
-      .map-locked:hover{transform:none}
+      .map-node:hover:not(.map-locked){transform:scale(1.1) translateY(-4px)}
+      .map-scroll::-webkit-scrollbar{height:14px}
+      .map-scroll::-webkit-scrollbar-track{background:#0a0518;border-radius:7px}
+      .map-scroll::-webkit-scrollbar-thumb{background:linear-gradient(90deg,#6B3FA0,#FF8800);border-radius:7px;border:2px solid #0a0518}
+      .map-scroll::-webkit-scrollbar-thumb:hover{background:linear-gradient(90deg,#8b5fcf,#ffa030)}
     `}</style>
-
-    {/* ═══ STARFIELD BACKGROUND ═══ */}
-    <div style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none",zIndex:0}}>
-      {[...Array(40)].map((_,i)=>(
-        <div key={i} style={{
-          position:"absolute",
-          left:`${(i*7)%100}%`,top:`${(i*13)%100}%`,
-          fontSize:`${6+(i%4)*3}px`,
-          animation:`star-twinkle ${2+(i%4)}s infinite`,
-          animationDelay:`${(i*0.15)%4}s`,
-          color:i%5===0?"#fbbf24":i%5===1?"#a78bfa":i%5===2?"#22d3ee":i%5===3?"#f472b6":"#fff",
-        }}>{i%4===0?"✦":"·"}</div>
-      ))}
-    </div>
 
     {/* ═══ HERO LEVEL CARD ═══ */}
     <div style={{
-      position:"relative",zIndex:1,marginBottom:24,
-      borderRadius:24,padding:24,
+      position:"relative",zIndex:2,marginBottom:18,
+      borderRadius:20,padding:20,
       background:`linear-gradient(135deg,${lv.color}33,${T.purple}66,#1a0a3a)`,
       border:`3px solid ${lv.color}88`,
-      boxShadow:`0 8px 50px ${lv.color}55,inset 0 1px 0 #ffffff22`,
+      boxShadow:`0 8px 40px ${lv.color}55`,
       overflow:"hidden",
-      "--gc":lv.color,
     }}>
-      {/* Background robot icons - decorative */}
-      <div style={{position:"absolute",top:-20,right:-10,fontSize:140,opacity:.06,transform:"rotate(-15deg)",pointerEvents:"none"}}>🤖</div>
-      <div style={{position:"absolute",bottom:-30,left:-10,fontSize:120,opacity:.05,transform:"rotate(15deg)",pointerEvents:"none"}}>🦾</div>
+      <div style={{position:"absolute",top:-15,right:-10,fontSize:120,opacity:.07,transform:"rotate(-15deg)",pointerEvents:"none"}}>🤖</div>
+      <div style={{position:"absolute",inset:0,pointerEvents:"none",background:`linear-gradient(90deg,transparent 30%,${lv.color}22 50%,transparent 70%)`,backgroundSize:"200% 100%",animation:"mb-shimmer 4s infinite linear"}}/>
 
-      {/* Shimmer overlay */}
-      <div style={{
-        position:"absolute",inset:0,pointerEvents:"none",
-        background:`linear-gradient(90deg,transparent 30%,${lv.color}22 50%,transparent 70%)`,
-        backgroundSize:"200% 100%",animation:"shimmer-mb 4s infinite linear",
-      }}/>
-
-      <div style={{position:"relative",display:"flex",alignItems:"center",gap:22,flexWrap:"wrap"}}>
-        {/* Level badge with double pulse ring */}
+      <div style={{position:"relative",display:"flex",alignItems:"center",gap:18,flexWrap:"wrap"}}>
         <div style={{position:"relative"}}>
-          <div style={{position:"absolute",inset:-8,borderRadius:"50%",border:`3px solid ${lv.color}aa`,animation:"ring-pulse-mb 2s infinite"}}/>
-          <div style={{position:"absolute",inset:-4,borderRadius:"50%",border:`2px solid ${lv.color}66`,animation:"ring-pulse-mb 2.5s infinite",animationDelay:".5s"}}/>
+          <div style={{position:"absolute",inset:-6,borderRadius:"50%",border:`3px solid ${lv.color}aa`,animation:"mb-ring-pulse 2s infinite"}}/>
           <div style={{
-            width:96,height:96,borderRadius:"50%",
+            width:80,height:80,borderRadius:"50%",
             display:"flex",alignItems:"center",justifyContent:"center",
-            fontSize:48,
+            fontSize:40,
             background:`radial-gradient(circle at 30% 30%,${lv.color}aa,${lv.color}33,#000)`,
             border:`4px solid ${lv.color}`,
-            boxShadow:`0 0 30px ${lv.color}aa,inset 0 0 20px ${lv.color}55`,
-            animation:"float-mb 3s ease-in-out infinite",
+            boxShadow:`0 0 24px ${lv.color}aa`,
+            animation:"mb-float 3s ease-in-out infinite",
           }}>{lv.icon}</div>
         </div>
 
-        <div style={{flex:1,minWidth:220}}>
-          <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:4,flexWrap:"wrap"}}>
-            <span style={{fontSize:11,color:T.tm,letterSpacing:3,fontWeight:800,textTransform:"uppercase"}}>Level</span>
-            <span style={{fontSize:42,fontWeight:900,color:lv.color,textShadow:`0 0 25px ${lv.color}aa`,letterSpacing:1,lineHeight:1}}>{lv.lv}</span>
-            <span style={{fontSize:18,fontWeight:800,color:T.tp,marginLeft:2}}>{lv.name}</span>
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap",marginBottom:3}}>
+            <span style={{fontSize:11,color:T.tm,letterSpacing:2,fontWeight:800,textTransform:"uppercase"}}>Level</span>
+            <span style={{fontSize:36,fontWeight:900,color:lv.color,textShadow:`0 0 20px ${lv.color}aa`,lineHeight:1}}>{lv.lv}</span>
+            <span style={{fontSize:16,fontWeight:800,color:T.tp}}>{lv.name}</span>
           </div>
-          <div style={{fontSize:14,color:T.ol,fontWeight:700,marginBottom:10,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-            <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 12px",borderRadius:14,background:`linear-gradient(135deg,${T.warn}33,${T.warn}11)`,border:`1px solid ${T.warn}55`}}>
-              ⚡ <b style={{fontSize:16,color:T.warn}}>{xp}</b> XP
-            </span>
+          <div style={{fontSize:13,color:T.ol,fontWeight:700,marginBottom:8,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+            <span style={{padding:"2px 10px",borderRadius:12,background:`${T.warn}33`,border:`1px solid ${T.warn}55`}}>⚡ <b style={{color:T.warn}}>{xp}</b> XP</span>
             {nlv&&<span style={{color:T.tm,fontSize:12}}>→ {nlv.icon} {nlv.name} <b style={{color:T.ol}}>({nlv.min-xp} XP daha)</b></span>}
           </div>
-          <div style={{position:"relative",width:"100%",height:16,borderRadius:8,background:"#0008",overflow:"hidden",border:`1px solid ${T.border}`}}>
+          <div style={{position:"relative",width:"100%",height:14,borderRadius:7,background:"#0008",overflow:"hidden",border:`1px solid ${T.border}`}}>
             <div style={{
-              height:"100%",borderRadius:8,
+              height:"100%",borderRadius:7,
               background:`linear-gradient(90deg,${T.warn},${lv.color},${T.pl})`,
               backgroundSize:"200% 100%",
-              animation:"shine-mb 2s infinite linear",
-              width:`${lvProgress}%`,transition:"width .6s ease",
-              boxShadow:`0 0 12px ${lv.color}aa`,
+              animation:"mb-shine 2s infinite linear",
+              width:`${lvProgress}%`,
+              boxShadow:`0 0 10px ${lv.color}aa`,
             }}/>
           </div>
         </div>
 
-        {/* Trophy circle */}
         <div style={{textAlign:"center"}}>
           <div style={{
-            width:90,height:90,borderRadius:"50%",
+            width:80,height:80,borderRadius:"50%",
             background:`conic-gradient(${T.ok} ${(cnt/36)*360}deg,${T.border} 0deg)`,
-            display:"flex",alignItems:"center",justifyContent:"center",position:"relative",
-            boxShadow:`0 0 20px ${T.ok}55`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            boxShadow:`0 0 16px ${T.ok}55`,
           }}>
             <div style={{
-              width:74,height:74,borderRadius:"50%",
+              width:64,height:64,borderRadius:"50%",
               background:`radial-gradient(circle,${T.bg},#0a0518)`,
               display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
               border:`2px solid ${T.ok}33`,
             }}>
-              <div style={{fontSize:24,fontWeight:900,color:T.ok,lineHeight:1}}>{cnt}</div>
-              <div style={{fontSize:10,color:T.tm,fontWeight:700}}>/36</div>
-              <div style={{fontSize:14,marginTop:2}}>🏆</div>
+              <div style={{fontSize:22,fontWeight:900,color:T.ok,lineHeight:1}}>{cnt}</div>
+              <div style={{fontSize:9,color:T.tm,fontWeight:700}}>/36</div>
+              <div style={{fontSize:14}}>🏆</div>
             </div>
           </div>
         </div>
 
-        {/* Help button */}
         <button onClick={onHelp} disabled={hasHelp} style={{
-          padding:"14px 22px",borderRadius:14,
+          padding:"12px 20px",borderRadius:12,
           border:`3px solid ${hasHelp?T.warn:T.err}88`,
-          background:hasHelp?`linear-gradient(135deg,${T.warn}33,${T.warn}22)`:`linear-gradient(135deg,${T.err}22,${T.err}11)`,
+          background:hasHelp?`${T.warn}22`:`${T.err}15`,
           color:hasHelp?T.warn:T.err,
           cursor:hasHelp?"default":"pointer",
-          fontWeight:800,fontSize:15,
-          display:"flex",alignItems:"center",gap:8,
-          animation:hasHelp?"bounce-mb 1s infinite":"none",
-          boxShadow:hasHelp?`0 0 20px ${T.warn}66`:`0 4px 12px ${T.err}33`,
+          fontWeight:800,fontSize:14,
+          display:"flex",alignItems:"center",gap:6,
+          animation:hasHelp?"mb-bounce 1s infinite":"none",
         }}>
           {hasHelp?<>⏳ Bekleniyor</>:<>🖐 Eğitmen Çağır</>}
         </button>
       </div>
     </div>
 
-    {/* ═══ ADVENTURE MAP — Each category is a "world" ═══ */}
-    {cats.map((cat,catIdx)=>{
-      const ct=TASKS.filter(t=>t.cat===cat);
-      const cd=ct.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
-      const catComplete=cd===ct.length;
-      const theme=catThemes[cat]||{c:T.orange,bg:T.card,icon:"🎯",deco:["⭐"]};
-      const catProgress=ct.length>0?(cd/ct.length)*100:0;
+    {/* ═══ SCROLL HINT ═══ */}
+    <div style={{
+      display:"flex",justifyContent:"space-between",alignItems:"center",
+      marginBottom:8,padding:"0 4px",
+    }}>
+      <div style={{fontSize:13,color:T.ts,fontWeight:700,letterSpacing:1}}>
+        🗺️ <span style={{color:T.orange}}>Macera Haritası</span> — Sağa kaydırarak ilerle
+      </div>
+      <div style={{fontSize:11,color:T.tm,fontStyle:"italic"}}>
+        ← → ok tuşlarıyla da kaydırabilirsin
+      </div>
+    </div>
 
-      return(<div key={cat} style={{
-        position:"relative",zIndex:1,marginBottom:24,
-        borderRadius:24,padding:0,overflow:"hidden",
-        background:`linear-gradient(135deg,${theme.bg},#0a0518)`,
-        border:`3px solid ${theme.c}55`,
-        boxShadow:`0 8px 30px ${theme.c}33`,
+    {/* ═══ ADVENTURE MAP — One huge horizontal scrolling map ═══ */}
+    <div ref={mapRef} className="map-scroll" style={{
+      position:"relative",
+      overflowX:"auto",overflowY:"hidden",
+      borderRadius:24,
+      border:`3px solid ${T.purple}66`,
+      background:`linear-gradient(180deg,#0a0518,#1a0a3a 50%,#0a0518)`,
+      boxShadow:`0 8px 40px ${T.purple}44,inset 0 0 80px ${T.purple}22`,
+      cursor:"grab",
+    }} onMouseDown={e=>e.currentTarget.style.cursor="grabbing"} onMouseUp={e=>e.currentTarget.style.cursor="grab"}>
+      <div style={{
+        position:"relative",
+        width:`${totalWidth}px`,
+        height:`${MAP_HEIGHT}px`,
       }}>
-        {/* Decorative robotic elements floating in background */}
-        <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden"}}>
-          {theme.deco.map((emoji,i)=>(
-            <div key={i} style={{
-              position:"absolute",
-              fontSize:`${50+i*15}px`,opacity:.06,
-              left:`${15+i*30}%`,top:`${10+(i*25)%70}%`,
-              animation:`deco-drift ${4+i*2}s infinite ease-in-out`,
-              animationDelay:`${i*0.5}s`,
-            }}>{emoji}</div>
-          ))}
-        </div>
-
-        {/* WORLD HEADER */}
-        <div style={{
-          position:"relative",padding:"18px 22px",
-          background:`linear-gradient(90deg,${theme.c}44,transparent)`,
-          borderBottom:`2px solid ${theme.c}33`,
-        }}>
-          <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
-            {/* World number medallion */}
-            <div style={{position:"relative"}}>
-              {catComplete&&<div style={{position:"absolute",inset:-4,borderRadius:"50%",border:`2px solid ${theme.c}88`,animation:"ring-pulse-mb 2s infinite"}}/>}
-              <div style={{
-                width:60,height:60,borderRadius:"50%",
-                background:`radial-gradient(circle at 30% 30%,${theme.c}cc,${theme.c}66)`,
-                display:"flex",alignItems:"center",justifyContent:"center",
-                fontSize:28,
-                border:`3px solid ${theme.c}`,
-                boxShadow:`0 0 20px ${theme.c}aa,inset 0 0 12px ${theme.c}55`,
-                animation:catComplete?"float-mb 3s ease-in-out infinite":"none",
-              }}>{theme.icon}</div>
-              <div style={{
-                position:"absolute",top:-6,right:-6,
-                width:26,height:26,borderRadius:"50%",
-                background:"#000",border:`2px solid ${theme.c}`,
-                display:"flex",alignItems:"center",justifyContent:"center",
-                fontSize:11,fontWeight:900,color:theme.c,
-              }}>{catIdx+1}</div>
-            </div>
-
-            <div style={{flex:1,minWidth:180}}>
-              <div style={{fontSize:20,fontWeight:900,color:theme.c,letterSpacing:.5,textShadow:`0 0 12px ${theme.c}66`}}>
-                {cat} {catComplete&&<span style={{fontSize:14}}>👑</span>}
-              </div>
-              <div style={{fontSize:13,color:T.ts,marginTop:2,fontWeight:600}}>
-                Bölüm {catIdx+1} • {cd}/{ct.length} görev
-                {catComplete&&<span style={{marginLeft:8,padding:"2px 10px",background:T.ok+"22",color:T.ok,borderRadius:6,fontSize:11,fontWeight:800}}>✓ TAMAMLANDI</span>}
-              </div>
-            </div>
-
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
-              <div style={{width:140,height:8,borderRadius:4,background:"#0008",overflow:"hidden"}}>
-                <div style={{height:"100%",borderRadius:4,background:`linear-gradient(90deg,${theme.c},${theme.c}cc)`,width:`${catProgress}%`,boxShadow:`0 0 8px ${theme.c}`}}/>
-              </div>
-              <span style={{fontSize:14,fontWeight:900,color:theme.c,minWidth:42,textAlign:"right"}}>{Math.round(catProgress)}%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* HORIZONTAL ADVENTURE MAP — scrollable */}
-        <div style={{
-          position:"relative",
-          overflowX:"auto",overflowY:"hidden",
-          padding:"30px 24px 30px",
-          minHeight:230,
-        }}>
-          {/* SVG path connecting nodes */}
-          <svg style={{
-            position:"absolute",top:60,left:0,width:`${ct.length*180+200}px`,height:120,
+        {/* TWINKLING STARS */}
+        {[...Array(60)].map((_,i)=>(
+          <div key={`star${i}`} style={{
+            position:"absolute",
+            left:`${(i*73)%totalWidth}px`,
+            top:`${(i*47)%MAP_HEIGHT}px`,
+            fontSize:`${4+(i%4)*2}px`,
+            color:i%5===0?"#fbbf24":i%5===1?"#a78bfa":i%5===2?"#22d3ee":"#fff",
+            animation:`mb-twinkle ${2+(i%4)}s infinite`,
+            animationDelay:`${(i*0.2)%4}s`,
             pointerEvents:"none",
-          }} viewBox={`0 0 ${ct.length*180+200} 120`} preserveAspectRatio="none">
-            <defs>
-              <linearGradient id={`path${catIdx}`} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor={theme.c} stopOpacity=".8"/>
-                <stop offset="100%" stopColor={theme.c} stopOpacity=".3"/>
-              </linearGradient>
-            </defs>
-            {/* Wavy path */}
-            <path
-              d={`M 80 ${60} ${ct.map((_,i)=>{
-                const x=80+i*180;
-                const y=i%2===0?60:60;
-                const cx=x+90;
-                const cy=i%2===0?20:100;
-                return `Q ${cx} ${cy}, ${x+180} ${y}`;
-              }).join(" ")}`}
-              fill="none"
-              stroke={`url(#path${catIdx})`}
-              strokeWidth="4"
-              strokeDasharray="8 6"
-              style={{animation:"path-flow 1.5s linear infinite"}}
-            />
-          </svg>
+          }}>{i%3===0?"✦":"·"}</div>
+        ))}
 
-          {/* Task nodes — horizontal row */}
-          <div style={{
-            position:"relative",display:"flex",gap:32,
-            paddingLeft:30,paddingRight:30,paddingTop:0,
-            minWidth:ct.length*180+"px",
+        {/* CATEGORY ZONE BANDS — vertical color stripes */}
+        {zones.map((z,i)=>(
+          <div key={`zone${i}`} style={{
+            position:"absolute",
+            left:`${z.startX}px`,
+            top:0,bottom:0,
+            width:`${z.endX-z.startX}px`,
+            background:`linear-gradient(180deg,${z.theme.c}11,transparent 30%,transparent 70%,${z.theme.c}11)`,
+            pointerEvents:"none",
+            borderLeft:i>0?`2px dashed ${z.theme.c}44`:"none",
           }}>
-            {ct.map((t,idx)=>{
-              const s=sp[t.id]?.status||TS.LOCKED;
-              const locked=s===TS.LOCKED;
-              const approved=s===TS.APPROVED;
-              const active=s===TS.ACTIVE||s===TS.IN_PROGRESS;
-              const pending=s===TS.PENDING;
-              const rejected=s===TS.REJECTED;
-              const started=sp[t.id]?.startedAt;
-              const completed=sp[t.id]?.completedAt||sp[t.id]?.approvedAt;
-              const dur=(started&&completed)?fd(completed-started):null;
-              const offsetY=idx%2===0?0:30;
-
-              return(
-                <div key={t.id}
-                  className={`map-node ${locked?"map-locked":""}`}
-                  onClick={()=>!locked&&onSel(t)}
-                  style={{
-                    cursor:locked?"not-allowed":"pointer",
-                    opacity:locked?.45:1,
-                    width:160,flexShrink:0,
-                    transform:`translateY(${offsetY}px)`,
-                    position:"relative",
-                  }}>
-
-                  {/* Active task pulse rings */}
-                  {active&&<>
-                    <div style={{position:"absolute",top:0,left:"50%",marginLeft:-50,width:100,height:100,borderRadius:"50%",border:`3px solid ${T.orange}`,animation:"ring-pulse-mb 1.8s infinite",pointerEvents:"none"}}/>
-                  </>}
-
-                  {/* Confetti on approved */}
-                  {approved&&[...Array(4)].map((_,ci)=>(
-                    <span key={ci} style={{
-                      position:"absolute",top:5,left:`${15+ci*25}%`,
-                      fontSize:14,
-                      animation:`confetti-mb 2s ${ci*0.3}s infinite ease-out`,
-                      pointerEvents:"none",zIndex:3,
-                    }}>{["✨","⭐","🎉","💫"][ci]}</span>
-                  ))}
-
-                  {/* Hexagonal map node */}
-                  <div style={{
-                    position:"relative",
-                    width:100,height:100,margin:"0 auto",
-                    background:approved
-                      ?`radial-gradient(circle at 30% 30%,${T.ok}ee,${T.ok}66)`
-                      :active
-                      ?`radial-gradient(circle at 30% 30%,${T.orange}ee,${T.orange}66)`
-                      :pending
-                      ?`radial-gradient(circle at 30% 30%,${T.pl}ee,${T.pl}66)`
-                      :rejected
-                      ?`radial-gradient(circle at 30% 30%,${T.err}ee,${T.err}66)`
-                      :`radial-gradient(circle at 30% 30%,${T.tm}66,${T.tm}22)`,
-                    clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
-                    display:"flex",alignItems:"center",justifyContent:"center",
-                    boxShadow:active
-                      ?`0 0 30px ${T.orange}aa,0 0 60px ${T.orange}55`
-                      :approved
-                      ?`0 6px 20px ${T.ok}88`
-                      :pending
-                      ?`0 6px 20px ${T.pl}66`
-                      :"0 4px 12px #0006",
-                  }}>
-                    {/* Inner hexagon */}
-                    <div style={{
-                      position:"absolute",inset:6,
-                      background:approved?T.ok:active?T.orange:pending?T.pl:rejected?T.err:T.dark,
-                      clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
-                    }}/>
-                    {/* Inner hexagon dark */}
-                    <div style={{
-                      position:"absolute",inset:9,
-                      background:`radial-gradient(circle at 40% 30%,${T.card},#0a0518)`,
-                      clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                    }}>
-                      {/* Task image inside hex */}
-                      <TaskImage taskId={t.id} type="gorsel" size={64} fallbackEmoji={t.img} style={{borderRadius:"50%",width:64,height:64,objectFit:"cover"}}/>
-                    </div>
-                    {/* Task number badge — top */}
-                    <div style={{
-                      position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",
-                      width:32,height:32,
-                      background:`linear-gradient(135deg,${theme.c},${theme.c}88)`,
-                      borderRadius:"50%",
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      fontSize:13,fontWeight:900,color:"#fff",
-                      border:`2px solid ${T.bg}`,
-                      boxShadow:`0 2px 8px ${theme.c}88`,zIndex:2,
-                      textShadow:"0 1px 2px #0008",
-                    }}>{t.id}</div>
-
-                    {/* Status icon — bottom right */}
-                    {approved&&<div style={{
-                      position:"absolute",bottom:-4,right:0,
-                      width:30,height:30,borderRadius:"50%",
-                      background:`radial-gradient(circle,${T.ok},#22a55a)`,
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      fontSize:16,color:"#fff",fontWeight:900,
-                      boxShadow:`0 0 12px ${T.ok}aa`,
-                      border:`2px solid ${T.bg}`,
-                      animation:"popin-mb .5s",zIndex:2,
-                    }}>✓</div>}
-                    {active&&<div style={{
-                      position:"absolute",bottom:-4,right:0,
-                      width:30,height:30,borderRadius:"50%",
-                      background:`linear-gradient(135deg,${T.orange},${T.od})`,
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      fontSize:14,color:"#fff",
-                      boxShadow:`0 0 12px ${T.orange}aa`,
-                      border:`2px solid ${T.bg}`,
-                      animation:"bounce-mb 1.5s infinite",zIndex:2,
-                    }}>▶</div>}
-                    {pending&&<div style={{
-                      position:"absolute",bottom:-4,right:0,
-                      width:30,height:30,borderRadius:"50%",
-                      background:`linear-gradient(135deg,${T.pl},${T.purple})`,
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      fontSize:14,color:"#fff",
-                      border:`2px solid ${T.bg}`,zIndex:2,
-                    }}>⏳</div>}
-                    {rejected&&<div style={{
-                      position:"absolute",bottom:-4,right:0,
-                      width:30,height:30,borderRadius:"50%",
-                      background:T.err,
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      fontSize:14,color:"#fff",
-                      border:`2px solid ${T.bg}`,zIndex:2,
-                    }}>↻</div>}
-
-                    {locked&&<div style={{
-                      position:"absolute",inset:0,
-                      background:"#0a0518cc",
-                      clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      backdropFilter:"blur(2px)",
-                    }}>
-                      <span style={{fontSize:32,filter:"grayscale(.5)"}}>🔒</span>
-                    </div>}
-                  </div>
-
-                  {/* Task title below */}
-                  <div style={{textAlign:"center",marginTop:14}}>
-                    <div style={{
-                      fontSize:13,fontWeight:800,
-                      color:locked?T.tm:T.tp,
-                      lineHeight:1.2,
-                      overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",
-                    }}>{t.title}</div>
-                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginTop:4}}>
-                      <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:`${T.warn}22`,color:T.warn,fontWeight:800,border:`1px solid ${T.warn}44`}}>⚡ {t.xp}</span>
-                      <span style={{display:"flex",gap:1}}>
-                        {[1,2,3,4,5].map(i=>(
-                          <span key={i} style={{fontSize:10,color:i<=t.diff?T.warn:T.border,filter:i<=t.diff?`drop-shadow(0 0 2px ${T.warn})`:"none"}}>★</span>
-                        ))}
-                      </span>
-                    </div>
-                    {dur&&<div style={{fontSize:10,color:T.ok,marginTop:3,fontWeight:600}}>⏱ {dur}</div>}
-                  </div>
-                </div>
-              );
-            })}
+            {/* Zone label at top */}
+            <div style={{
+              position:"absolute",top:14,left:"50%",transform:"translateX(-50%)",
+              padding:"6px 16px",borderRadius:20,
+              background:`linear-gradient(135deg,${z.theme.c},${z.theme.c}cc)`,
+              color:"#fff",fontSize:13,fontWeight:900,
+              letterSpacing:1,textTransform:"uppercase",
+              boxShadow:`0 4px 14px ${z.theme.c}88`,
+              whiteSpace:"nowrap",
+              border:"2px solid #fff2",
+            }}>
+              <span style={{marginRight:6}}>{z.theme.icon}</span>{z.cat}
+            </div>
+            {/* Decorative scene element */}
+            <div style={{
+              position:"absolute",bottom:18,left:"50%",transform:"translateX(-50%)",
+              fontSize:60,opacity:.12,
+              animation:"mb-bob 4s infinite ease-in-out",
+              pointerEvents:"none",
+            }}>{z.theme.scene}</div>
           </div>
-        </div>
-      </div>);
-    })}
+        ))}
 
-    {/* End trophy */}
+        {/* SVG WAVY PATH */}
+        <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}} viewBox={`0 0 ${totalWidth} ${MAP_HEIGHT}`} preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="pathGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={T.orange} stopOpacity=".7"/>
+              <stop offset="50%" stopColor={T.pl} stopOpacity=".7"/>
+              <stop offset="100%" stopColor={T.cyan} stopOpacity=".7"/>
+            </linearGradient>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          {/* Generate smooth path connecting all nodes */}
+          <path
+            d={positions.map((p,i)=>{
+              if(i===0)return `M ${p.x} ${p.y}`;
+              const prev=positions[i-1];
+              const cx=(prev.x+p.x)/2;
+              return `Q ${cx} ${prev.y}, ${cx} ${(prev.y+p.y)/2} T ${p.x} ${p.y}`;
+            }).join(" ")}
+            fill="none"
+            stroke="url(#pathGrad)"
+            strokeWidth="6"
+            strokeDasharray="12 8"
+            strokeLinecap="round"
+            style={{animation:"mb-path-flow 1.5s linear infinite",filter:"url(#glow)"}}
+          />
+        </svg>
+
+        {/* TASK NODES */}
+        {positions.map((p,idx)=>{
+          const t=p.task;
+          const theme=p.theme;
+          const s=sp[t.id]?.status||TS.LOCKED;
+          const locked=s===TS.LOCKED;
+          const approved=s===TS.APPROVED;
+          const active=s===TS.ACTIVE||s===TS.IN_PROGRESS;
+          const pending=s===TS.PENDING;
+          const rejected=s===TS.REJECTED;
+          const started=sp[t.id]?.startedAt;
+          const completed=sp[t.id]?.completedAt||sp[t.id]?.approvedAt;
+          const dur=(started&&completed)?fd(completed-started):null;
+          const diff=diffLabel(t.diff);
+
+          return(
+            <div key={t.id}
+              className={`map-node ${locked?"map-locked":""}`}
+              onClick={()=>!locked&&onSel(t)}
+              style={{
+                position:"absolute",
+                left:`${p.x-70}px`,
+                top:`${p.y-70}px`,
+                width:140,
+                cursor:locked?"not-allowed":"pointer",
+                opacity:locked?.5:1,
+                zIndex:active?5:approved?3:2,
+              }}>
+
+              {/* Active pulse ring */}
+              {active&&<div style={{
+                position:"absolute",top:5,left:25,width:90,height:90,
+                borderRadius:"50%",border:`3px solid ${T.orange}`,
+                animation:"mb-ring-pulse 1.8s infinite",pointerEvents:"none",
+              }}/>}
+
+              {/* Confetti */}
+              {approved&&[...Array(3)].map((_,ci)=>(
+                <span key={ci} style={{
+                  position:"absolute",top:0,
+                  left:`${30+ci*30}%`,
+                  fontSize:14,
+                  animation:`mb-confetti 2s ${ci*0.3}s infinite ease-out`,
+                  pointerEvents:"none",zIndex:10,
+                }}>{["✨","⭐","🎉"][ci]}</span>
+              ))}
+
+              {/* Hexagon node */}
+              <div style={{
+                position:"relative",width:100,height:100,margin:"0 auto",
+                background:approved
+                  ?`radial-gradient(circle at 30% 30%,${T.ok}ee,${T.ok}66)`
+                  :active
+                  ?`radial-gradient(circle at 30% 30%,${T.orange}ee,${T.orange}66)`
+                  :pending
+                  ?`radial-gradient(circle at 30% 30%,${T.pl}ee,${T.pl}66)`
+                  :rejected
+                  ?`radial-gradient(circle at 30% 30%,${T.err}ee,${T.err}66)`
+                  :`radial-gradient(circle at 30% 30%,${theme.c}66,${theme.c}22)`,
+                clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+                boxShadow:active
+                  ?`0 0 30px ${T.orange}cc,0 0 60px ${T.orange}66`
+                  :approved
+                  ?`0 6px 22px ${T.ok}99`
+                  :pending
+                  ?`0 6px 22px ${T.pl}77`
+                  :`0 4px 16px ${theme.c}55`,
+              }}>
+                {/* Inner hex */}
+                <div style={{
+                  position:"absolute",inset:6,
+                  background:approved?T.ok:active?T.orange:pending?T.pl:rejected?T.err:T.dark,
+                  clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+                }}/>
+                {/* Inner content */}
+                <div style={{
+                  position:"absolute",inset:9,
+                  background:`radial-gradient(circle at 40% 30%,${T.card},#0a0518)`,
+                  clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                }}>
+                  <TaskImage taskId={t.id} type="gorsel" size={64} fallbackEmoji={t.img} style={{borderRadius:"50%",width:64,height:64,objectFit:"cover"}}/>
+                </div>
+
+                {/* Number badge */}
+                <div style={{
+                  position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",
+                  width:32,height:32,borderRadius:"50%",
+                  background:`linear-gradient(135deg,${theme.c},${theme.c}88)`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:13,fontWeight:900,color:"#fff",
+                  border:`2px solid ${T.bg}`,
+                  boxShadow:`0 2px 10px ${theme.c}aa`,
+                  textShadow:"0 1px 2px #0008",zIndex:2,
+                }}>{t.id}</div>
+
+                {/* Status pip */}
+                {approved&&<div style={{
+                  position:"absolute",bottom:-4,right:-2,
+                  width:30,height:30,borderRadius:"50%",
+                  background:`radial-gradient(circle,${T.ok},#22a55a)`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:16,color:"#fff",fontWeight:900,
+                  boxShadow:`0 0 12px ${T.ok}cc`,
+                  border:`2px solid ${T.bg}`,
+                  animation:"mb-popin .5s",zIndex:3,
+                }}>✓</div>}
+                {active&&<div style={{
+                  position:"absolute",bottom:-4,right:-2,
+                  width:30,height:30,borderRadius:"50%",
+                  background:`linear-gradient(135deg,${T.orange},${T.od})`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:14,color:"#fff",
+                  boxShadow:`0 0 14px ${T.orange}cc`,
+                  border:`2px solid ${T.bg}`,
+                  animation:"mb-bounce 1.5s infinite",zIndex:3,
+                }}>▶</div>}
+                {pending&&<div style={{
+                  position:"absolute",bottom:-4,right:-2,
+                  width:30,height:30,borderRadius:"50%",
+                  background:`linear-gradient(135deg,${T.pl},${T.purple})`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:14,color:"#fff",
+                  border:`2px solid ${T.bg}`,zIndex:3,
+                }}>⏳</div>}
+                {rejected&&<div style={{
+                  position:"absolute",bottom:-4,right:-2,
+                  width:30,height:30,borderRadius:"50%",
+                  background:T.err,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:14,color:"#fff",
+                  border:`2px solid ${T.bg}`,zIndex:3,
+                }}>↻</div>}
+
+                {/* Lock overlay */}
+                {locked&&<div style={{
+                  position:"absolute",inset:0,
+                  background:"#0a0518cc",
+                  clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                }}>
+                  <span style={{fontSize:30,filter:"grayscale(.5)"}}>🔒</span>
+                </div>}
+              </div>
+
+              {/* Task info card below */}
+              <div style={{
+                marginTop:14,textAlign:"center",
+                padding:"8px 6px",borderRadius:10,
+                background:`${T.card}cc`,
+                border:`1px solid ${active?T.orange:approved?T.ok:T.border}66`,
+                backdropFilter:"blur(8px)",
+              }}>
+                <div style={{
+                  fontSize:12,fontWeight:800,color:locked?T.tm:T.tp,
+                  lineHeight:1.2,
+                  whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",
+                  marginBottom:4,
+                }}>{t.title}</div>
+
+                {/* Difficulty pill + XP */}
+                <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4,flexWrap:"wrap"}}>
+                  <span style={{
+                    fontSize:9,padding:"2px 7px",borderRadius:8,
+                    background:diff.bg,color:diff.c,
+                    fontWeight:900,letterSpacing:.5,
+                    border:`1px solid ${diff.c}55`,
+                  }}>{diff.l}</span>
+                  <span style={{
+                    fontSize:10,padding:"2px 7px",borderRadius:8,
+                    background:`${T.warn}22`,color:T.warn,
+                    fontWeight:900,
+                    border:`1px solid ${T.warn}44`,
+                  }}>⚡{t.xp}</span>
+                </div>
+
+                {dur&&<div style={{fontSize:9,color:T.ok,marginTop:3,fontWeight:700}}>⏱ {dur}</div>}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* START FLAG */}
+        <div style={{
+          position:"absolute",
+          left:`${PAD_X-50}px`,
+          top:`${positions[0].y-30}px`,
+          fontSize:50,
+          animation:"mb-bob 2s infinite",
+          pointerEvents:"none",
+        }}>🏁</div>
+
+        {/* FINISH TROPHY */}
+        <div style={{
+          position:"absolute",
+          left:`${positions[positions.length-1].x+40}px`,
+          top:`${positions[positions.length-1].y-30}px`,
+          fontSize:60,
+          animation:cnt===36?"mb-bounce 1s infinite":"mb-bob 3s infinite",
+          filter:cnt===36?`drop-shadow(0 0 20px ${T.warn})`:"grayscale(.4)",
+          pointerEvents:"none",
+        }}>🏆</div>
+      </div>
+    </div>
+
+    {/* ═══ MAP NAVIGATOR — mini overview ═══ */}
+    <div style={{
+      marginTop:14,padding:14,borderRadius:14,
+      background:T.card,border:`1px solid ${T.border}`,
+    }}>
+      <div style={{fontSize:11,color:T.tm,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>📍 Hızlı Atlama</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        {zones.map((z,i)=>{
+          const ct=TASKS.filter(t=>t.cat===z.cat);
+          const cd=ct.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
+          const done=cd===ct.length;
+          return(
+            <button key={i} onClick={()=>{
+              if(mapRef.current)mapRef.current.scrollTo({left:Math.max(0,z.startX-100),behavior:"smooth"});
+            }} style={{
+              padding:"6px 12px",borderRadius:10,
+              border:`2px solid ${z.theme.c}55`,
+              background:`${z.theme.c}15`,color:z.theme.c,
+              cursor:"pointer",fontSize:12,fontWeight:700,
+              display:"flex",alignItems:"center",gap:6,
+            }}>
+              <span>{z.theme.icon}</span>
+              <span>{z.cat}</span>
+              <span style={{fontSize:10,opacity:.8}}>{cd}/{ct.length}</span>
+              {done&&<span>✓</span>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* ═══ FINAL TROPHY BANNER ═══ */}
     {cnt===36&&<div style={{
-      textAlign:"center",padding:36,marginBottom:20,
+      marginTop:16,textAlign:"center",padding:30,
       borderRadius:24,
       background:`linear-gradient(135deg,${T.warn}44,${T.orange}44,${T.pl}33)`,
       border:`4px solid ${T.warn}aa`,
-      animation:"glow-mb 2s infinite",
-      "--gc":T.warn,
     }}>
-      <div style={{fontSize:96,animation:"float-mb 3s ease-in-out infinite"}}>🏆</div>
-      <div style={{fontSize:32,fontWeight:900,color:T.warn,marginTop:10,letterSpacing:2,textShadow:`0 0 20px ${T.warn}`}}>BERRYBOT MASTER!</div>
-      <div style={{fontSize:15,color:T.tp,marginTop:6}}>Tüm 36 görevi tamamladın. Sen bir robotik efsanesin! 🤖✨</div>
+      <div style={{fontSize:80,animation:"mb-float 3s ease-in-out infinite"}}>🏆</div>
+      <div style={{fontSize:28,fontWeight:900,color:T.warn,marginTop:8,letterSpacing:2,textShadow:`0 0 20px ${T.warn}`}}>BERRYBOT MASTER!</div>
+      <div style={{fontSize:14,color:T.tp,marginTop:4}}>Tüm 36 görevi tamamladın. Sen bir robotik efsanesin! 🤖✨</div>
     </div>}
   </div>);
 }
