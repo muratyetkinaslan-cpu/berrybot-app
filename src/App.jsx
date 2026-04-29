@@ -378,45 +378,47 @@ function LoginPage({onLogin}){
           }}>
             {/* Robotistan */}
             <div style={{
-              display:"flex",flexDirection:"column",alignItems:"center",gap:4,
+              display:"flex",flexDirection:"column",alignItems:"center",gap:6,
               animation:"logo-float 3s infinite ease-in-out",
             }}>
               <div style={{
-                width:48,height:48,borderRadius:12,
-                background:`linear-gradient(135deg,#ff6b35,#c0392b)`,
+                height:56,width:120,
+                background:"#fff",borderRadius:10,padding:8,
                 display:"flex",alignItems:"center",justifyContent:"center",
-                fontSize:22,boxShadow:"0 4px 12px #ff6b3555",
-              }}>🤖</div>
-              <div style={{fontSize:11,fontWeight:700,color:"#ff8855"}}>Robotistan</div>
+                boxShadow:"0 4px 12px #00000055",
+              }}>
+                <img src="/logos/robotistan.png" alt="Robotistan" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>
+              </div>
             </div>
 
             {/* RoboGPT */}
             <div style={{
-              display:"flex",flexDirection:"column",alignItems:"center",gap:4,
+              display:"flex",flexDirection:"column",alignItems:"center",gap:6,
               animation:"logo-float 3s infinite ease-in-out .4s",
             }}>
               <div style={{
-                width:48,height:48,borderRadius:12,
-                background:`linear-gradient(135deg,${T.orange},${T.od})`,
+                height:56,width:120,
+                background:"#fff",borderRadius:10,padding:8,
                 display:"flex",alignItems:"center",justifyContent:"center",
-                fontSize:18,fontWeight:900,color:"#fff",
-                boxShadow:`0 4px 12px ${T.orange}66`,
-              }}>RG</div>
-              <div style={{fontSize:11,fontWeight:700,color:T.ol}}>RoboGPT</div>
+                boxShadow:"0 4px 12px #00000055",
+              }}>
+                <img src="/logos/robogpt.png" alt="RoboGPT" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>
+              </div>
             </div>
 
             {/* PicoBricks */}
             <div style={{
-              display:"flex",flexDirection:"column",alignItems:"center",gap:4,
+              display:"flex",flexDirection:"column",alignItems:"center",gap:6,
               animation:"logo-float 3s infinite ease-in-out .8s",
             }}>
               <div style={{
-                width:48,height:48,borderRadius:12,
-                background:`linear-gradient(135deg,${T.pl},${T.purple})`,
+                height:56,width:120,
+                background:"#fff",borderRadius:10,padding:8,
                 display:"flex",alignItems:"center",justifyContent:"center",
-                fontSize:22,boxShadow:`0 4px 12px ${T.purple}66`,
-              }}>🧱</div>
-              <div style={{fontSize:11,fontWeight:700,color:T.pl}}>PicoBricks</div>
+                boxShadow:"0 4px 12px #00000055",
+              }}>
+                <img src="/logos/picobricks.png" alt="PicoBricks" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>
+              </div>
             </div>
           </div>
         </div>
