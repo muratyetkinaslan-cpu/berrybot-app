@@ -1,5 +1,3 @@
-
-
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = "https://byjxolgvqetwoxhcaemv.supabase.co";
@@ -10,7 +8,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 export async function loginUser(email, password) {
   const { data, error } = await supabase.from('bb_users').select('*').eq('email', email).eq('password', password).single();
   if (error || !data) return null;
-  const user = { ...data, instructorId: data.instructor_id, classId: data.class_id };
+  const user = { ...data, instructorId: data.instructor_id, classId: data.class_id, childId: data.child_id };
   if (user.role === 'student') {
     await supabase.from('bb_student_meta').update({ online: true, last_seen: Date.now() }).eq('student_id', user.id);
   }
@@ -20,7 +18,7 @@ export async function loginUser(email, password) {
 
 export async function getUsers() {
   const { data } = await supabase.from('bb_users').select('*').order('created_at');
-  return (data || []).map(u => ({ ...u, instructorId: u.instructor_id, classId: u.class_id }));
+  return (data || []).map(u => ({ ...u, instructorId: u.instructor_id, classId: u.class_id, childId: u.child_id }));
 }
 
 export async function createUser(userData) {
@@ -28,6 +26,7 @@ export async function createUser(userData) {
   const { data, error } = await supabase.from('bb_users').insert({
     id, name: userData.name, email: userData.email, password: userData.password,
     role: userData.role, instructor_id: userData.instructorId || null,
+    child_id: userData.childId || null,
     grup: userData.grup || 'Büyük',
   }).select().single();
   if (error) { console.error('createUser:', error); return null; }
@@ -221,6 +220,37 @@ export async function saveClassLayout(classId, layoutData) {
 
 export async function saveAllLayouts(layouts) {
   for (const l of layouts) await saveClassLayout(l.id, l);
+}
+
+// ═══ ADMIN: SET STUDENT PROGRESS ═══
+// Sets tasks 1..(fromTask-1) as approved, fromTask as active, rest as locked
+export async function setStudentProgressTo(studentId, fromTask) {
+  const now = Date.now();
+  const ts = new Date().toISOString();
+  
+  // 1. Set all tasks before fromTask as approved
+  if (fromTask > 1) {
+    await supabase.from('bb_progress')
+      .update({ status: 'approved', started_at: now - 300000, completed_at: now - 60000, approved_at: now, updated_at: ts })
+      .eq('student_id', studentId)
+      .gte('task_id', 1).lte('task_id', fromTask - 1);
+  }
+  
+  // 2. Set fromTask as active
+  await supabase.from('bb_progress')
+    .update({ status: 'active', started_at: null, completed_at: null, approved_at: null, instructor_note: null, photo: null, updated_at: ts })
+    .eq('student_id', studentId).eq('task_id', fromTask);
+  
+  // 3. Set all tasks after fromTask as locked
+  if (fromTask < 36) {
+    await supabase.from('bb_progress')
+      .update({ status: 'locked', started_at: null, completed_at: null, approved_at: null, instructor_note: null, photo: null, updated_at: ts })
+      .eq('student_id', studentId)
+      .gte('task_id', fromTask + 1).lte('task_id', 36);
+  }
+  
+  addLog({ type: 'admin_set_progress', userId: studentId, taskId: fromTask, detail: `Admin: Görev ${fromTask}'den devam ayarlandı (${fromTask-1} görev onaylandı)` });
+  console.log('🔧 setStudentProgressTo:', studentId, 'from task', fromTask);
 }
 
 // ═══ REALTIME ═══

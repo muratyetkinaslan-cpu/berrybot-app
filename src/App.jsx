@@ -7,7 +7,7 @@ import { useData, getLocalPhoto } from "./useData";
 //  Her klasöre: gorsel.jpg, cevap.jpg
 // ═══════════════════════════════════════════════════════════
 
-const ROLES = { ADMIN:"admin", INSTRUCTOR:"instructor", STUDENT:"student" };
+const ROLES = { ADMIN:"admin", INSTRUCTOR:"instructor", STUDENT:"student", PARENT:"parent" };
 const TS = { LOCKED:"locked", ACTIVE:"active", IN_PROGRESS:"in_progress", PENDING:"pending_review", APPROVED:"approved", REJECTED:"rejected" };
 const SL = { locked:"Kilitli", active:"Aktif", in_progress:"Devam Ediyor", pending_review:"Onay Bekliyor", approved:"Onaylandı", rejected:"Reddedildi" };
 const T = { bg:"#1a1035", card:"#231845", input:"#15102a", dark:"#110d20", purple:"#6B3FA0", pl:"#9b6fd0", pd:"#4a2670", orange:"#F5922A", ol:"#ffb347", od:"#c96f10", border:"#3a2860", tp:"#f0e8ff", ts:"#a090c0", tm:"#6b5a90", ok:"#4ade80", err:"#f87171", warn:"#fbbf24", cyan:"#22d3ee" };
@@ -67,44 +67,44 @@ const WOOD = {
   border: "#5C4010", headerBg: "#6B4F12", text: "#F5E6C8", textDim: "#C4A868",
 };
 
-// ─── 36 TASKS ───
+// ─── 36 TASKS — kazanımlar (learnings) velilerin görmesi için ───
 const TASKS=[
-  {id:1,title:"RGB LED Yakma",cat:"RGB LED",diff:1,xp:10,img:"💡",desc:"Kırmızı, Yeşil, Mavi LED'leri ayrı ayrı yak.",answer:"Doğru blok: set_rgb(255,0,0)"},
-  {id:2,title:"LED Renk Karışımı",cat:"RGB LED",diff:1,xp:10,img:"🌈",desc:"İki rengi karıştırarak yeni renk elde et.",answer:"set_rgb(255,255,0) → sarı"},
-  {id:3,title:"LED Yanıp Sönme",cat:"RGB LED",diff:2,xp:15,img:"✨",desc:"LED'i 1 saniye aralıkla yanıp söndür.",answer:"while true: set_rgb → wait(1) → off → wait(1)"},
-  {id:4,title:"Gökkuşağı Efekti",cat:"RGB LED",diff:2,xp:15,img:"🌈",desc:"Sırayla 7 rengi göster.",answer:"7 renk döngüsü"},
-  {id:5,title:"SOS Sinyali",cat:"RGB LED",diff:3,xp:20,img:"🆘",desc:"Mors koduyla SOS sinyali gönder.",answer:"3 kısa, 3 uzun, 3 kısa"},
-  {id:6,title:"Nefes Alan LED",cat:"RGB LED",diff:3,xp:20,img:"💫",desc:"LED parlaklığını yavaşça artır azalt.",answer:"for loop ile PWM"},
-  {id:7,title:"Motor İleri Geri",cat:"Motor",diff:2,xp:15,img:"⚙️",desc:"Motoru ileri ve geri hareket ettir.",answer:"motor.forward() / motor.backward()"},
-  {id:8,title:"Hız Kontrolü",cat:"Motor",diff:2,xp:15,img:"🏎️",desc:"Motor hızını kademeli artır.",answer:"speed değişkeni ile PWM"},
-  {id:9,title:"Kare Çizme",cat:"Motor",diff:3,xp:25,img:"◻️",desc:"Robotla kare şekli çiz.",answer:"4x ileri+90° dönüş"},
-  {id:10,title:"Buzzer Melodisi",cat:"Sensör+LED+Buzzer",diff:1,xp:10,img:"🔔",desc:"Buzzer ile basit melodi çal.",answer:"tone(freq, dur)"},
-  {id:11,title:"Işık Sensörü Okuma",cat:"Sensör+LED+Buzzer",diff:2,xp:15,img:"☀️",desc:"Işık sensöründen değer oku ve göster.",answer:"light = ldr.read()"},
-  {id:12,title:"Sıcaklık Alarmı",cat:"Sensör+LED+Buzzer",diff:2,xp:15,img:"🌡️",desc:"Sıcaklık eşik değeri geçince alarm ver.",answer:"if temp > 30: buzzer.on()"},
-  {id:13,title:"Işık Takip Başlangıç",cat:"Işık Sensörü",diff:2,xp:15,img:"🔦",desc:"Işık kaynağına doğru dön.",answer:"LDR farkına göre motor yönlendir"},
-  {id:14,title:"Işık Yoğunluk Haritası",cat:"Işık Sensörü",diff:3,xp:20,img:"🗺️",desc:"Ortamdaki ışık dağılımını LED ile göster.",answer:"LDR oku → RGB map"},
-  {id:15,title:"IR Kumanda Okuma",cat:"IR Kumanda",diff:2,xp:15,img:"📡",desc:"IR kumandadan sinyal al ve göster.",answer:"ir.read() → serial"},
-  {id:16,title:"Kumanda ile LED",cat:"IR Kumanda",diff:2,xp:15,img:"🎮",desc:"Kumanda tuşlarıyla LED rengini değiştir.",answer:"if key==1: red, key==2: green"},
-  {id:17,title:"Kumanda ile Motor",cat:"IR Kumanda",diff:3,xp:25,img:"🕹️",desc:"Kumandayla robotu yönlendir.",answer:"key mapping → motor direction"},
-  {id:18,title:"Fonksiyon Tanımlama",cat:"Fonksiyon",diff:2,xp:15,img:"📦",desc:"Tekrarlayan işlemi fonksiyon yap.",answer:"def my_func(): ..."},
-  {id:19,title:"Mesafe Ölçme",cat:"Mesafe/Navigasyon",diff:2,xp:15,img:"📏",desc:"Ultrasonik sensörle mesafe ölç.",answer:"dist = ultrasonic.read()"},
-  {id:20,title:"Otonom Navigasyon",cat:"Mesafe/Navigasyon",diff:4,xp:30,img:"🧭",desc:"Engellere çarpmadan ilerle.",answer:"if dist < 20: turn()"},
-  {id:21,title:"Engel Algılama",cat:"Engel Algılama",diff:3,xp:20,img:"🚧",desc:"Önündeki engeli tespit et ve dur.",answer:"while dist > 15: forward()"},
-  {id:22,title:"Engelden Kaçınma",cat:"Engel Algılama",diff:4,xp:30,img:"🔀",desc:"Engel varsa etrafından dolaş.",answer:"detect → turn → check → forward"},
-  {id:23,title:"Çizgi Algılama",cat:"Çizgi Takip",diff:2,xp:15,img:"➖",desc:"Siyah çizgiyi sensörle algıla.",answer:"line = ir_sensor.read()"},
-  {id:24,title:"Çizgi Takip Basit",cat:"Çizgi Takip",diff:3,xp:25,img:"〰️",desc:"Basit çizgi takip robotu yap.",answer:"if left: turn_right, if right: turn_left"},
-  {id:25,title:"Kesişim Yönetimi",cat:"Çizgi Takip",diff:4,xp:30,img:"✖️",desc:"Çizgi kesişimlerinde doğru karar ver.",answer:"count intersections → decide"},
-  {id:26,title:"Hızlı Çizgi Takip",cat:"Çizgi Takip",diff:5,xp:40,img:"⚡",desc:"PID kontrolle hızlı çizgi takip.",answer:"PID: error*Kp + integral*Ki + derivative*Kd"},
-  {id:27,title:"Sumo Duruş",cat:"Sumo Robot",diff:2,xp:15,img:"🤼",desc:"Ring içinde kal, dışarı çıkma.",answer:"if edge: backward + turn"},
-  {id:28,title:"Rakip Bulma",cat:"Sumo Robot",diff:3,xp:25,img:"🔍",desc:"Ultrasonik ile rakibi bul.",answer:"scan 360° → closest target"},
-  {id:29,title:"Sumo Saldırı",cat:"Sumo Robot",diff:3,xp:25,img:"💥",desc:"Rakibi bul ve it.",answer:"detect → full speed forward"},
-  {id:30,title:"Sumo Strateji",cat:"Sumo Robot",diff:4,xp:35,img:"🧠",desc:"Savunma ve saldırı stratejisi.",answer:"state machine: search/attack/defend"},
-  {id:31,title:"Mini Sumo Turnuva",cat:"Sumo Robot",diff:4,xp:35,img:"🏆",desc:"Turnuva kurallarına uygun sumo robotu.",answer:"combine all sumo skills"},
-  {id:32,title:"Sumo Şampiyonu",cat:"Sumo Robot",diff:5,xp:50,img:"👑",desc:"En iyi sumo stratejisini geliştir.",answer:"adaptive strategy"},
-  {id:33,title:"Işık Kaynağı Bulma",cat:"Işık Takip",diff:3,xp:20,img:"💡",desc:"En parlak ışık kaynağına git.",answer:"compare LDRs → move toward max"},
-  {id:34,title:"Işıktan Kaçınma",cat:"Işık Takip",diff:3,xp:20,img:"🌑",desc:"Karanlık bölgeye git.",answer:"move toward min light"},
-  {id:35,title:"Işık Labirenti",cat:"Işık Takip",diff:4,xp:35,img:"🌟",desc:"Işık ipuçlarıyla labirentten çık.",answer:"follow light gradient"},
-  {id:36,title:"Final Projesi",cat:"Işık Takip",diff:5,xp:50,img:"🎓",desc:"Tüm becerileri birleştiren proje.",answer:"combined autonomous robot"},
+  {id:1,title:"RGB LED Yakma",cat:"RGB LED",diff:1,xp:10,img:"💡",desc:"Kırmızı, Yeşil, Mavi LED'leri ayrı ayrı yak.",answer:"Doğru blok: set_rgb(255,0,0)",learnings:["RGB renk sistemi","Pin çıkışı kontrolü","Temel blok kod yazımı"]},
+  {id:2,title:"LED Renk Karışımı",cat:"RGB LED",diff:1,xp:10,img:"🌈",desc:"İki rengi karıştırarak yeni renk elde et.",answer:"set_rgb(255,255,0) → sarı",learnings:["Renk karışımı (additive)","RGB değer kombinasyonları","Yaratıcı düşünme"]},
+  {id:3,title:"LED Yanıp Sönme",cat:"RGB LED",diff:2,xp:15,img:"✨",desc:"LED'i 1 saniye aralıkla yanıp söndür.",answer:"while true: set_rgb → wait(1) → off → wait(1)",learnings:["Sonsuz döngü kavramı","Zamanlama (delay)","Durum değişimi"]},
+  {id:4,title:"Gökkuşağı Efekti",cat:"RGB LED",diff:2,xp:15,img:"🌈",desc:"Sırayla 7 rengi göster.",answer:"7 renk döngüsü",learnings:["Sıralı işlem","Renk geçişleri","Animasyon mantığı"]},
+  {id:5,title:"SOS Sinyali",cat:"RGB LED",diff:3,xp:20,img:"🆘",desc:"Mors koduyla SOS sinyali gönder.",answer:"3 kısa, 3 uzun, 3 kısa",learnings:["Mors kodu","Desen tekrarı","Zamanlama hassasiyeti","İletişim sistemleri"]},
+  {id:6,title:"Nefes Alan LED",cat:"RGB LED",diff:3,xp:20,img:"💫",desc:"LED parlaklığını yavaşça artır azalt.",answer:"for loop ile PWM",learnings:["PWM (Pulse Width Modulation)","Yumuşak geçiş","Sayaç döngüleri"]},
+  {id:7,title:"Motor İleri Geri",cat:"Motor",diff:2,xp:15,img:"⚙️",desc:"Motoru ileri ve geri hareket ettir.",answer:"motor.forward() / motor.backward()",learnings:["DC motor kontrolü","Yön belirleme","Hareketin temel komutları"]},
+  {id:8,title:"Hız Kontrolü",cat:"Motor",diff:2,xp:15,img:"🏎️",desc:"Motor hızını kademeli artır.",answer:"speed değişkeni ile PWM",learnings:["Değişken kullanımı","Kademeli kontrol","PWM ile hız ayarı"]},
+  {id:9,title:"Kare Çizme",cat:"Motor",diff:3,xp:25,img:"◻️",desc:"Robotla kare şekli çiz.",answer:"4x ileri+90° dönüş",learnings:["Geometri (kare)","Döngü ile tekrar","Açı kavramı (90°)","Adım adım planlama"]},
+  {id:10,title:"Buzzer Melodisi",cat:"Sensör+LED+Buzzer",diff:1,xp:10,img:"🔔",desc:"Buzzer ile basit melodi çal.",answer:"tone(freq, dur)",learnings:["Frekans ve ses","Müzik notası mantığı","Süre kontrolü"]},
+  {id:11,title:"Işık Sensörü Okuma",cat:"Sensör+LED+Buzzer",diff:2,xp:15,img:"☀️",desc:"Işık sensöründen değer oku ve göster.",answer:"light = ldr.read()",learnings:["Sensör verisi okuma","Analog değerler","LDR çalışma prensibi"]},
+  {id:12,title:"Sıcaklık Alarmı",cat:"Sensör+LED+Buzzer",diff:2,xp:15,img:"🌡️",desc:"Sıcaklık eşik değeri geçince alarm ver.",answer:"if temp > 30: buzzer.on()",learnings:["Koşullu ifadeler (if)","Eşik değer","Sensör + aktüatör birleştirme"]},
+  {id:13,title:"Işık Takip Başlangıç",cat:"Işık Sensörü",diff:2,xp:15,img:"🔦",desc:"Işık kaynağına doğru dön.",answer:"LDR farkına göre motor yönlendir",learnings:["İki sensör karşılaştırma","Yönlendirme algoritması","Tepkisel davranış"]},
+  {id:14,title:"Işık Yoğunluk Haritası",cat:"Işık Sensörü",diff:3,xp:20,img:"🗺️",desc:"Ortamdaki ışık dağılımını LED ile göster.",answer:"LDR oku → RGB map",learnings:["Veri görselleştirme","Aralık eşleştirme (map)","Çoklu sensör"]},
+  {id:15,title:"IR Kumanda Okuma",cat:"IR Kumanda",diff:2,xp:15,img:"📡",desc:"IR kumandadan sinyal al ve göster.",answer:"ir.read() → serial",learnings:["Kızılötesi iletişim","Tuş kodları","Seri port debug"]},
+  {id:16,title:"Kumanda ile LED",cat:"IR Kumanda",diff:2,xp:15,img:"🎮",desc:"Kumanda tuşlarıyla LED rengini değiştir.",answer:"if key==1: red, key==2: green",learnings:["Çoklu koşul (if/elif)","Kullanıcı girdisi","Etkileşimli sistem"]},
+  {id:17,title:"Kumanda ile Motor",cat:"IR Kumanda",diff:3,xp:25,img:"🕹️",desc:"Kumandayla robotu yönlendir.",answer:"key mapping → motor direction",learnings:["Uzaktan kumanda mantığı","Tuş eşleme","Gerçek zamanlı kontrol"]},
+  {id:18,title:"Fonksiyon Tanımlama",cat:"Fonksiyon",diff:2,xp:15,img:"📦",desc:"Tekrarlayan işlemi fonksiyon yap.",answer:"def my_func(): ...",learnings:["Fonksiyon kavramı","Kod tekrarını önleme","Modüler programlama"]},
+  {id:19,title:"Mesafe Ölçme",cat:"Mesafe/Navigasyon",diff:2,xp:15,img:"📏",desc:"Ultrasonik sensörle mesafe ölç.",answer:"dist = ultrasonic.read()",learnings:["Ultrasonik dalgalar","Mesafe hesaplama","Birim dönüşümleri (cm)"]},
+  {id:20,title:"Otonom Navigasyon",cat:"Mesafe/Navigasyon",diff:4,xp:30,img:"🧭",desc:"Engellere çarpmadan ilerle.",answer:"if dist < 20: turn()",learnings:["Otonom karar verme","Sensör entegrasyonu","Reaktif robotik","Güvenlik mesafesi"]},
+  {id:21,title:"Engel Algılama",cat:"Engel Algılama",diff:3,xp:20,img:"🚧",desc:"Önündeki engeli tespit et ve dur.",answer:"while dist > 15: forward()",learnings:["While döngüsü","Sürekli kontrol","Acil durdurma"]},
+  {id:22,title:"Engelden Kaçınma",cat:"Engel Algılama",diff:4,xp:30,img:"🔀",desc:"Engel varsa etrafından dolaş.",answer:"detect → turn → check → forward",learnings:["Çok adımlı strateji","Algılama-eylem döngüsü","Problem çözme"]},
+  {id:23,title:"Çizgi Algılama",cat:"Çizgi Takip",diff:2,xp:15,img:"➖",desc:"Siyah çizgiyi sensörle algıla.",answer:"line = ir_sensor.read()",learnings:["Yansıma sensörleri","Siyah/beyaz ayrımı","İkili veri (binary)"]},
+  {id:24,title:"Çizgi Takip Basit",cat:"Çizgi Takip",diff:3,xp:25,img:"〰️",desc:"Basit çizgi takip robotu yap.",answer:"if left: turn_right, if right: turn_left",learnings:["Bang-bang kontrol","Çizgi takip algoritması","Sensör konumlandırma"]},
+  {id:25,title:"Kesişim Yönetimi",cat:"Çizgi Takip",diff:4,xp:30,img:"✖️",desc:"Çizgi kesişimlerinde doğru karar ver.",answer:"count intersections → decide",learnings:["Sayaç değişkeni","Karar mekanizması","Harita mantığı"]},
+  {id:26,title:"Hızlı Çizgi Takip",cat:"Çizgi Takip",diff:5,xp:40,img:"⚡",desc:"PID kontrolle hızlı çizgi takip.",answer:"PID: error*Kp + integral*Ki + derivative*Kd",learnings:["PID kontrol algoritması","Hata düzeltme","İleri matematik kullanımı","Optimizasyon"]},
+  {id:27,title:"Sumo Duruş",cat:"Sumo Robot",diff:2,xp:15,img:"🤼",desc:"Ring içinde kal, dışarı çıkma.",answer:"if edge: backward + turn",learnings:["Sınır algılama","Savunma davranışı","Acil tepki"]},
+  {id:28,title:"Rakip Bulma",cat:"Sumo Robot",diff:3,xp:25,img:"🔍",desc:"Ultrasonik ile rakibi bul.",answer:"scan 360° → closest target",learnings:["Tarama (scanning)","Hedef takibi","Mesafe karşılaştırma"]},
+  {id:29,title:"Sumo Saldırı",cat:"Sumo Robot",diff:3,xp:25,img:"💥",desc:"Rakibi bul ve it.",answer:"detect → full speed forward",learnings:["Hedef kilitleme","Maksimum güç kullanımı","Rekabetçi strateji"]},
+  {id:30,title:"Sumo Strateji",cat:"Sumo Robot",diff:4,xp:35,img:"🧠",desc:"Savunma ve saldırı stratejisi.",answer:"state machine: search/attack/defend",learnings:["Durum makinesi","Stratejik düşünme","Çoklu mod yönetimi","Yapay zeka temelleri"]},
+  {id:31,title:"Mini Sumo Turnuva",cat:"Sumo Robot",diff:4,xp:35,img:"🏆",desc:"Turnuva kurallarına uygun sumo robotu.",answer:"combine all sumo skills",learnings:["Kural odaklı tasarım","Tüm becerileri birleştirme","Rekabet hazırlığı"]},
+  {id:32,title:"Sumo Şampiyonu",cat:"Sumo Robot",diff:5,xp:50,img:"👑",desc:"En iyi sumo stratejisini geliştir.",answer:"adaptive strategy",learnings:["Adaptif algoritma","Rakip analizi","Yapay zeka davranışı","İleri robotik"]},
+  {id:33,title:"Işık Kaynağı Bulma",cat:"Işık Takip",diff:3,xp:20,img:"💡",desc:"En parlak ışık kaynağına git.",answer:"compare LDRs → move toward max",learnings:["Maksimum bulma","Gradyan takibi","Çoklu sensör birleşimi"]},
+  {id:34,title:"Işıktan Kaçınma",cat:"Işık Takip",diff:3,xp:20,img:"🌑",desc:"Karanlık bölgeye git.",answer:"move toward min light",learnings:["Minimum bulma","Negatif fototaksis","Davranış değiştirme"]},
+  {id:35,title:"Işık Labirenti",cat:"Işık Takip",diff:4,xp:35,img:"🌟",desc:"Işık ipuçlarıyla labirentten çık.",answer:"follow light gradient",learnings:["Labirent çözme","İpucu takibi","Karmaşık navigasyon"]},
+  {id:36,title:"Final Projesi",cat:"Işık Takip",diff:5,xp:50,img:"🎓",desc:"Tüm becerileri birleştiren proje.",answer:"combined autonomous robot",learnings:["Sistem entegrasyonu","Proje tasarımı","Sunum becerileri","Otonom robot"]},
 ];
 
 // ─── LEVELS ───
@@ -177,8 +177,9 @@ export default function App() {
         <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{color:T.orange,display:"flex",alignItems:"center",gap:6}}><I.Bot/><b style={{fontSize:22}}>BerryBot</b></span><span style={{fontSize:12,background:T.purple,color:"#fff",padding:"3px 10px",borderRadius:6,fontWeight:700}}>LMS</span></div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
           {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf Düzeni</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit Log</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
-          {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay Bekleyenler</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görev+Cevap</NBtn></>}
+          {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay Bekleyenler</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Günlük Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görev+Cevap</NBtn></>}
           {user.role===ROLES.STUDENT&&<NBtn a={page==="dash"} o={()=>nav("dash")}>Görevlerim</NBtn>}
+          {user.role===ROLES.PARENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>👨‍👩‍👧 Çocuğum</NBtn><NBtn a={page==="cv"} o={()=>nav("cv")}>📜 CV Çıkar</NBtn></>}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           {user.role===ROLES.STUDENT&&<span style={{fontSize:15,padding:"5px 14px",borderRadius:8,background:T.orange+"22",color:T.ol,fontWeight:700}}>{getLevel(getXP(user.id)).icon} Lv.{getLevel(getXP(user.id)).lv} • {getXP(user.id)} XP</span>}
@@ -200,11 +201,16 @@ export default function App() {
         {user.role===ROLES.INSTRUCTOR&&page==="dash"&&<InstructorDash user={user} users={users} prog={prog} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="sdi"&&selS&&<StudentDetail s={selS} prog={prog} users={users} canReview onApprove={handleApprove} onReject={handleReject} onBack={()=>nav("dash")}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="pend"&&<PendingReviews user={user} users={users} prog={prog} onApprove={handleApprove} onReject={handleReject}/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="show"&&<DailyShow users={users} prog={prog} logs={logs} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="tasks"&&<TaskBrowser showAns/>}
 
         {/* ──── STUDENT ──── */}
         {user.role===ROLES.STUDENT&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)}/>}
         {user.role===ROLES.STUDENT&&selT&&<StudentTaskView user={user} task={selT} prog={prog} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
+
+        {/* ──── PARENT ──── */}
+        {user.role===ROLES.PARENT&&page==="dash"&&<ParentDashboard parent={user} users={users} prog={prog} classLayout={classLayout}/>}
+        {user.role===ROLES.PARENT&&page==="cv"&&<ParentCV parent={user} users={users} prog={prog}/>}
       </main>
     </div>
   );
@@ -939,6 +945,7 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
   const[showForm,setShowForm]=useState(false);
   const[name,setName]=useState("");const[email,setEmail]=useState("");const[pw,setPw]=useState("");
   const[role,setRole]=useState("student");const[grup,setGrup]=useState("Büyük");
+  const[childId,setChildId]=useState("");
   const[busy,setBusy]=useState(false);const[msg,setMsg]=useState(null);
   // Progress setter
   const[selStudent,setSelStudent]=useState(null);
@@ -948,10 +955,11 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
 
   const handleAdd=async()=>{
     if(!name.trim()||!email.trim()||!pw.trim()){setMsg("Tüm alanları doldur!");return;}
+    if(role==="parent"&&!childId){setMsg("Veli için çocuk seçmelisiniz!");return;}
     setBusy(true);setMsg(null);
-    const u=await onAddUser({name:name.trim(),email:email.trim(),password:pw.trim(),role,grup});
+    const u=await onAddUser({name:name.trim(),email:email.trim(),password:pw.trim(),role,grup,childId:role==="parent"?childId:null});
     setBusy(false);
-    if(u){setMsg("✓ Kullanıcı oluşturuldu!");setName("");setEmail("");setPw("");}
+    if(u){setMsg("✓ Kullanıcı oluşturuldu!");setName("");setEmail("");setPw("");setChildId("");}
     else setMsg("Hata! Email zaten kayıtlı olabilir.");
   };
 
@@ -966,6 +974,7 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
   const students=users.filter(u=>u.role==="student");
   const instructors=users.filter(u=>u.role==="instructor");
   const admins=users.filter(u=>u.role==="admin");
+  const parents=users.filter(u=>u.role==="parent");
 
   // Get current task for a student
   const getCurrentTask=(sid)=>{
@@ -992,10 +1001,14 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
         <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email" style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none"}}/>
         <input value={pw} onChange={e=>setPw(e.target.value)} placeholder="Şifre" style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none"}}/>
         <select value={role} onChange={e=>setRole(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none"}}>
-          <option value="student">Öğrenci</option><option value="instructor">Eğitmen</option>
+          <option value="student">Öğrenci</option><option value="instructor">Eğitmen</option><option value="parent">Veli</option>
         </select>
         {role==="student"&&<select value={grup} onChange={e=>setGrup(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none"}}>
           <option value="Büyük">Büyük</option><option value="Kids">Kids</option>
+        </select>}
+        {role==="parent"&&<select value={childId} onChange={e=>setChildId(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",gridColumn:"span 2"}}>
+          <option value="">Çocuk seç...</option>
+          {students.map(s=><option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
         </select>}
       </div>
       <div style={{display:"flex",gap:8,marginTop:10,alignItems:"center"}}>
@@ -1059,9 +1072,10 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
     </Card>
 
     {/* Stats */}
-    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
       <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.orange}}>{students.length}</div><div style={{fontSize:14,color:T.ts}}>Öğrenci</div></Card>
       <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.pl}}>{instructors.length}</div><div style={{fontSize:14,color:T.ts}}>Eğitmen</div></Card>
+      <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.cyan}}>{parents.length}</div><div style={{fontSize:14,color:T.ts}}>Veli</div></Card>
       <Card style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.ok}}>{admins.length}</div><div style={{fontSize:14,color:T.ts}}>Admin</div></Card>
     </div>
 
@@ -1094,5 +1108,346 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
         })}
       </div>
     </Card>
+  </div>);
+}
+
+
+// ═══════════════════════════════════════
+//  PARENT: DASHBOARD — kendi çocuğunun durumunu görür
+// ═══════════════════════════════════════
+function ParentDashboard({parent,users,prog,classLayout}){
+  const child=users.find(u=>u.id===parent.childId);
+  if(!child)return<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:16}}>Çocuk bilgisi bulunamadı. Admin'e başvurun.</div></Card>;
+
+  const sp=prog[child.id]||{};
+  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+  const xp=completed.reduce((a,t)=>a+t.xp,0);
+  const lv=getLevel(xp);
+  const nlv=getNextLevel(xp);
+  const pct=Math.round(completed.length/36*100);
+
+  // Total time
+  let totalMs=0;
+  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+
+  // Currently working on
+  const current=TASKS.find(t=>sp[t.id]?.status===TS.ACTIVE||sp[t.id]?.status===TS.IN_PROGRESS||sp[t.id]?.status===TS.PENDING);
+
+  // Allcategories with progress
+  const cats=[...new Set(TASKS.map(t=>t.cat))];
+
+  return(<div>
+    <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 4px"}}>👨‍👩‍👧 {child.name}</h1>
+    <div style={{fontSize:14,color:T.tm,marginBottom:16}}>Çocuğunuzun robotik eğitim ilerlemesi</div>
+
+    {/* HERO STATS */}
+    <Card style={{marginBottom:16,background:`linear-gradient(135deg,${T.purple}40,${T.orange}20)`,border:`1px solid ${T.orange}44`}}>
+      <div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+        <div style={{width:72,height:72,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,background:T.orange+"20",border:`3px solid ${T.orange}88`}}>{lv.icon}</div>
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{fontSize:24,fontWeight:800,color:T.orange}}>Level {lv.lv} — {lv.name}</div>
+          <div style={{fontSize:16,color:T.ol,fontWeight:700,marginTop:2}}>{xp} XP {nlv&&<span style={{fontSize:14,color:T.tm,fontWeight:400}}>• Sonraki: {nlv.icon} {nlv.name} ({nlv.min} XP)</span>}</div>
+          <div style={{width:"100%",height:12,borderRadius:6,background:T.border,overflow:"hidden",marginTop:8}}>
+            <div style={{height:"100%",borderRadius:6,background:`linear-gradient(90deg,${T.orange},${T.pl})`,width:`${nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100}%`}}/>
+          </div>
+        </div>
+        <div style={{textAlign:"center",minWidth:100}}>
+          <div style={{fontSize:32,fontWeight:800,color:T.orange}}>{completed.length}<span style={{fontSize:18,color:T.tm}}>/36</span></div>
+          <div style={{fontSize:12,color:T.tm}}>Tamamlanan</div>
+        </div>
+      </div>
+    </Card>
+
+    {/* QUICK STATS */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:16}}>
+      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.ok}}>{pct}%</div><div style={{fontSize:13,color:T.ts}}>İlerleme</div></Card>
+      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.cyan}}>{fd(totalMs)}</div><div style={{fontSize:13,color:T.ts}}>Toplam Süre</div></Card>
+      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.warn}}>{xp}</div><div style={{fontSize:13,color:T.ts}}>XP Puanı</div></Card>
+      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.pl}}>{lv.lv}</div><div style={{fontSize:13,color:T.ts}}>Level</div></Card>
+    </div>
+
+    {/* CURRENT TASK */}
+    {current&&<Card style={{marginBottom:16,borderColor:T.orange+"55"}}>
+      <div style={{fontSize:14,color:T.orange,fontWeight:700,marginBottom:6}}>🎯 Şu An Üzerinde Çalışıyor</div>
+      <div style={{display:"flex",alignItems:"center",gap:12}}>
+        <TaskImage taskId={current.id} type="gorsel" size={56} fallbackEmoji={current.img}/>
+        <div style={{flex:1}}>
+          <div style={{fontSize:17,fontWeight:700}}>#{current.id} {current.title}</div>
+          <div style={{fontSize:13,color:T.ts}}>{current.desc}</div>
+          <div style={{marginTop:4}}><Badge s={sp[current.id]?.status}/></div>
+        </div>
+      </div>
+    </Card>}
+
+    {/* COMPLETED TASKS WITH LEARNINGS */}
+    <div style={{fontSize:18,fontWeight:700,color:T.ol,marginBottom:10}}>✓ Tamamlanan Görevler & Kazanımlar ({completed.length})</div>
+    {completed.length===0?<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:14}}>Henüz tamamlanmış görev yok.</div></Card>:
+    cats.map(cat=>{
+      const ct=completed.filter(t=>t.cat===cat);
+      if(ct.length===0)return null;
+      return(<div key={cat} style={{marginBottom:16}}>
+        <div style={{fontSize:15,fontWeight:700,color:T.orange,padding:"4px 14px",background:T.orange+"15",borderRadius:8,display:"inline-block",marginBottom:8}}>{cat} ({ct.length})</div>
+        {ct.map(t=>{
+          const tp=sp[t.id];
+          const dur=(tp.startedAt&&tp.completedAt)?fd(tp.completedAt-tp.startedAt):null;
+          return(<Card key={t.id} style={{marginBottom:8,padding:14}}>
+            <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+              <TaskImage taskId={t.id} type="gorsel" size={48} fallbackEmoji={t.img}/>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                  <span style={{fontSize:15,fontWeight:700}}>#{t.id} {t.title}</span>
+                  <span style={{fontSize:12,padding:"2px 8px",borderRadius:5,background:T.ok+"20",color:T.ok,fontWeight:600}}>✓ Tamamlandı</span>
+                  {dur&&<span style={{fontSize:12,color:T.cyan}}>⏱ {dur}</span>}
+                  <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{t.xp} XP</span>
+                </div>
+                <div style={{fontSize:13,color:T.ts,marginBottom:6}}>{t.desc}</div>
+                {t.learnings&&t.learnings.length>0&&<div style={{marginTop:6}}>
+                  <div style={{fontSize:12,color:T.pl,fontWeight:700,marginBottom:4}}>📚 Kazanımlar:</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                    {t.learnings.map((lr,i)=><span key={i} style={{fontSize:12,padding:"3px 10px",borderRadius:5,background:T.purple+"22",color:T.pl,border:`1px solid ${T.purple}33`}}>{lr}</span>)}
+                  </div>
+                </div>}
+              </div>
+            </div>
+          </Card>);
+        })}
+      </div>);
+    })}
+  </div>);
+}
+
+// ═══════════════════════════════════════
+//  PARENT: CV EXPORT — RoboGPT referansıyla
+// ═══════════════════════════════════════
+function ParentCV({parent,users,prog}){
+  const child=users.find(u=>u.id===parent.childId);
+  if(!child)return<Card><div style={{padding:30,textAlign:"center",color:T.tm}}>Çocuk bilgisi bulunamadı.</div></Card>;
+
+  const sp=prog[child.id]||{};
+  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+  const xp=completed.reduce((a,t)=>a+t.xp,0);
+  const lv=getLevel(xp);
+  let totalMs=0;
+  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+
+  // All learnings deduped
+  const allLearnings=[...new Set(completed.flatMap(t=>t.learnings||[]))];
+  const cats=[...new Set(completed.map(t=>t.cat))];
+
+  const today=new Date().toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"});
+
+  const handlePrint=()=>{window.print();};
+
+  return(<div>
+    <style>{`
+      @media print {
+        nav, .no-print { display: none !important; }
+        body { background: #fff !important; color: #000 !important; }
+        .cv-container { background: #fff !important; color: #000 !important; box-shadow: none !important; padding: 30px !important; }
+        .cv-container * { color: #000 !important; }
+        .cv-container .cv-tag { background: #f0f0f0 !important; color: #333 !important; }
+        .cv-container .cv-purple { color: #6B3FA0 !important; }
+        .cv-container .cv-orange { color: #c96f10 !important; }
+      }
+    `}</style>
+
+    <div className="no-print" style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
+      <button onClick={handlePrint} style={{padding:"12px 24px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.orange},${T.od})`,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}}>🖨 Yazdır / PDF Olarak Kaydet</button>
+      <span style={{fontSize:13,color:T.tm,alignSelf:"center"}}>"Yazdır" deyince PDF olarak da kaydedebilirsin (Hedef: PDF olarak kaydet)</span>
+    </div>
+
+    {/* CV PRINTABLE */}
+    <div className="cv-container" style={{background:"#fff",color:"#1a1035",borderRadius:14,padding:36,fontFamily:"'Segoe UI',sans-serif",boxShadow:"0 8px 30px #0006"}}>
+      {/* HEADER */}
+      <div style={{borderBottom:`3px solid #6B3FA0`,paddingBottom:14,marginBottom:20,display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+        <div>
+          <h1 className="cv-purple" style={{margin:0,fontSize:30,fontWeight:800,color:"#6B3FA0"}}>{child.name}</h1>
+          <div style={{fontSize:15,color:"#555",marginTop:4}}>Robotik Eğitim Sertifikası</div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div className="cv-orange" style={{fontSize:22,fontWeight:800,color:"#c96f10"}}>🤖 RoboGPT</div>
+          <div style={{fontSize:12,color:"#555"}}>BerryBot Robotik Akademisi</div>
+          <div style={{fontSize:11,color:"#888",marginTop:2}}>{today}</div>
+        </div>
+      </div>
+
+      {/* SUMMARY */}
+      <div style={{marginBottom:20,padding:14,background:"#f5f0ff",borderRadius:10,border:"1px solid #e0d0ff"}}>
+        <div style={{fontSize:14,fontWeight:700,color:"#6B3FA0",marginBottom:6}}>📋 ÖZET</div>
+        <div style={{fontSize:14,lineHeight:1.7,color:"#333"}}>
+          {child.name}, RoboGPT BerryBot programında <b>{completed.length} robotik görevini başarıyla tamamlamıştır</b>. 
+          Toplamda <b>{xp} XP puan</b> kazanmış, <b>Level {lv.lv} - {lv.name}</b> seviyesine ulaşmıştır.
+          Bu süreçte <b>{cats.length} farklı kategoride</b> ({cats.join(", ")}) deneyim kazanmış,
+          eğitime toplam <b>{fd(totalMs)}</b> aktif zaman ayırmıştır.
+        </div>
+      </div>
+
+      {/* STATS */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
+        <div style={{padding:12,background:"#fff5e6",borderRadius:8,textAlign:"center",border:"1px solid #f5d99a"}}>
+          <div className="cv-orange" style={{fontSize:24,fontWeight:800,color:"#c96f10"}}>{completed.length}</div>
+          <div style={{fontSize:11,color:"#555"}}>Tamamlanan Görev</div>
+        </div>
+        <div style={{padding:12,background:"#fff5e6",borderRadius:8,textAlign:"center",border:"1px solid #f5d99a"}}>
+          <div className="cv-orange" style={{fontSize:24,fontWeight:800,color:"#c96f10"}}>{xp}</div>
+          <div style={{fontSize:11,color:"#555"}}>XP Puanı</div>
+        </div>
+        <div style={{padding:12,background:"#f5f0ff",borderRadius:8,textAlign:"center",border:"1px solid #d0c0ff"}}>
+          <div className="cv-purple" style={{fontSize:24,fontWeight:800,color:"#6B3FA0"}}>Lv.{lv.lv}</div>
+          <div style={{fontSize:11,color:"#555"}}>{lv.name}</div>
+        </div>
+        <div style={{padding:12,background:"#f0f8f0",borderRadius:8,textAlign:"center",border:"1px solid #c0e0c0"}}>
+          <div style={{fontSize:24,fontWeight:800,color:"#22a55a"}}>{fd(totalMs)}</div>
+          <div style={{fontSize:11,color:"#555"}}>Eğitim Süresi</div>
+        </div>
+      </div>
+
+      {/* COMPETENCIES */}
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:16,fontWeight:700,color:"#6B3FA0",marginBottom:10,paddingBottom:5,borderBottom:"2px solid #e0d0ff"}}>🎯 KAZANILAN YETKİNLİKLER</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+          {allLearnings.map((lr,i)=><span key={i} className="cv-tag" style={{fontSize:12,padding:"5px 12px",borderRadius:5,background:"#f5f0ff",color:"#5a3580",border:"1px solid #d0c0ff"}}>{lr}</span>)}
+        </div>
+      </div>
+
+      {/* COMPLETED TASKS */}
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:16,fontWeight:700,color:"#6B3FA0",marginBottom:10,paddingBottom:5,borderBottom:"2px solid #e0d0ff"}}>✓ TAMAMLANAN GÖREVLER ({completed.length}/36)</div>
+        {cats.map(cat=>{
+          const ct=completed.filter(t=>t.cat===cat);
+          if(ct.length===0)return null;
+          return(<div key={cat} style={{marginBottom:10}}>
+            <div className="cv-orange" style={{fontSize:13,fontWeight:700,color:"#c96f10",marginBottom:4}}>{cat}</div>
+            <div style={{paddingLeft:14}}>
+              {ct.map(t=><div key={t.id} style={{fontSize:13,marginBottom:3,color:"#333"}}>• #{t.id} {t.title} <span style={{color:"#888",fontSize:11}}>(+{t.xp} XP)</span></div>)}
+            </div>
+          </div>);
+        })}
+      </div>
+
+      {/* FOOTER */}
+      <div style={{marginTop:30,paddingTop:14,borderTop:"2px solid #e0d0ff",textAlign:"center"}}>
+        <div style={{fontSize:13,color:"#666",marginBottom:4}}>Bu sertifika <b>RoboGPT BerryBot Robotik Akademisi</b> tarafından düzenlenmiştir.</div>
+        <div style={{fontSize:11,color:"#999"}}>www.robogpt.com.tr • Doğrulama Kodu: BB-{child.id.toUpperCase()}-{Date.now().toString(36).toUpperCase()}</div>
+      </div>
+    </div>
+  </div>);
+}
+
+// ═══════════════════════════════════════
+//  INSTRUCTOR: DAILY SHOW — günlük özet
+// ═══════════════════════════════════════
+function DailyShow({users,prog,logs,onSel}){
+  const[selStudent,setSelStudent]=useState(null);
+  const[dayFilter,setDayFilter]=useState("today"); // today, week, all
+
+  const students=users.filter(u=>u.role===ROLES.STUDENT);
+  const now=Date.now();
+  const dayStart=new Date();dayStart.setHours(0,0,0,0);
+  const weekAgo=now-7*24*60*60*1000;
+
+  const isInRange=(ts)=>{
+    if(!ts)return false;
+    if(dayFilter==="today")return ts>=dayStart.getTime();
+    if(dayFilter==="week")return ts>=weekAgo;
+    return true;
+  };
+
+  // Today's active students
+  const activeStudents=students.map(s=>{
+    const sp=prog[s.id]||{};
+    const tasksInRange=TASKS.filter(t=>{
+      const tp=sp[t.id];
+      return tp&&(isInRange(tp.startedAt)||isInRange(tp.completedAt)||isInRange(tp.approvedAt));
+    });
+    const approved=tasksInRange.filter(t=>sp[t.id]?.status===TS.APPROVED);
+    const xpGained=approved.reduce((a,t)=>a+t.xp,0);
+    let totalMs=0;
+    tasksInRange.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+    return{student:s,tasks:tasksInRange,approved,xpGained,totalMs};
+  }).filter(x=>x.tasks.length>0).sort((a,b)=>b.xpGained-a.xpGained);
+
+  const detail=selStudent;
+  if(detail){
+    const sp=prog[detail.id]||{};
+    const allTasks=TASKS.filter(t=>{
+      const tp=sp[t.id];
+      return tp&&(isInRange(tp.startedAt)||isInRange(tp.completedAt)||isInRange(tp.approvedAt));
+    });
+    const totalLearnings=[...new Set(allTasks.filter(t=>sp[t.id]?.status===TS.APPROVED).flatMap(t=>t.learnings||[]))];
+    let totalMs=0;
+    allTasks.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+
+    return(<div>
+      <button onClick={()=>setSelStudent(null)} style={{fontSize:14,padding:"6px 14px",borderRadius:8,background:T.border,color:T.ts,border:"none",cursor:"pointer",marginBottom:14}}>← Geri</button>
+      <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 4px"}}>📊 {detail.name}</h1>
+      <div style={{fontSize:14,color:T.tm,marginBottom:14}}>{dayFilter==="today"?"Bugün":dayFilter==="week"?"Son 7 Gün":"Tüm Zaman"} özeti</div>
+
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
+        <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.ok}}>{allTasks.filter(t=>sp[t.id]?.status===TS.APPROVED).length}</div><div style={{fontSize:13,color:T.ts}}>Tamamlanan</div></Card>
+        <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.cyan}}>{fd(totalMs)}</div><div style={{fontSize:13,color:T.ts}}>Süre</div></Card>
+        <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.warn}}>{allTasks.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0)}</div><div style={{fontSize:13,color:T.ts}}>XP</div></Card>
+        <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.pl}}>{totalLearnings.length}</div><div style={{fontSize:13,color:T.ts}}>Kazanım</div></Card>
+      </div>
+
+      {totalLearnings.length>0&&<Card style={{marginBottom:14}}>
+        <div style={{fontSize:15,fontWeight:700,color:T.pl,marginBottom:8}}>🎯 Kazanılan Yetkinlikler</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+          {totalLearnings.map((lr,i)=><span key={i} style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.purple+"22",color:T.pl,border:`1px solid ${T.purple}44`}}>{lr}</span>)}
+        </div>
+      </Card>}
+
+      <div style={{fontSize:16,fontWeight:700,color:T.ol,marginBottom:8}}>📋 Görev Detayları ({allTasks.length})</div>
+      {allTasks.map(t=>{
+        const tp=sp[t.id];
+        const dur=(tp.startedAt&&tp.completedAt)?fd(tp.completedAt-tp.startedAt):null;
+        return(<Card key={t.id} style={{marginBottom:8,padding:12}}>
+          <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
+            <TaskImage taskId={t.id} type="gorsel" size={42} fallbackEmoji={t.img}/>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:3}}>
+                <span style={{fontSize:14,fontWeight:700}}>#{t.id} {t.title}</span>
+                <Badge s={tp.status}/>
+                {dur&&<span style={{fontSize:12,color:T.cyan}}>⏱ {dur}</span>}
+                <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{t.xp} XP</span>
+              </div>
+              <div style={{fontSize:11,color:T.tm}}>
+                {tp.startedAt&&`Başladı: ${ft(tp.startedAt)} `}
+                {tp.completedAt&&`• Bitti: ${ft(tp.completedAt)} `}
+                {tp.approvedAt&&`• Onay: ${ft(tp.approvedAt)}`}
+              </div>
+              {t.learnings&&tp.status===TS.APPROVED&&<div style={{marginTop:4,display:"flex",flexWrap:"wrap",gap:4}}>
+                {t.learnings.map((lr,i)=><span key={i} style={{fontSize:10,padding:"2px 7px",borderRadius:4,background:T.purple+"15",color:T.pl}}>{lr}</span>)}
+              </div>}
+            </div>
+          </div>
+        </Card>);
+      })}
+    </div>);
+  }
+
+  return(<div>
+    <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 14px"}}>📊 Günlük Show</h1>
+    <div style={{display:"flex",gap:6,marginBottom:14}}>
+      {[{k:"today",l:"Bugün"},{k:"week",l:"Son 7 Gün"},{k:"all",l:"Tüm Zaman"}].map(d=>
+        <button key={d.k} onClick={()=>setDayFilter(d.k)} style={{fontSize:13,padding:"7px 16px",borderRadius:8,border:dayFilter===d.k?`2px solid ${T.orange}`:`1px solid ${T.border}`,background:dayFilter===d.k?T.orange+"20":T.card,color:dayFilter===d.k?T.orange:T.ts,cursor:"pointer",fontWeight:dayFilter===d.k?700:400}}>{d.l}</button>
+      )}
+    </div>
+    {activeStudents.length===0?<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:15}}>Bu zaman aralığında aktivite yok.</div></Card>:
+    activeStudents.map(({student:s,tasks,approved,xpGained,totalMs})=>(
+      <Card key={s.id} style={{marginBottom:10,cursor:"pointer"}} >
+        <div onClick={()=>setSelStudent(s)} style={{display:"flex",alignItems:"center",gap:14}}>
+          <div style={{width:46,height:46,borderRadius:"50%",background:T.orange+"15",color:T.orange,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18,border:`2px solid ${T.orange}44`}}>{s.name[0]}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:16,fontWeight:700}}>{s.name}</div>
+            <div style={{fontSize:13,color:T.tm}}>{tasks.length} görev • {approved.length} tamamlandı • {fd(totalMs)} süre</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:18,fontWeight:800,color:T.warn}}>+{xpGained} XP</div>
+            <div style={{fontSize:11,color:T.tm}}>tıkla → detay</div>
+          </div>
+        </div>
+      </Card>
+    ))}
   </div>);
 }
