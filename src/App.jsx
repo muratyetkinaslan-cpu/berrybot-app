@@ -1167,47 +1167,68 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
   const[imgError,setImgError]=useState(false);
   const[photo,setPhoto]=useState(null);
   const[photoPreview,setPhotoPreview]=useState(null);
-  const[savedPhoto,setSavedPhoto]=useState(null); // loaded from IndexedDB
+  const[savedPhoto,setSavedPhoto]=useState(null);
   const tp=prog[user.id]?.[t.id]||{};
   const imgSrc=`/tasks/gorev_${t.id}/gorsel.jpg`;
   const hasHelp=prog[user.id]?.helpRequest;
 
-  // Load saved photo from IndexedDB
+  // Category theme matching MissionBoard
+  const catThemes={
+    "RGB LED":{c:"#ff6b9d",icon:"💡"},"Motor":{c:"#fbbf24",icon:"⚙️"},
+    "Sensör+LED+Buzzer":{c:"#22d3ee",icon:"📡"},"Işık Sensörü":{c:"#fde047",icon:"🔦"},
+    "IR Kumanda":{c:"#a78bfa",icon:"🎮"},"Fonksiyon":{c:"#f472b6",icon:"📦"},
+    "Mesafe/Navigasyon":{c:"#34d399",icon:"🧭"},"Engel Algılama":{c:"#fb7185",icon:"🚧"},
+    "Çizgi Takip":{c:"#60a5fa",icon:"〰️"},"Sumo Robot":{c:"#f87171",icon:"🤼"},
+    "Işık Takip":{c:"#facc15",icon:"🌟"},
+  };
+  const theme=catThemes[t.cat]||{c:T.orange,icon:"🎯"};
+
   useEffect(()=>{
     if(tp.photo){getLocalPhoto(user.id,t.id).then(p=>setSavedPhoto(p));}
   },[user.id,t.id,tp.photo]);
 
-  // Handle photo upload — compress to max 800px, JPEG 60% quality
   const handlePhotoUpload=(e)=>{
     const file=e.target.files?.[0];
     if(!file)return;
     const img=new Image();
     img.onload=()=>{
-      const MAX=800;
-      let w=img.width,h=img.height;
-      if(w>MAX||h>MAX){
-        if(w>h){h=Math.round(h*MAX/w);w=MAX;}
-        else{w=Math.round(w*MAX/h);h=MAX;}
-      }
+      const MAX=800;let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
       const canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
       const ctx=canvas.getContext('2d');
       ctx.drawImage(img,0,0,w,h);
       const compressed=canvas.toDataURL('image/jpeg',0.6);
-      setPhoto(compressed);
-      setPhotoPreview(compressed);
+      setPhoto(compressed);setPhotoPreview(compressed);
       URL.revokeObjectURL(img.src);
     };
     img.src=URL.createObjectURL(file);
   };
 
-  return(<div>
-    <button onClick={onBack} style={{fontSize:14,padding:"6px 14px",borderRadius:8,background:T.border,color:T.ts,border:"none",cursor:"pointer",marginBottom:12}}>← Görevlere Dön</button>
+  return(<div style={{position:"relative"}}>
+    <style>{`
+      @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes glowBox { 0%,100%{box-shadow:0 0 20px var(--tc)55,0 0 40px var(--tc)33} 50%{box-shadow:0 0 35px var(--tc)88,0 0 60px var(--tc)55} }
+      @keyframes pulseRing { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.5);opacity:0} }
+      @keyframes celebrate { 0%{transform:scale(0) rotate(0deg)} 50%{transform:scale(1.2) rotate(180deg)} 100%{transform:scale(1) rotate(360deg)} }
+      @keyframes confettiFall { 0%{transform:translateY(-100px) rotate(0deg);opacity:1} 100%{transform:translateY(400px) rotate(720deg);opacity:0} }
+      @keyframes shimmer-tv { 0%{background-position:-1000px 0} 100%{background-position:1000px 0} }
+      .stv-section{animation:fadeUp .4s ease-out backwards}
+    `}</style>
 
-    {/* FULLSCREEN IMAGE LIGHTBOX */}
+    {/* Top back button */}
+    <button onClick={onBack} style={{
+      fontSize:14,padding:"8px 18px",borderRadius:10,
+      background:`${theme.c}22`,color:theme.c,
+      border:`2px solid ${theme.c}44`,cursor:"pointer",
+      marginBottom:14,fontWeight:700,
+      display:"inline-flex",alignItems:"center",gap:6,
+    }}>← Görevlere Dön</button>
+
+    {/* Lightbox */}
     {imgZoom&&<div onClick={()=>setImgZoom(false)} style={{position:"fixed",inset:0,zIndex:100,background:"#000e",display:"flex",alignItems:"center",justifyContent:"center",cursor:"zoom-out",padding:20}}>
       <div style={{position:"relative",maxWidth:"90vw",maxHeight:"90vh"}}>
-        <img src={imgSrc} alt={`Görev ${t.id}`} style={{maxWidth:"90vw",maxHeight:"85vh",objectFit:"contain",borderRadius:12,border:`2px solid ${T.orange}44`}}/>
+        <img src={imgSrc} alt={`Görev ${t.id}`} style={{maxWidth:"90vw",maxHeight:"85vh",objectFit:"contain",borderRadius:12,border:`2px solid ${theme.c}44`}}/>
         <div style={{position:"absolute",top:-40,right:0,display:"flex",alignItems:"center",gap:8}}>
           <span style={{fontSize:14,color:T.ts}}>Görev #{t.id} — {t.title}</span>
           <button onClick={()=>setImgZoom(false)} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:8,color:T.tp,padding:"6px 14px",cursor:"pointer",fontSize:14}}>✕ Kapat</button>
@@ -1215,129 +1236,283 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
       </div>
     </div>}
 
-    {/* TASK HEADER WITH LARGE IMAGE */}
-    <Card style={{marginBottom:16,padding:0,overflow:"hidden"}}>
-      {!imgError ? (
-        <div onClick={()=>imgLoaded&&setImgZoom(true)} style={{width:"100%",height:240,background:T.dark,position:"relative",cursor:imgLoaded?"zoom-in":"default",overflow:"hidden"}}>
-          <img src={imgSrc} alt={`Görev ${t.id}`} onLoad={()=>setImgLoaded(true)} onError={()=>setImgError(true)}
-            style={{width:"100%",height:"100%",objectFit:"contain",background:T.dark,opacity:imgLoaded?1:0,transition:"opacity .3s"}}/>
-          {!imgLoaded&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}}>
-            <span style={{fontSize:56}}>{t.img}</span>
-            <span style={{fontSize:14,color:T.tm}}>Görsel yükleniyor...</span>
-          </div>}
-          {imgLoaded&&<div style={{position:"absolute",bottom:10,right:10,fontSize:12,color:T.ts,background:"#000a",padding:"4px 12px",borderRadius:8}}>🔍 Büyütmek için tıkla</div>}
-          <div style={{position:"absolute",top:10,left:10,fontSize:14,fontWeight:800,color:T.tp,background:"#000a",padding:"4px 12px",borderRadius:8}}>#{t.id}</div>
-        </div>
-      ) : (
-        <div style={{width:"100%",height:140,background:`linear-gradient(135deg,${T.purple}30,${T.dark})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6}}>
-          <span style={{fontSize:56}}>{t.img}</span>
-        </div>
-      )}
+    {/* ═══ HERO BANNER ═══ */}
+    <div className="stv-section" style={{
+      position:"relative",marginBottom:18,
+      borderRadius:20,padding:"22px 24px",overflow:"hidden",
+      background:`linear-gradient(135deg,${theme.c}33,${T.purple}33,#1a0a3a)`,
+      border:`3px solid ${theme.c}66`,
+      "--tc":theme.c,
+    }}>
+      {/* Decorative big icon backdrop */}
+      <div style={{position:"absolute",top:-30,right:-20,fontSize:200,opacity:.08,transform:"rotate(-15deg)",pointerEvents:"none"}}>{theme.icon}</div>
+      {/* Shimmer */}
+      <div style={{position:"absolute",inset:0,pointerEvents:"none",background:`linear-gradient(90deg,transparent 30%,${theme.c}22 50%,transparent 70%)`,backgroundSize:"200% 100%",animation:"shimmer-tv 4s infinite linear"}}/>
 
-      {/* TASK INFO — bigger fonts */}
-      <div style={{padding:18}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,flexWrap:"wrap"}}>
-          <span style={{fontSize:13,padding:"3px 10px",borderRadius:6,background:T.purple+"30",color:T.pl,fontWeight:600}}>{t.cat}</span>
-          <span style={{fontSize:14,color:T.tm}}>Görev #{t.id}</span>
-          <Stars n={t.diff}/>
-          <span style={{fontSize:14,color:T.warn,fontWeight:700}}>+{t.xp} XP</span>
-          <div style={{marginLeft:"auto"}}><Badge s={tp.status}/></div>
+      <div style={{position:"relative",display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+        {/* Mission number + icon */}
+        <div style={{position:"relative"}}>
+          <div style={{position:"absolute",inset:-4,borderRadius:"50%",border:`2px solid ${theme.c}88`,animation:"pulseRing 2s infinite",pointerEvents:"none"}}/>
+          <div style={{
+            width:74,height:74,borderRadius:"50%",
+            background:`radial-gradient(circle at 30% 30%,${theme.c}cc,${theme.c}55)`,
+            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            border:`3px solid ${theme.c}`,
+            boxShadow:`0 0 24px ${theme.c}88`,
+          }}>
+            <div style={{fontSize:26}}>{theme.icon}</div>
+            <div style={{fontSize:11,fontWeight:900,color:"#fff",marginTop:-2,textShadow:"0 1px 2px #0008"}}>#{t.id}</div>
+          </div>
         </div>
-        <h2 style={{margin:"0 0 8px",fontSize:22,fontWeight:800}}>{t.title}</h2>
-        <p style={{fontSize:16,color:T.ts,margin:0,lineHeight:1.7}}>{t.desc}</p>
+
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+            <span style={{fontSize:11,padding:"3px 10px",borderRadius:6,background:`${theme.c}33`,color:theme.c,fontWeight:800,letterSpacing:1,textTransform:"uppercase"}}>{t.cat}</span>
+            <Badge s={tp.status}/>
+          </div>
+          <h2 style={{margin:0,fontSize:24,fontWeight:900,color:T.tp,letterSpacing:.3,lineHeight:1.2}}>{t.title}</h2>
+        </div>
+
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{padding:"8px 14px",borderRadius:12,background:`linear-gradient(135deg,${T.warn}33,${T.warn}11)`,border:`2px solid ${T.warn}55`}}>
+            <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ÖDÜL</div>
+            <div style={{fontSize:18,fontWeight:900,color:T.warn,textAlign:"center"}}>⚡ {t.xp}</div>
+          </div>
+          <div style={{padding:"8px 14px",borderRadius:12,background:`${T.purple}22`,border:`2px solid ${T.purple}55`}}>
+            <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ZORLUK</div>
+            <div style={{fontSize:14,textAlign:"center"}}><Stars n={t.diff}/></div>
+          </div>
+        </div>
       </div>
-    </Card>
+    </div>
 
-    {/* ── ACTIVE: Start button ── */}
-    {tp.status===TS.ACTIVE&&<Card><div style={{textAlign:"center",padding:30}}>
-      <div style={{fontSize:56,marginBottom:12}}>🎯</div>
-      <div style={{fontSize:18,color:T.ts,marginBottom:16}}>Bu görevi başlatmaya hazır mısın?</div>
-      <button onClick={onStart} style={{padding:"14px 40px",borderRadius:14,border:"none",background:`linear-gradient(135deg,${T.orange},${T.od})`,color:"#fff",fontSize:20,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 20px ${T.orange}44`}}>🚀 Göreve Başla!</button>
-    </div></Card>}
+    {/* ═══ 2-COLUMN MAIN ═══ */}
+    <div style={{display:"grid",gridTemplateColumns:"minmax(0,1.1fr) minmax(0,1fr)",gap:14,alignItems:"start"}}>
 
-    {/* ── IN PROGRESS: Call instructor + Upload photo ── */}
-    {tp.status===TS.IN_PROGRESS&&<>
-      {/* CALL INSTRUCTOR */}
-      <Card style={{marginBottom:12,background:hasHelp?"#3a1520":T.card,border:hasHelp?`2px solid ${T.err}55`:undefined}}>
-        <div style={{textAlign:"center",padding:16}}>
-          {hasHelp ? (
-            <>
-              <div style={{fontSize:40,marginBottom:8,animation:"pulse 2s infinite"}}>🖐</div>
-              <div style={{fontSize:18,color:T.err,fontWeight:700}}>Eğitmen çağrıldı!</div>
-              <div style={{fontSize:14,color:T.ts,marginTop:4}}>Eğitmenin gelmesini bekle...</div>
-            </>
+      {/* ─── LEFT: Image + Learnings ─── */}
+      <div className="stv-section" style={{animationDelay:".1s"}}>
+
+        {/* TASK IMAGE */}
+        <div style={{
+          marginBottom:14,borderRadius:18,overflow:"hidden",
+          border:`2px solid ${theme.c}44`,
+          background:T.card,
+        }}>
+          {!imgError ? (
+            <div onClick={()=>imgLoaded&&setImgZoom(true)} style={{width:"100%",height:300,background:T.dark,position:"relative",cursor:imgLoaded?"zoom-in":"default",overflow:"hidden"}}>
+              <img src={imgSrc} alt={`Görev ${t.id}`} onLoad={()=>setImgLoaded(true)} onError={()=>setImgError(true)}
+                style={{width:"100%",height:"100%",objectFit:"contain",background:T.dark,opacity:imgLoaded?1:0,transition:"opacity .3s"}}/>
+              {!imgLoaded&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}}>
+                <span style={{fontSize:64}}>{t.img}</span>
+                <span style={{fontSize:13,color:T.tm}}>Görsel yükleniyor...</span>
+              </div>}
+              {imgLoaded&&<div style={{position:"absolute",bottom:10,right:10,fontSize:12,color:T.ts,background:"#000a",padding:"4px 12px",borderRadius:8,backdropFilter:"blur(4px)"}}>🔍 Büyütmek için tıkla</div>}
+            </div>
           ) : (
-            <>
-              <div style={{fontSize:18,color:T.ts,marginBottom:12}}>Görev üzerinde çalışıyorsun. Hazır olduğunda eğitmeni çağır!</div>
-              <button onClick={onHelp} style={{padding:"14px 32px",borderRadius:14,border:`3px solid ${T.err}66`,background:T.err+"15",color:T.err,cursor:"pointer",fontWeight:800,fontSize:18,display:"inline-flex",alignItems:"center",gap:8}}>
-                <I.Hand/> Eğitmeni Çağır
-              </button>
-            </>
+            <div style={{width:"100%",height:240,background:`linear-gradient(135deg,${theme.c}30,${T.dark})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}}>
+              <span style={{fontSize:84}}>{t.img}</span>
+              <span style={{fontSize:13,color:T.tm}}>Görev #{t.id}</span>
+            </div>
           )}
         </div>
-      </Card>
 
-      {/* UPLOAD PHOTO */}
-      <Card>
-        <div style={{fontSize:16,fontWeight:700,color:T.ts,marginBottom:6}}>📸 Görevi Tamamla</div>
-        <div style={{fontSize:14,color:T.tm,marginBottom:12}}>İstersen fotoğraf ekle, ya da direkt onaya gönder.</div>
+        {/* DESCRIPTION */}
+        <div style={{
+          marginBottom:14,padding:18,borderRadius:18,
+          background:T.card,border:`1px solid ${T.border}`,
+        }}>
+          <div style={{fontSize:11,color:theme.c,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>📋 Görev Açıklaması</div>
+          <p style={{fontSize:16,color:T.tp,margin:0,lineHeight:1.7}}>{t.desc}</p>
+        </div>
 
-        {/* Photo preview */}
-        {photoPreview&&<div style={{marginBottom:12,borderRadius:12,overflow:"hidden",border:`2px solid ${T.ok}44`,position:"relative"}}>
-          <img src={photoPreview} alt="Yüklenen fotoğraf" style={{width:"100%",maxHeight:300,objectFit:"contain",background:T.dark}}/>
-          <button onClick={()=>{setPhoto(null);setPhotoPreview(null);}} style={{position:"absolute",top:8,right:8,padding:"4px 12px",borderRadius:8,border:"none",background:"#000a",color:T.err,cursor:"pointer",fontSize:13,fontWeight:600}}>✕ Kaldır</button>
+        {/* LEARNINGS */}
+        {t.learnings&&t.learnings.length>0&&<div style={{
+          padding:18,borderRadius:18,
+          background:`linear-gradient(135deg,${T.purple}22,${T.card})`,
+          border:`1px solid ${T.purple}44`,
+        }}>
+          <div style={{fontSize:11,color:T.pl,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>📚 Bu Görevden Kazanımlar</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {t.learnings.map((lr,i)=>(
+              <div key={i} style={{
+                display:"flex",alignItems:"center",gap:10,
+                padding:"10px 14px",borderRadius:10,
+                background:`${T.purple}15`,
+                border:`1px solid ${T.purple}33`,
+              }}>
+                <div style={{
+                  width:28,height:28,borderRadius:"50%",
+                  background:`linear-gradient(135deg,${T.pl},${T.purple})`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:12,fontWeight:900,color:"#fff",flexShrink:0,
+                }}>{i+1}</div>
+                <span style={{fontSize:14,color:T.tp,fontWeight:600}}>{lr}</span>
+              </div>
+            ))}
+          </div>
+        </div>}
+      </div>
+
+      {/* ─── RIGHT: Action Panel ─── */}
+      <div className="stv-section" style={{animationDelay:".2s",position:"sticky",top:14}}>
+
+        {/* ACTIVE → Start Button */}
+        {tp.status===TS.ACTIVE&&<div style={{
+          padding:"30px 22px",borderRadius:20,textAlign:"center",
+          background:`linear-gradient(135deg,${theme.c}33,${T.purple}33,${T.card})`,
+          border:`3px solid ${theme.c}66`,
+          animation:"glowBox 3s infinite ease-in-out",
+          "--tc":theme.c,
+        }}>
+          <div style={{fontSize:64,marginBottom:10,animation:"celebrate 2s infinite"}}>🚀</div>
+          <div style={{fontSize:20,fontWeight:800,color:T.tp,marginBottom:4}}>Maceraya Hazır!</div>
+          <div style={{fontSize:14,color:T.ts,marginBottom:18}}>Bu görevi başlatmaya hazır mısın?</div>
+          <button onClick={onStart} style={{
+            padding:"16px 38px",borderRadius:14,border:"none",
+            background:`linear-gradient(135deg,${theme.c},${theme.c}cc)`,
+            color:"#fff",fontSize:18,fontWeight:900,cursor:"pointer",
+            boxShadow:`0 6px 24px ${theme.c}88`,
+            letterSpacing:1,textTransform:"uppercase",
+            transition:"transform .15s",
+          }} onMouseDown={e=>e.currentTarget.style.transform="scale(.96)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>
+            🎯 Göreve Başla
+          </button>
         </div>}
 
-        {/* File input — accepts images, also camera on mobile */}
-        <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center"}}>
-          <label style={{padding:"12px 24px",borderRadius:12,border:`2px dashed ${T.orange}55`,background:T.orange+"10",color:T.orange,cursor:"pointer",fontWeight:700,fontSize:16,display:"inline-flex",alignItems:"center",gap:8}}>
-            📷 Fotoğraf Seç (İsteğe Bağlı)
-            <input type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} style={{display:"none"}}/>
-          </label>
-        </div>
+        {/* IN PROGRESS → Help + Submit */}
+        {tp.status===TS.IN_PROGRESS&&<>
+          <div style={{
+            marginBottom:14,padding:"20px",borderRadius:18,
+            background:hasHelp?`linear-gradient(135deg,${T.err}33,${T.warn}22,#3a1520)`:`linear-gradient(135deg,${theme.c}22,${T.card})`,
+            border:`2px solid ${hasHelp?T.err:theme.c}55`,
+            textAlign:"center",
+          }}>
+            {hasHelp?(<>
+              <div style={{fontSize:48,marginBottom:8,animation:"celebrate 2s infinite"}}>🖐</div>
+              <div style={{fontSize:18,color:T.err,fontWeight:800}}>Eğitmen çağrıldı!</div>
+              <div style={{fontSize:13,color:T.ts,marginTop:4}}>Eğitmenin gelmesini bekle</div>
+            </>):(<>
+              <div style={{fontSize:42,marginBottom:6}}>👨‍🏫</div>
+              <div style={{fontSize:14,color:T.ts,marginBottom:12,fontWeight:600}}>Yardıma ihtiyacın var mı?</div>
+              <button onClick={onHelp} style={{
+                padding:"12px 28px",borderRadius:12,
+                border:`3px solid ${T.err}66`,background:T.err+"15",color:T.err,
+                cursor:"pointer",fontWeight:800,fontSize:15,
+                display:"inline-flex",alignItems:"center",gap:6,
+              }}>🖐 Eğitmeni Çağır</button>
+            </>)}
+          </div>
 
-        {/* Submit buttons */}
-        <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginTop:14}}>
-          {photo&&<button onClick={()=>onSubmit(photo)} style={{padding:"14px 28px",borderRadius:12,border:"none",background:`linear-gradient(135deg,${T.ok},#22a55a)`,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:8,boxShadow:`0 4px 16px ${T.ok}44`}}>
-            ✓ Fotoğrafla Gönder
-          </button>}
-          <button onClick={()=>onSubmit(null)} style={{padding:"14px 28px",borderRadius:12,border:"none",background:`linear-gradient(135deg,${T.pl},${T.purple})`,color:"#fff",fontSize:16,fontWeight:800,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:8,boxShadow:`0 4px 16px ${T.pl}44`}}>
-            ✓ Onaya Gönder {photo?"":"(Fotoğrafsız)"}
-          </button>
-        </div>
+          <div style={{padding:"20px",borderRadius:18,background:T.card,border:`2px solid ${theme.c}55`}}>
+            <div style={{fontSize:11,color:theme.c,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>📸 Görevi Tamamla</div>
+            <div style={{fontSize:13,color:T.tm,marginBottom:14}}>İstersen fotoğraf ekle, ya da direkt onaya gönder.</div>
 
-        <div style={{fontSize:12,color:T.tm,marginTop:10,display:"flex",alignItems:"center",gap:6}}>
-          <I.Clock/> Başlangıç: {ft(tp.startedAt)}
-        </div>
-      </Card>
-    </>}
+            {photoPreview&&<div style={{marginBottom:12,borderRadius:12,overflow:"hidden",border:`2px solid ${T.ok}55`,position:"relative"}}>
+              <img src={photoPreview} alt="Yüklenen" style={{width:"100%",maxHeight:220,objectFit:"contain",background:T.dark,display:"block"}}/>
+              <button onClick={()=>{setPhoto(null);setPhotoPreview(null);}} style={{position:"absolute",top:8,right:8,padding:"4px 12px",borderRadius:8,border:"none",background:"#000c",color:T.err,cursor:"pointer",fontSize:13,fontWeight:700}}>✕ Kaldır</button>
+            </div>}
 
-    {/* ── PENDING ── */}
-    {tp.status===TS.PENDING&&<Card><div style={{textAlign:"center",padding:30}}>
-      <div style={{fontSize:48}}>⏳</div>
-      <div style={{fontSize:20,color:T.pl,marginTop:10,fontWeight:700}}>Eğitmen onayı bekleniyor...</div>
-      <div style={{fontSize:14,color:T.tm,marginTop:6}}>Eğitmenin incelemesini bekle.</div>
-      {tp.photo&&savedPhoto&&<div style={{marginTop:14,borderRadius:12,overflow:"hidden",border:`1px solid ${T.border}`,display:"inline-block"}}><img src={savedPhoto} alt="Gönderilen" style={{maxWidth:300,maxHeight:200,objectFit:"contain",background:T.dark}}/></div>}
-      {tp.photo&&!savedPhoto&&<div style={{marginTop:10,fontSize:13,color:T.ok}}>📸 Fotoğraf bu cihazda kayıtlı</div>}
-    </div></Card>}
+            <label style={{
+              display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+              padding:"14px 20px",borderRadius:12,
+              border:`2px dashed ${theme.c}66`,
+              background:`${theme.c}10`,color:theme.c,cursor:"pointer",
+              fontWeight:700,fontSize:15,marginBottom:12,
+            }}>
+              📷 Fotoğraf Seç (İsteğe Bağlı)
+              <input type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} style={{display:"none"}}/>
+            </label>
 
-    {/* ── APPROVED ── */}
-    {tp.status===TS.APPROVED&&<Card><div style={{textAlign:"center",padding:30}}>
-      <div style={{fontSize:56}}>🎉</div>
-      <div style={{fontSize:24,color:T.ok,fontWeight:800,marginTop:8}}>+{t.xp} XP Kazandın!</div>
-      <div style={{fontSize:16,color:T.ts,marginTop:4}}>Harika iş çıkardın!</div>
-      {tp.instructorNote&&<div style={{fontSize:15,padding:"8px 20px",borderRadius:10,background:"#1a4a2e",color:"#86efac",marginTop:10,display:"inline-block"}}>"{tp.instructorNote}"</div>}
-    </div></Card>}
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {photo&&<button onClick={()=>onSubmit(photo)} style={{
+                padding:"14px 22px",borderRadius:12,border:"none",
+                background:`linear-gradient(135deg,${T.ok},#22a55a)`,color:"#fff",
+                fontSize:16,fontWeight:900,cursor:"pointer",
+                boxShadow:`0 4px 16px ${T.ok}55`,
+                display:"flex",alignItems:"center",justifyContent:"center",gap:8,
+              }}>✓ Fotoğrafla Onaya Gönder</button>}
+              <button onClick={()=>onSubmit(null)} style={{
+                padding:"14px 22px",borderRadius:12,border:"none",
+                background:`linear-gradient(135deg,${T.pl},${T.purple})`,color:"#fff",
+                fontSize:15,fontWeight:800,cursor:"pointer",
+                boxShadow:`0 4px 16px ${T.pl}44`,
+                display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+              }}>✓ {photo?"Onaya Gönder":"Fotoğrafsız Onaya Gönder"}</button>
+            </div>
 
-    {/* ── REJECTED ── */}
-    {tp.status===TS.REJECTED&&<Card><div style={{textAlign:"center",padding:30}}>
-      <div style={{fontSize:48}}>🔄</div>
-      <div style={{fontSize:18,color:T.err,marginTop:6,fontWeight:700}}>Tekrar dene!</div>
-      {tp.instructorNote&&<div style={{fontSize:15,padding:"8px 20px",borderRadius:10,background:"#5c1a1a",color:"#fca5a5",marginTop:8,display:"inline-block"}}>"{tp.instructorNote}"</div>}
-      <div><button onClick={onResub} style={{marginTop:14,padding:"12px 28px",borderRadius:12,border:"none",background:T.warn,color:T.dark,fontSize:16,fontWeight:800,cursor:"pointer"}}>🔄 Tekrar Dene</button></div>
-    </div></Card>}
+            <div style={{fontSize:11,color:T.tm,marginTop:12,display:"flex",alignItems:"center",gap:5}}>
+              <I.Clock/> Başlangıç: {ft(tp.startedAt)}
+            </div>
+          </div>
+        </>}
+
+        {/* PENDING */}
+        {tp.status===TS.PENDING&&<div style={{
+          padding:"28px 22px",borderRadius:20,textAlign:"center",
+          background:`linear-gradient(135deg,${T.pl}33,${T.purple}33,${T.card})`,
+          border:`3px solid ${T.pl}66`,
+        }}>
+          <div style={{fontSize:60,marginBottom:8,animation:"celebrate 3s infinite"}}>⏳</div>
+          <div style={{fontSize:20,color:T.pl,fontWeight:800}}>Onay Bekleniyor</div>
+          <div style={{fontSize:14,color:T.ts,marginTop:6}}>Eğitmenin görevi inceliyor...</div>
+          {tp.photo&&savedPhoto&&<div style={{marginTop:14,borderRadius:12,overflow:"hidden",border:`2px solid ${T.pl}44`,display:"inline-block"}}>
+            <img src={savedPhoto} alt="Gönderilen" style={{maxWidth:"100%",maxHeight:200,objectFit:"contain",background:T.dark,display:"block"}}/>
+          </div>}
+          {tp.photo&&!savedPhoto&&<div style={{marginTop:10,fontSize:13,color:T.ok,fontWeight:600}}>📸 Fotoğraf bu cihazda kayıtlı</div>}
+        </div>}
+
+        {/* APPROVED — celebration */}
+        {tp.status===TS.APPROVED&&<div style={{
+          position:"relative",overflow:"hidden",
+          padding:"32px 24px",borderRadius:20,textAlign:"center",
+          background:`linear-gradient(135deg,${T.ok}33,${T.warn}22,${T.card})`,
+          border:`3px solid ${T.ok}88`,
+          boxShadow:`0 8px 30px ${T.ok}44`,
+        }}>
+          {/* Confetti */}
+          {[...Array(12)].map((_,i)=>(
+            <span key={i} style={{
+              position:"absolute",
+              left:`${(i*9)%100}%`,top:0,
+              fontSize:`${14+(i%3)*4}px`,
+              animation:`confettiFall ${2.5+(i%4)*.5}s ${(i*0.2)%2}s infinite linear`,
+            }}>{["🎉","✨","⭐","🎊","💫"][i%5]}</span>
+          ))}
+
+          <div style={{position:"relative",fontSize:72,marginBottom:6,animation:"celebrate 2s infinite"}}>🏆</div>
+          <div style={{position:"relative",fontSize:28,color:T.ok,fontWeight:900,marginTop:4,textShadow:`0 0 20px ${T.ok}88`}}>+{t.xp} XP</div>
+          <div style={{position:"relative",fontSize:18,color:T.tp,marginTop:4,fontWeight:700}}>Harika İş!</div>
+          <div style={{position:"relative",fontSize:14,color:T.ts,marginTop:4}}>Bu görevi başarıyla tamamladın</div>
+          {tp.instructorNote&&<div style={{position:"relative",fontSize:14,padding:"10px 18px",borderRadius:10,background:`${T.ok}22`,color:"#86efac",marginTop:14,border:`1px solid ${T.ok}55`,fontStyle:"italic"}}>
+            💬 "{tp.instructorNote}"
+          </div>}
+        </div>}
+
+        {/* REJECTED */}
+        {tp.status===TS.REJECTED&&<div style={{
+          padding:"28px 22px",borderRadius:20,textAlign:"center",
+          background:`linear-gradient(135deg,${T.err}33,#3a1520)`,
+          border:`3px solid ${T.err}66`,
+        }}>
+          <div style={{fontSize:56,marginBottom:8}}>🔄</div>
+          <div style={{fontSize:20,color:T.err,fontWeight:800}}>Tekrar Dene!</div>
+          <div style={{fontSize:13,color:T.ts,marginTop:4}}>Eğitmen geri bildirim bıraktı</div>
+          {tp.instructorNote&&<div style={{fontSize:14,padding:"10px 18px",borderRadius:10,background:`${T.err}22`,color:"#fca5a5",marginTop:12,border:`1px solid ${T.err}44`,fontStyle:"italic"}}>
+            💬 "{tp.instructorNote}"
+          </div>}
+          <button onClick={onResub} style={{
+            marginTop:16,padding:"12px 28px",borderRadius:12,border:"none",
+            background:`linear-gradient(135deg,${T.warn},${T.orange})`,
+            color:"#fff",fontSize:16,fontWeight:900,cursor:"pointer",
+            boxShadow:`0 4px 16px ${T.warn}66`,
+          }}>🔄 Tekrar Dene</button>
+        </div>}
+
+      </div>
+    </div>
   </div>);
 }
+
 
 // ═══════════════════════════════════════
 //  INSTRUCTOR DASHBOARD
