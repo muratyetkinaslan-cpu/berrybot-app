@@ -109,7 +109,18 @@ const TASKS=[
 ];
 
 // ─── LEVELS ───
-const LEVELS=[{lv:1,name:"Çaylak",min:0,icon:"🥚"},{lv:2,name:"Başlangıç",min:30,icon:"🐣"},{lv:3,name:"Keşifçi",min:80,icon:"🔍"},{lv:4,name:"Geliştirici",min:150,icon:"🔧"},{lv:5,name:"Mühendis",min:250,icon:"⚙️"},{lv:6,name:"Uzman",min:370,icon:"🏅"},{lv:7,name:"Usta",min:500,icon:"🎖️"},{lv:8,name:"Profesör",min:640,icon:"🎓"},{lv:9,name:"Efsane",min:770,icon:"🌟"},{lv:10,name:"BerryBot Master",min:900,icon:"👑"}];
+const LEVELS=[
+  {lv:1,name:"Çaylak Mühendis",min:0,icon:"🔩",color:"#94a3b8"},
+  {lv:2,name:"Robot Çırağı",min:30,icon:"🤖",color:"#22d3ee"},
+  {lv:3,name:"Devre Kâşifi",min:80,icon:"⚡",color:"#facc15"},
+  {lv:4,name:"Sensör Ustası",min:150,icon:"📡",color:"#34d399"},
+  {lv:5,name:"Motor Mühendisi",min:250,icon:"⚙️",color:"#fb923c"},
+  {lv:6,name:"Otomasyon Uzmanı",min:370,icon:"🦾",color:"#a78bfa"},
+  {lv:7,name:"AI Pilotu",min:500,icon:"🚁",color:"#f472b6"},
+  {lv:8,name:"Robot Mimarı",min:640,icon:"🤖",color:"#60a5fa"},
+  {lv:9,name:"Robotik Efsanesi",min:770,icon:"🛸",color:"#fbbf24"},
+  {lv:10,name:"BerryBot Master",min:900,icon:"👑",color:"#ff6b9d"},
+];
 const getLevel=(xp)=>{let l=LEVELS[0];for(const lv of LEVELS)if(xp>=lv.min)l=lv;return l;};
 const getNextLevel=(xp)=>{const cur=getLevel(xp);const idx=LEVELS.indexOf(cur);return idx<LEVELS.length-1?LEVELS[idx+1]:null;};
 
@@ -695,6 +706,7 @@ function AdminClassroom({users,prog,classLayout,saveLayout,onClearHelp,onSel}){
 // ═══════════════════════════════════════
 //  STUDENT: MISSION BOARD (GAME STYLE)
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════
 function MissionBoard({user,prog,onSel,onHelp}){
   const sp=prog[user.id]||{};
   const xp=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
@@ -704,128 +716,137 @@ function MissionBoard({user,prog,onSel,onHelp}){
   const lvProgress=nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100;
   const hasHelp=prog[user.id]?.helpRequest;
 
-  // Category color palette
-  const catColors={
-    "RGB LED":"#ff6b9d","Motor":"#fbbf24","Sensör+LED+Buzzer":"#22d3ee",
-    "Işık Sensörü":"#fde047","IR Kumanda":"#a78bfa","Fonksiyon":"#f472b6",
-    "Mesafe/Navigasyon":"#34d399","Engel Algılama":"#fb7185","Çizgi Takip":"#60a5fa",
-    "Sumo Robot":"#f87171","Işık Takip":"#facc15"
+  // ═══ Kategori temaları (renk + ikon + arka plan dekoru) ═══
+  const catThemes={
+    "RGB LED":{c:"#ff6b9d",bg:"#3a1a3a",icon:"💡",deco:["🌈","✨","💫"]},
+    "Motor":{c:"#fbbf24",bg:"#3a2a0a",icon:"⚙️",deco:["🏎️","🚗","🔄"]},
+    "Sensör+LED+Buzzer":{c:"#22d3ee",bg:"#0a2a3a",icon:"📡",deco:["🔔","🌡️","☀️"]},
+    "Işık Sensörü":{c:"#fde047",bg:"#3a2a0a",icon:"🔦",deco:["☀️","💡","🌞"]},
+    "IR Kumanda":{c:"#a78bfa",bg:"#1a0a3a",icon:"🎮",deco:["📡","🕹️","📶"]},
+    "Fonksiyon":{c:"#f472b6",bg:"#3a0a2a",icon:"📦",deco:["💻","⚡","🔧"]},
+    "Mesafe/Navigasyon":{c:"#34d399",bg:"#0a3a2a",icon:"🧭",deco:["🗺️","📏","🚀"]},
+    "Engel Algılama":{c:"#fb7185",bg:"#3a0a1a",icon:"🚧",deco:["🚦","⚠️","🛑"]},
+    "Çizgi Takip":{c:"#60a5fa",bg:"#0a1a3a",icon:"〰️",deco:["➡️","🛤️","🎯"]},
+    "Sumo Robot":{c:"#f87171",bg:"#3a0a0a",icon:"🤼",deco:["💥","🏆","🥋"]},
+    "Işık Takip":{c:"#facc15",bg:"#2a2a0a",icon:"🌟",deco:["💫","🌠","✨"]},
   };
 
   return(<div style={{position:"relative"}}>
-    {/* Inject animations */}
     <style>{`
-      @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-      @keyframes glow { 0%,100%{box-shadow:0 0 12px ${T.orange}99,0 0 24px ${T.orange}55} 50%{box-shadow:0 0 24px ${T.orange}cc,0 0 48px ${T.orange}88} }
-      @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-      @keyframes shine { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-      @keyframes bounce { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-4px) scale(1.05)} }
-      @keyframes confetti { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(-40px) rotate(360deg);opacity:0} }
-      @keyframes shimmer { 0%{background-position:-1000px 0} 100%{background-position:1000px 0} }
-      @keyframes popin { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
-      @keyframes path-draw { from{stroke-dashoffset:1000} to{stroke-dashoffset:0} }
-      @keyframes stars-twinkle { 0%,100%{opacity:.4} 50%{opacity:1} }
-      @keyframes ring-pulse { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.6);opacity:0} }
-      .mission-node:hover { transform: translateY(-4px) scale(1.04); transition: all .3s; }
-      .mission-locked:hover { transform: none; }
-      .star-bg { position:absolute; pointer-events:none; animation:stars-twinkle 3s infinite; }
+      @keyframes float-mb { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+      @keyframes glow-mb { 0%,100%{box-shadow:0 0 20px var(--gc,#ff8800)aa,0 0 40px var(--gc,#ff8800)55} 50%{box-shadow:0 0 35px var(--gc,#ff8800)ee,0 0 60px var(--gc,#ff8800)88} }
+      @keyframes spin-mb { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+      @keyframes shine-mb { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+      @keyframes bounce-mb { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-6px) scale(1.08)} }
+      @keyframes confetti-mb { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(-50px) rotate(360deg);opacity:0} }
+      @keyframes shimmer-mb { 0%{background-position:-1000px 0} 100%{background-position:1000px 0} }
+      @keyframes popin-mb { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+      @keyframes path-flow { 0%{stroke-dashoffset:40} 100%{stroke-dashoffset:0} }
+      @keyframes ring-pulse-mb { 0%{transform:scale(1);opacity:.8} 100%{transform:scale(1.8);opacity:0} }
+      @keyframes deco-drift { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(8px,-8px) rotate(8deg)} }
+      @keyframes star-twinkle { 0%,100%{opacity:.2;transform:scale(.9)} 50%{opacity:1;transform:scale(1.1)} }
+      .map-node{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+      .map-node:hover{transform:scale(1.08) translateY(-4px)}
+      .map-locked:hover{transform:none}
     `}</style>
 
-    {/* Decorative star background */}
+    {/* ═══ STARFIELD BACKGROUND ═══ */}
     <div style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none",zIndex:0}}>
-      {[...Array(20)].map((_,i)=>(
-        <div key={i} className="star-bg" style={{
+      {[...Array(40)].map((_,i)=>(
+        <div key={i} style={{
+          position:"absolute",
           left:`${(i*7)%100}%`,top:`${(i*13)%100}%`,
-          fontSize:`${8+(i%3)*4}px`,
-          animationDelay:`${(i*0.2)%3}s`,
-          color:i%3===0?T.orange:i%3===1?T.pl:T.cyan,
-        }}>✦</div>
+          fontSize:`${6+(i%4)*3}px`,
+          animation:`star-twinkle ${2+(i%4)}s infinite`,
+          animationDelay:`${(i*0.15)%4}s`,
+          color:i%5===0?"#fbbf24":i%5===1?"#a78bfa":i%5===2?"#22d3ee":i%5===3?"#f472b6":"#fff",
+        }}>{i%4===0?"✦":"·"}</div>
       ))}
     </div>
 
-    {/* ═══ HERO LEVEL CARD — Premium ═══ */}
+    {/* ═══ HERO LEVEL CARD ═══ */}
     <div style={{
-      position:"relative",zIndex:1,
-      marginBottom:24,
-      borderRadius:20,
-      padding:24,
-      background:`linear-gradient(135deg,${T.purple}66,${T.orange}33,#1a0a3a)`,
-      border:`2px solid ${T.orange}66`,
-      boxShadow:`0 8px 40px ${T.purple}55,inset 0 1px 0 #ffffff22`,
+      position:"relative",zIndex:1,marginBottom:24,
+      borderRadius:24,padding:24,
+      background:`linear-gradient(135deg,${lv.color}33,${T.purple}66,#1a0a3a)`,
+      border:`3px solid ${lv.color}88`,
+      boxShadow:`0 8px 50px ${lv.color}55,inset 0 1px 0 #ffffff22`,
       overflow:"hidden",
+      "--gc":lv.color,
     }}>
+      {/* Background robot icons - decorative */}
+      <div style={{position:"absolute",top:-20,right:-10,fontSize:140,opacity:.06,transform:"rotate(-15deg)",pointerEvents:"none"}}>🤖</div>
+      <div style={{position:"absolute",bottom:-30,left:-10,fontSize:120,opacity:.05,transform:"rotate(15deg)",pointerEvents:"none"}}>🦾</div>
+
       {/* Shimmer overlay */}
       <div style={{
         position:"absolute",inset:0,pointerEvents:"none",
-        background:`linear-gradient(90deg,transparent 30%,${T.orange}22 50%,transparent 70%)`,
-        backgroundSize:"200% 100%",
-        animation:"shimmer 4s infinite linear",
+        background:`linear-gradient(90deg,transparent 30%,${lv.color}22 50%,transparent 70%)`,
+        backgroundSize:"200% 100%",animation:"shimmer-mb 4s infinite linear",
       }}/>
 
-      <div style={{position:"relative",display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
-        {/* Animated avatar */}
+      <div style={{position:"relative",display:"flex",alignItems:"center",gap:22,flexWrap:"wrap"}}>
+        {/* Level badge with double pulse ring */}
         <div style={{position:"relative"}}>
+          <div style={{position:"absolute",inset:-8,borderRadius:"50%",border:`3px solid ${lv.color}aa`,animation:"ring-pulse-mb 2s infinite"}}/>
+          <div style={{position:"absolute",inset:-4,borderRadius:"50%",border:`2px solid ${lv.color}66`,animation:"ring-pulse-mb 2.5s infinite",animationDelay:".5s"}}/>
           <div style={{
-            position:"absolute",inset:-8,borderRadius:"50%",
-            border:`3px solid ${T.orange}88`,
-            animation:"ring-pulse 2s infinite",
-          }}/>
-          <div style={{
-            width:88,height:88,borderRadius:"50%",
+            width:96,height:96,borderRadius:"50%",
             display:"flex",alignItems:"center",justifyContent:"center",
-            fontSize:44,
-            background:`radial-gradient(circle,${T.orange}55,${T.purple}77)`,
-            border:`4px solid ${T.orange}`,
-            boxShadow:`0 0 20px ${T.orange}88,inset 0 0 20px ${T.orange}33`,
-            animation:"float 3s ease-in-out infinite",
+            fontSize:48,
+            background:`radial-gradient(circle at 30% 30%,${lv.color}aa,${lv.color}33,#000)`,
+            border:`4px solid ${lv.color}`,
+            boxShadow:`0 0 30px ${lv.color}aa,inset 0 0 20px ${lv.color}55`,
+            animation:"float-mb 3s ease-in-out infinite",
           }}>{lv.icon}</div>
         </div>
 
-        <div style={{flex:1,minWidth:240}}>
-          <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:2}}>
-            <span style={{fontSize:13,color:T.tm,letterSpacing:2,fontWeight:700,textTransform:"uppercase"}}>Level</span>
-            <span style={{fontSize:36,fontWeight:900,color:T.orange,textShadow:`0 0 20px ${T.orange}66`,letterSpacing:1}}>{lv.lv}</span>
-            <span style={{fontSize:18,fontWeight:700,color:T.pl,marginLeft:4}}>{lv.name}</span>
+        <div style={{flex:1,minWidth:220}}>
+          <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+            <span style={{fontSize:11,color:T.tm,letterSpacing:3,fontWeight:800,textTransform:"uppercase"}}>Level</span>
+            <span style={{fontSize:42,fontWeight:900,color:lv.color,textShadow:`0 0 25px ${lv.color}aa`,letterSpacing:1,lineHeight:1}}>{lv.lv}</span>
+            <span style={{fontSize:18,fontWeight:800,color:T.tp,marginLeft:2}}>{lv.name}</span>
           </div>
-          <div style={{fontSize:14,color:T.ol,fontWeight:600,marginBottom:8}}>
-            ⚡ <b style={{fontSize:18,color:T.warn}}>{xp}</b> XP {nlv&&<span style={{color:T.tm}}>→ {nlv.icon} {nlv.name} <b style={{color:T.ol}}>{nlv.min} XP</b></span>}
+          <div style={{fontSize:14,color:T.ol,fontWeight:700,marginBottom:10,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 12px",borderRadius:14,background:`linear-gradient(135deg,${T.warn}33,${T.warn}11)`,border:`1px solid ${T.warn}55`}}>
+              ⚡ <b style={{fontSize:16,color:T.warn}}>{xp}</b> XP
+            </span>
+            {nlv&&<span style={{color:T.tm,fontSize:12}}>→ {nlv.icon} {nlv.name} <b style={{color:T.ol}}>({nlv.min-xp} XP daha)</b></span>}
           </div>
-          {/* XP Bar with shine */}
-          <div style={{position:"relative",width:"100%",height:14,borderRadius:7,background:"#0008",overflow:"hidden",border:`1px solid ${T.border}`}}>
+          <div style={{position:"relative",width:"100%",height:16,borderRadius:8,background:"#0008",overflow:"hidden",border:`1px solid ${T.border}`}}>
             <div style={{
-              height:"100%",borderRadius:7,
-              background:`linear-gradient(90deg,${T.warn},${T.orange},${T.pl})`,
+              height:"100%",borderRadius:8,
+              background:`linear-gradient(90deg,${T.warn},${lv.color},${T.pl})`,
               backgroundSize:"200% 100%",
-              animation:"shine 2s infinite linear",
-              width:`${lvProgress}%`,
-              transition:"width .6s ease",
-              boxShadow:`0 0 10px ${T.orange}88`,
+              animation:"shine-mb 2s infinite linear",
+              width:`${lvProgress}%`,transition:"width .6s ease",
+              boxShadow:`0 0 12px ${lv.color}aa`,
             }}/>
-            {nlv&&<div style={{position:"absolute",top:0,right:0,bottom:0,width:1,background:T.tp,opacity:.3}}/>}
           </div>
         </div>
 
-        {/* Progress counter — trophy */}
-        <div style={{textAlign:"center",position:"relative"}}>
+        {/* Trophy circle */}
+        <div style={{textAlign:"center"}}>
           <div style={{
-            width:80,height:80,borderRadius:"50%",
+            width:90,height:90,borderRadius:"50%",
             background:`conic-gradient(${T.ok} ${(cnt/36)*360}deg,${T.border} 0deg)`,
-            display:"flex",alignItems:"center",justifyContent:"center",
-            position:"relative",
+            display:"flex",alignItems:"center",justifyContent:"center",position:"relative",
+            boxShadow:`0 0 20px ${T.ok}55`,
           }}>
             <div style={{
-              width:64,height:64,borderRadius:"50%",
-              background:T.bg,
+              width:74,height:74,borderRadius:"50%",
+              background:`radial-gradient(circle,${T.bg},#0a0518)`,
               display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+              border:`2px solid ${T.ok}33`,
             }}>
-              <div style={{fontSize:22,fontWeight:900,color:T.ok,lineHeight:1}}>{cnt}</div>
-              <div style={{fontSize:10,color:T.tm,fontWeight:600}}>/36</div>
+              <div style={{fontSize:24,fontWeight:900,color:T.ok,lineHeight:1}}>{cnt}</div>
+              <div style={{fontSize:10,color:T.tm,fontWeight:700}}>/36</div>
+              <div style={{fontSize:14,marginTop:2}}>🏆</div>
             </div>
           </div>
-          <div style={{fontSize:10,color:T.tm,marginTop:4,fontWeight:600}}>GÖREV</div>
         </div>
 
-        {/* Help button — glowing */}
+        {/* Help button */}
         <button onClick={onHelp} disabled={hasHelp} style={{
           padding:"14px 22px",borderRadius:14,
           border:`3px solid ${hasHelp?T.warn:T.err}88`,
@@ -834,86 +855,129 @@ function MissionBoard({user,prog,onSel,onHelp}){
           cursor:hasHelp?"default":"pointer",
           fontWeight:800,fontSize:15,
           display:"flex",alignItems:"center",gap:8,
-          animation:hasHelp?"bounce 1s infinite":"none",
+          animation:hasHelp?"bounce-mb 1s infinite":"none",
           boxShadow:hasHelp?`0 0 20px ${T.warn}66`:`0 4px 12px ${T.err}33`,
-          transition:"all .2s",
         }}>
-          {hasHelp?<>⏳ Bekleniyor</>:<><I.Hand/> Eğitmen Çağır</>}
+          {hasHelp?<>⏳ Bekleniyor</>:<>🖐 Eğitmen Çağır</>}
         </button>
       </div>
     </div>
 
-    {/* ═══ ROADMAP SECTIONS BY CATEGORY ═══ */}
+    {/* ═══ ADVENTURE MAP — Each category is a "world" ═══ */}
     {cats.map((cat,catIdx)=>{
       const ct=TASKS.filter(t=>t.cat===cat);
       const cd=ct.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
       const catComplete=cd===ct.length;
-      const catColor=catColors[cat]||T.orange;
+      const theme=catThemes[cat]||{c:T.orange,bg:T.card,icon:"🎯",deco:["⭐"]};
       const catProgress=ct.length>0?(cd/ct.length)*100:0;
 
-      return(<div key={cat} style={{marginBottom:30,position:"relative",zIndex:1}}>
-        {/* Category Banner */}
+      return(<div key={cat} style={{
+        position:"relative",zIndex:1,marginBottom:24,
+        borderRadius:24,padding:0,overflow:"hidden",
+        background:`linear-gradient(135deg,${theme.bg},#0a0518)`,
+        border:`3px solid ${theme.c}55`,
+        boxShadow:`0 8px 30px ${theme.c}33`,
+      }}>
+        {/* Decorative robotic elements floating in background */}
+        <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden"}}>
+          {theme.deco.map((emoji,i)=>(
+            <div key={i} style={{
+              position:"absolute",
+              fontSize:`${50+i*15}px`,opacity:.06,
+              left:`${15+i*30}%`,top:`${10+(i*25)%70}%`,
+              animation:`deco-drift ${4+i*2}s infinite ease-in-out`,
+              animationDelay:`${i*0.5}s`,
+            }}>{emoji}</div>
+          ))}
+        </div>
+
+        {/* WORLD HEADER */}
         <div style={{
-          position:"relative",
-          padding:"14px 20px",
-          borderRadius:16,
-          background:`linear-gradient(135deg,${catColor}33,${catColor}11)`,
-          border:`2px solid ${catColor}55`,
-          marginBottom:16,
-          overflow:"hidden",
+          position:"relative",padding:"18px 22px",
+          background:`linear-gradient(90deg,${theme.c}44,transparent)`,
+          borderBottom:`2px solid ${theme.c}33`,
         }}>
-          {catComplete&&<div style={{
-            position:"absolute",top:-20,right:-20,
-            fontSize:80,opacity:.15,
-            transform:"rotate(15deg)",
-          }}>🏆</div>}
-          <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-            <div style={{
-              width:46,height:46,borderRadius:12,
-              background:`linear-gradient(135deg,${catColor},${catColor}88)`,
-              display:"flex",alignItems:"center",justifyContent:"center",
-              fontSize:22,fontWeight:900,color:"#fff",
-              boxShadow:`0 4px 12px ${catColor}66`,
-              animation:catComplete?"bounce 2s infinite":"none",
-            }}>{catIdx+1}</div>
-            <div style={{flex:1,minWidth:160}}>
-              <div style={{fontSize:18,fontWeight:800,color:catColor}}>{cat} {catComplete&&"✨"}</div>
-              <div style={{fontSize:12,color:T.ts,marginTop:2}}>
-                {cd}/{ct.length} görev tamamlandı
-                {catComplete&&<span style={{marginLeft:8,color:T.ok,fontWeight:700}}>BÖLÜM TAMAMLANDI!</span>}
+          <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+            {/* World number medallion */}
+            <div style={{position:"relative"}}>
+              {catComplete&&<div style={{position:"absolute",inset:-4,borderRadius:"50%",border:`2px solid ${theme.c}88`,animation:"ring-pulse-mb 2s infinite"}}/>}
+              <div style={{
+                width:60,height:60,borderRadius:"50%",
+                background:`radial-gradient(circle at 30% 30%,${theme.c}cc,${theme.c}66)`,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:28,
+                border:`3px solid ${theme.c}`,
+                boxShadow:`0 0 20px ${theme.c}aa,inset 0 0 12px ${theme.c}55`,
+                animation:catComplete?"float-mb 3s ease-in-out infinite":"none",
+              }}>{theme.icon}</div>
+              <div style={{
+                position:"absolute",top:-6,right:-6,
+                width:26,height:26,borderRadius:"50%",
+                background:"#000",border:`2px solid ${theme.c}`,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:11,fontWeight:900,color:theme.c,
+              }}>{catIdx+1}</div>
+            </div>
+
+            <div style={{flex:1,minWidth:180}}>
+              <div style={{fontSize:20,fontWeight:900,color:theme.c,letterSpacing:.5,textShadow:`0 0 12px ${theme.c}66`}}>
+                {cat} {catComplete&&<span style={{fontSize:14}}>👑</span>}
+              </div>
+              <div style={{fontSize:13,color:T.ts,marginTop:2,fontWeight:600}}>
+                Bölüm {catIdx+1} • {cd}/{ct.length} görev
+                {catComplete&&<span style={{marginLeft:8,padding:"2px 10px",background:T.ok+"22",color:T.ok,borderRadius:6,fontSize:11,fontWeight:800}}>✓ TAMAMLANDI</span>}
               </div>
             </div>
-            {/* Mini progress bar */}
-            <div style={{width:120,height:6,borderRadius:3,background:"#0006",overflow:"hidden"}}>
-              <div style={{
-                height:"100%",borderRadius:3,
-                background:`linear-gradient(90deg,${catColor},${catColor}cc)`,
-                width:`${catProgress}%`,
-                transition:"width .6s ease",
-                boxShadow:`0 0 8px ${catColor}`,
-              }}/>
+
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <div style={{width:140,height:8,borderRadius:4,background:"#0008",overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:4,background:`linear-gradient(90deg,${theme.c},${theme.c}cc)`,width:`${catProgress}%`,boxShadow:`0 0 8px ${theme.c}`}}/>
+              </div>
+              <span style={{fontSize:14,fontWeight:900,color:theme.c,minWidth:42,textAlign:"right"}}>{Math.round(catProgress)}%</span>
             </div>
-            <span style={{fontSize:14,fontWeight:800,color:catColor,minWidth:42,textAlign:"right"}}>{Math.round(catProgress)}%</span>
           </div>
         </div>
 
-        {/* Task Roadmap — zigzag layout */}
-        <div style={{position:"relative",padding:"16px 0"}}>
-          {/* SVG dotted path connecting nodes */}
-          <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none",opacity:.4}} preserveAspectRatio="none">
+        {/* HORIZONTAL ADVENTURE MAP — scrollable */}
+        <div style={{
+          position:"relative",
+          overflowX:"auto",overflowY:"hidden",
+          padding:"30px 24px 30px",
+          minHeight:230,
+        }}>
+          {/* SVG path connecting nodes */}
+          <svg style={{
+            position:"absolute",top:60,left:0,width:`${ct.length*180+200}px`,height:120,
+            pointerEvents:"none",
+          }} viewBox={`0 0 ${ct.length*180+200} 120`} preserveAspectRatio="none">
             <defs>
-              <linearGradient id={`gradPath${catIdx}`} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor={catColor}/>
-                <stop offset="100%" stopColor={catColor} stopOpacity=".3"/>
+              <linearGradient id={`path${catIdx}`} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor={theme.c} stopOpacity=".8"/>
+                <stop offset="100%" stopColor={theme.c} stopOpacity=".3"/>
               </linearGradient>
             </defs>
+            {/* Wavy path */}
+            <path
+              d={`M 80 ${60} ${ct.map((_,i)=>{
+                const x=80+i*180;
+                const y=i%2===0?60:60;
+                const cx=x+90;
+                const cy=i%2===0?20:100;
+                return `Q ${cx} ${cy}, ${x+180} ${y}`;
+              }).join(" ")}`}
+              fill="none"
+              stroke={`url(#path${catIdx})`}
+              strokeWidth="4"
+              strokeDasharray="8 6"
+              style={{animation:"path-flow 1.5s linear infinite"}}
+            />
           </svg>
 
+          {/* Task nodes — horizontal row */}
           <div style={{
-            display:"grid",
-            gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",
-            gap:16,
-            position:"relative",
+            position:"relative",display:"flex",gap:32,
+            paddingLeft:30,paddingRight:30,paddingTop:0,
+            minWidth:ct.length*180+"px",
           }}>
             {ct.map((t,idx)=>{
               const s=sp[t.id]?.status||TS.LOCKED;
@@ -925,174 +989,154 @@ function MissionBoard({user,prog,onSel,onHelp}){
               const started=sp[t.id]?.startedAt;
               const completed=sp[t.id]?.completedAt||sp[t.id]?.approvedAt;
               const dur=(started&&completed)?fd(completed-started):null;
-
-              const nodeColor=approved?T.ok:active?T.orange:pending?T.pl:rejected?T.err:T.tm;
-              const offsetY=idx%2===0?0:8; // zigzag
+              const offsetY=idx%2===0?0:30;
 
               return(
                 <div key={t.id}
-                  className={`mission-node ${locked?"mission-locked":""}`}
+                  className={`map-node ${locked?"map-locked":""}`}
                   onClick={()=>!locked&&onSel(t)}
                   style={{
                     cursor:locked?"not-allowed":"pointer",
-                    opacity:locked?.4:1,
-                    position:"relative",
+                    opacity:locked?.45:1,
+                    width:160,flexShrink:0,
                     transform:`translateY(${offsetY}px)`,
-                    transition:"all .3s",
+                    position:"relative",
                   }}>
 
-                  {/* Glowing ring for active task */}
-                  {active&&<div style={{
-                    position:"absolute",inset:-6,borderRadius:20,
-                    border:`2px solid ${T.orange}`,
-                    animation:"ring-pulse 1.8s infinite",
-                    pointerEvents:"none",
-                  }}/>}
+                  {/* Active task pulse rings */}
+                  {active&&<>
+                    <div style={{position:"absolute",top:0,left:"50%",marginLeft:-50,width:100,height:100,borderRadius:"50%",border:`3px solid ${T.orange}`,animation:"ring-pulse-mb 1.8s infinite",pointerEvents:"none"}}/>
+                  </>}
 
-                  {/* Confetti for newly approved */}
-                  {approved&&[...Array(3)].map((_,ci)=>(
+                  {/* Confetti on approved */}
+                  {approved&&[...Array(4)].map((_,ci)=>(
                     <span key={ci} style={{
-                      position:"absolute",
-                      top:8,
-                      left:`${20+ci*30}%`,
+                      position:"absolute",top:5,left:`${15+ci*25}%`,
                       fontSize:14,
-                      animation:`confetti 2s ${ci*0.3}s infinite ease-out`,
-                      pointerEvents:"none",
-                      zIndex:3,
-                    }}>{["✨","⭐","🎉"][ci]}</span>
+                      animation:`confetti-mb 2s ${ci*0.3}s infinite ease-out`,
+                      pointerEvents:"none",zIndex:3,
+                    }}>{["✨","⭐","🎉","💫"][ci]}</span>
                   ))}
 
-                  {/* Card body */}
+                  {/* Hexagonal map node */}
                   <div style={{
-                    borderRadius:18,
-                    background:approved
-                      ?`linear-gradient(160deg,${T.ok}33,${T.card})`
-                      :active
-                      ?`linear-gradient(160deg,${T.orange}33,${T.card})`
-                      :pending
-                      ?`linear-gradient(160deg,${T.pl}33,${T.card})`
-                      :rejected
-                      ?`linear-gradient(160deg,${T.err}33,${T.card})`
-                      :T.card,
-                    border:`2px solid ${nodeColor}66`,
-                    boxShadow:active
-                      ?`0 8px 24px ${T.orange}44,0 0 30px ${T.orange}33`
-                      :approved
-                      ?`0 6px 18px ${T.ok}33`
-                      :"0 4px 12px #0004",
-                    overflow:"hidden",
                     position:"relative",
+                    width:100,height:100,margin:"0 auto",
+                    background:approved
+                      ?`radial-gradient(circle at 30% 30%,${T.ok}ee,${T.ok}66)`
+                      :active
+                      ?`radial-gradient(circle at 30% 30%,${T.orange}ee,${T.orange}66)`
+                      :pending
+                      ?`radial-gradient(circle at 30% 30%,${T.pl}ee,${T.pl}66)`
+                      :rejected
+                      ?`radial-gradient(circle at 30% 30%,${T.err}ee,${T.err}66)`
+                      :`radial-gradient(circle at 30% 30%,${T.tm}66,${T.tm}22)`,
+                    clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    boxShadow:active
+                      ?`0 0 30px ${T.orange}aa,0 0 60px ${T.orange}55`
+                      :approved
+                      ?`0 6px 20px ${T.ok}88`
+                      :pending
+                      ?`0 6px 20px ${T.pl}66`
+                      :"0 4px 12px #0006",
                   }}>
-
-                    {/* Image area */}
-                    <div style={{height:100,position:"relative",overflow:"hidden",background:T.dark}}>
-                      <TaskImage taskId={t.id} type="gorsel" size={999} fallbackEmoji={t.img} style={{width:"100%",height:100,borderRadius:0}}/>
-
-                      {/* Top gradient overlay */}
-                      <div style={{
-                        position:"absolute",top:0,left:0,right:0,height:40,
-                        background:"linear-gradient(180deg,#000a,transparent)",
-                        pointerEvents:"none",
-                      }}/>
-
-                      {/* Task number badge — hexagon style */}
-                      <div style={{
-                        position:"absolute",top:8,left:8,
-                        width:36,height:36,
-                        background:`linear-gradient(135deg,${catColor},${catColor}88)`,
-                        clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
-                        display:"flex",alignItems:"center",justifyContent:"center",
-                        fontSize:13,fontWeight:900,color:"#fff",
-                        textShadow:"0 1px 2px #0008",
-                      }}>{t.id}</div>
-
-                      {/* Status badge top right */}
-                      {approved&&<div style={{
-                        position:"absolute",top:8,right:8,
-                        width:32,height:32,borderRadius:"50%",
-                        background:`radial-gradient(circle,${T.ok},#22a55a)`,
-                        display:"flex",alignItems:"center",justifyContent:"center",
-                        fontSize:18,fontWeight:900,color:"#fff",
-                        boxShadow:`0 0 12px ${T.ok}88`,
-                        animation:"popin .5s",
-                      }}>✓</div>}
-                      {active&&!pending&&<div style={{
-                        position:"absolute",top:8,right:8,
-                        padding:"3px 10px",borderRadius:10,
-                        background:`linear-gradient(135deg,${T.orange},${T.od})`,
-                        fontSize:10,fontWeight:800,color:"#fff",
-                        textTransform:"uppercase",letterSpacing:1,
-                        boxShadow:`0 2px 8px ${T.orange}88`,
-                        animation:"bounce 1.5s infinite",
-                      }}>▶ Şimdi</div>}
-                      {pending&&<div style={{
-                        position:"absolute",top:8,right:8,
-                        padding:"3px 10px",borderRadius:10,
-                        background:`linear-gradient(135deg,${T.pl},${T.purple})`,
-                        fontSize:10,fontWeight:800,color:"#fff",
-                        textTransform:"uppercase",letterSpacing:1,
-                        animation:"shimmer 2s infinite",
-                      }}>⏳ Onayda</div>}
-                      {rejected&&<div style={{
-                        position:"absolute",top:8,right:8,
-                        padding:"3px 10px",borderRadius:10,
-                        background:T.err,
-                        fontSize:10,fontWeight:800,color:"#fff",
-                      }}>↻ Tekrar</div>}
+                    {/* Inner hexagon */}
+                    <div style={{
+                      position:"absolute",inset:6,
+                      background:approved?T.ok:active?T.orange:pending?T.pl:rejected?T.err:T.dark,
+                      clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+                    }}/>
+                    {/* Inner hexagon dark */}
+                    <div style={{
+                      position:"absolute",inset:9,
+                      background:`radial-gradient(circle at 40% 30%,${T.card},#0a0518)`,
+                      clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                    }}>
+                      {/* Task image inside hex */}
+                      <TaskImage taskId={t.id} type="gorsel" size={64} fallbackEmoji={t.img} style={{borderRadius:"50%",width:64,height:64,objectFit:"cover"}}/>
                     </div>
+                    {/* Task number badge — top */}
+                    <div style={{
+                      position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",
+                      width:32,height:32,
+                      background:`linear-gradient(135deg,${theme.c},${theme.c}88)`,
+                      borderRadius:"50%",
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      fontSize:13,fontWeight:900,color:"#fff",
+                      border:`2px solid ${T.bg}`,
+                      boxShadow:`0 2px 8px ${theme.c}88`,zIndex:2,
+                      textShadow:"0 1px 2px #0008",
+                    }}>{t.id}</div>
 
-                    {/* Content */}
-                    <div style={{padding:"12px 14px"}}>
-                      <div style={{
-                        fontSize:14,fontWeight:800,marginBottom:8,
-                        overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",
-                        color:locked?T.tm:T.tp,
-                      }}>{t.title}</div>
+                    {/* Status icon — bottom right */}
+                    {approved&&<div style={{
+                      position:"absolute",bottom:-4,right:0,
+                      width:30,height:30,borderRadius:"50%",
+                      background:`radial-gradient(circle,${T.ok},#22a55a)`,
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      fontSize:16,color:"#fff",fontWeight:900,
+                      boxShadow:`0 0 12px ${T.ok}aa`,
+                      border:`2px solid ${T.bg}`,
+                      animation:"popin-mb .5s",zIndex:2,
+                    }}>✓</div>}
+                    {active&&<div style={{
+                      position:"absolute",bottom:-4,right:0,
+                      width:30,height:30,borderRadius:"50%",
+                      background:`linear-gradient(135deg,${T.orange},${T.od})`,
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      fontSize:14,color:"#fff",
+                      boxShadow:`0 0 12px ${T.orange}aa`,
+                      border:`2px solid ${T.bg}`,
+                      animation:"bounce-mb 1.5s infinite",zIndex:2,
+                    }}>▶</div>}
+                    {pending&&<div style={{
+                      position:"absolute",bottom:-4,right:0,
+                      width:30,height:30,borderRadius:"50%",
+                      background:`linear-gradient(135deg,${T.pl},${T.purple})`,
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      fontSize:14,color:"#fff",
+                      border:`2px solid ${T.bg}`,zIndex:2,
+                    }}>⏳</div>}
+                    {rejected&&<div style={{
+                      position:"absolute",bottom:-4,right:0,
+                      width:30,height:30,borderRadius:"50%",
+                      background:T.err,
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      fontSize:14,color:"#fff",
+                      border:`2px solid ${T.bg}`,zIndex:2,
+                    }}>↻</div>}
 
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6}}>
-                        {/* XP coin */}
-                        <div style={{
-                          display:"flex",alignItems:"center",gap:4,
-                          padding:"3px 9px",borderRadius:12,
-                          background:`linear-gradient(135deg,${T.warn}33,${T.warn}11)`,
-                          border:`1px solid ${T.warn}44`,
-                        }}>
-                          <span style={{fontSize:11}}>⚡</span>
-                          <span style={{fontSize:12,fontWeight:800,color:T.warn}}>{t.xp}</span>
-                        </div>
-                        {/* Stars */}
-                        <div style={{display:"flex",gap:1}}>
-                          {[1,2,3,4,5].map(i=>(
-                            <span key={i} style={{
-                              fontSize:11,
-                              color:i<=t.diff?T.warn:T.border,
-                              filter:i<=t.diff?`drop-shadow(0 0 2px ${T.warn}66)`:"none",
-                            }}>★</span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {dur&&<div style={{
-                        marginTop:6,fontSize:11,color:T.ok,
-                        display:"flex",alignItems:"center",gap:4,
-                        padding:"2px 8px",
-                        background:T.ok+"15",borderRadius:8,
-                        width:"fit-content",
-                      }}><I.Clock/> {dur}</div>}
-                    </div>
+                    {locked&&<div style={{
+                      position:"absolute",inset:0,
+                      background:"#0a0518cc",
+                      clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      backdropFilter:"blur(2px)",
+                    }}>
+                      <span style={{fontSize:32,filter:"grayscale(.5)"}}>🔒</span>
+                    </div>}
                   </div>
 
-                  {/* LOCKED overlay */}
-                  {locked&&<div style={{
-                    position:"absolute",inset:0,
-                    display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-                    background:"linear-gradient(180deg,#0a0518cc,#0a0518ee)",
-                    borderRadius:18,
-                    backdropFilter:"blur(2px)",
-                  }}>
-                    <div style={{fontSize:40,marginBottom:6,filter:"grayscale(.5)"}}>🔒</div>
-                    <div style={{fontSize:11,color:T.tm,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>Önce Görev #{t.id-1}</div>
-                  </div>}
+                  {/* Task title below */}
+                  <div style={{textAlign:"center",marginTop:14}}>
+                    <div style={{
+                      fontSize:13,fontWeight:800,
+                      color:locked?T.tm:T.tp,
+                      lineHeight:1.2,
+                      overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",
+                    }}>{t.title}</div>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginTop:4}}>
+                      <span style={{fontSize:11,padding:"2px 8px",borderRadius:10,background:`${T.warn}22`,color:T.warn,fontWeight:800,border:`1px solid ${T.warn}44`}}>⚡ {t.xp}</span>
+                      <span style={{display:"flex",gap:1}}>
+                        {[1,2,3,4,5].map(i=>(
+                          <span key={i} style={{fontSize:10,color:i<=t.diff?T.warn:T.border,filter:i<=t.diff?`drop-shadow(0 0 2px ${T.warn})`:"none"}}>★</span>
+                        ))}
+                      </span>
+                    </div>
+                    {dur&&<div style={{fontSize:10,color:T.ok,marginTop:3,fontWeight:600}}>⏱ {dur}</div>}
+                  </div>
                 </div>
               );
             })}
@@ -1101,24 +1145,22 @@ function MissionBoard({user,prog,onSel,onHelp}){
       </div>);
     })}
 
-    {/* End-of-roadmap trophy */}
+    {/* End trophy */}
     {cnt===36&&<div style={{
-      textAlign:"center",padding:30,marginBottom:20,
-      borderRadius:20,
-      background:`linear-gradient(135deg,${T.warn}33,${T.orange}33)`,
-      border:`3px solid ${T.warn}88`,
-      animation:"glow 2s infinite",
+      textAlign:"center",padding:36,marginBottom:20,
+      borderRadius:24,
+      background:`linear-gradient(135deg,${T.warn}44,${T.orange}44,${T.pl}33)`,
+      border:`4px solid ${T.warn}aa`,
+      animation:"glow-mb 2s infinite",
+      "--gc":T.warn,
     }}>
-      <div style={{fontSize:80,animation:"float 3s ease-in-out infinite"}}>🏆</div>
-      <div style={{fontSize:28,fontWeight:900,color:T.warn,marginTop:10,letterSpacing:1}}>BERRYBOT MASTER!</div>
-      <div style={{fontSize:14,color:T.tp,marginTop:4}}>Tüm 36 görevi tamamladın! Sen bir efsanesin.</div>
+      <div style={{fontSize:96,animation:"float-mb 3s ease-in-out infinite"}}>🏆</div>
+      <div style={{fontSize:32,fontWeight:900,color:T.warn,marginTop:10,letterSpacing:2,textShadow:`0 0 20px ${T.warn}`}}>BERRYBOT MASTER!</div>
+      <div style={{fontSize:15,color:T.tp,marginTop:6}}>Tüm 36 görevi tamamladın. Sen bir robotik efsanesin! 🤖✨</div>
     </div>}
   </div>);
 }
 
-// ═══════════════════════════════════════
-//  STUDENT: TASK VIEW
-// ═══════════════════════════════════════
 function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBack}){
   const[imgZoom,setImgZoom]=useState(false);
   const[imgLoaded,setImgLoaded]=useState(false);
