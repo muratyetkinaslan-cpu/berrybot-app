@@ -291,19 +291,19 @@ function LoginPage({onLogin}){
 
     {/* MAIN CONTAINER — 2 columns side by side */}
     <div style={{
-      width:"100%",maxWidth:980,
+      width:"100%",maxWidth:1200,
       maxHeight:"100%",
       display:"flex",alignItems:"center",justifyContent:"center",
-      gap:32,flexWrap:"wrap",
+      gap:24,flexWrap:"wrap",
       position:"relative",zIndex:2,
     }}>
 
-      {/* LEFT COLUMN — 3D Robot + Title */}
+      {/* LEFT COLUMN — Big 3D Robot + BerryBot logo */}
       <div style={{
-        flex:"1 1 380px",maxWidth:480,minWidth:280,
+        flex:"2 1 520px",maxWidth:680,minWidth:300,
         display:"flex",flexDirection:"column",alignItems:"center",
       }}>
-        {/* 3D BerryBot — non-interactive, auto rotates */}
+        {/* 3D BerryBot — large, auto rotates */}
         <div style={{
           width:"100%",position:"relative",
           display:"flex",alignItems:"center",justifyContent:"center",
@@ -311,26 +311,21 @@ function LoginPage({onLogin}){
           <div style={{
             position:"absolute",bottom:10,left:"50%",
             transform:"translateX(-50%)",
-            height:14,borderRadius:"50%",
+            width:240,height:18,borderRadius:"50%",
             background:`radial-gradient(ellipse,${T.purple}aa,transparent 70%)`,
             animation:"shadow-pulse 4s infinite ease-in-out",
-            filter:"blur(6px)",
+            filter:"blur(8px)",
             zIndex:1,
           }}/>
           <div style={{position:"relative",zIndex:2,width:"100%"}}>
-            <BerryBot3D height={280} autoRotate={true} background="transparent" interactive={false}/>
+            <BerryBot3D height={420} autoRotate={true} background="transparent" interactive={false}/>
           </div>
         </div>
 
-        {/* Title */}
-        <div style={{textAlign:"center",marginTop:-8}}>
-          <div style={{
-            fontSize:46,fontWeight:900,lineHeight:1,
-            background:`linear-gradient(135deg,${T.orange},${T.pl})`,
-            WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
-            letterSpacing:1,
-          }}>BerryBot</div>
-          <div style={{fontSize:13,color:T.ts,marginTop:6,letterSpacing:2,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
+        {/* BerryBot logo image */}
+        <div style={{textAlign:"center",marginTop:-12,maxWidth:340,width:"100%"}}>
+          <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",height:"auto",maxHeight:90,objectFit:"contain"}}/>
+          <div style={{fontSize:13,color:T.ts,marginTop:8,letterSpacing:2,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
         </div>
       </div>
 
@@ -374,51 +369,36 @@ function LoginPage({onLogin}){
           }}>POWERED BY</div>
           <div style={{
             display:"flex",alignItems:"center",justifyContent:"space-around",gap:8,
-            flexWrap:"wrap",
+            flexWrap:"nowrap",
           }}>
             {/* Robotistan */}
             <div style={{
-              display:"flex",flexDirection:"column",alignItems:"center",gap:6,
+              flex:"1 1 0",
+              display:"flex",alignItems:"center",justifyContent:"center",
+              height:60,
               animation:"logo-float 3s infinite ease-in-out",
             }}>
-              <div style={{
-                height:56,width:120,
-                background:"#fff",borderRadius:10,padding:8,
-                display:"flex",alignItems:"center",justifyContent:"center",
-                boxShadow:"0 4px 12px #00000055",
-              }}>
-                <img src="/logos/robotistan.png" alt="Robotistan" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>
-              </div>
+              <img src="/logos/robotistan.png" alt="Robotistan" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain",filter:"drop-shadow(0 2px 6px #0008)"}}/>
             </div>
 
-            {/* RoboGPT */}
+            {/* RoboGPT — bigger */}
             <div style={{
-              display:"flex",flexDirection:"column",alignItems:"center",gap:6,
+              flex:"1.4 1 0",
+              display:"flex",alignItems:"center",justifyContent:"center",
+              height:80,
               animation:"logo-float 3s infinite ease-in-out .4s",
             }}>
-              <div style={{
-                height:56,width:120,
-                background:"#fff",borderRadius:10,padding:8,
-                display:"flex",alignItems:"center",justifyContent:"center",
-                boxShadow:"0 4px 12px #00000055",
-              }}>
-                <img src="/logos/robogpt.png" alt="RoboGPT" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>
-              </div>
+              <img src="/logos/robogpt.png" alt="RoboGPT" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain",filter:"drop-shadow(0 2px 8px #0008)"}}/>
             </div>
 
             {/* PicoBricks */}
             <div style={{
-              display:"flex",flexDirection:"column",alignItems:"center",gap:6,
+              flex:"1 1 0",
+              display:"flex",alignItems:"center",justifyContent:"center",
+              height:60,
               animation:"logo-float 3s infinite ease-in-out .8s",
             }}>
-              <div style={{
-                height:56,width:120,
-                background:"#fff",borderRadius:10,padding:8,
-                display:"flex",alignItems:"center",justifyContent:"center",
-                boxShadow:"0 4px 12px #00000055",
-              }}>
-                <img src="/logos/picobricks.png" alt="PicoBricks" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain"}}/>
-              </div>
+              <img src="/logos/picobricks.png" alt="PicoBricks" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain",filter:"drop-shadow(0 2px 6px #0008)"}}/>
             </div>
           </div>
         </div>
