@@ -753,6 +753,36 @@ function MissionBoard({user,prog,onSel,onHelp}){
   const lvProgress=nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100;
   const hasHelp=prog[user.id]?.helpRequest;
 
+  // ═══ Inspirational quotes from tech/science legends — rotate every 8s ═══
+  const QUOTES=[
+    {text:"Geleceği tahmin etmenin en iyi yolu onu icat etmektir.",author:"Alan Kay",role:"Bilgisayar Bilimcisi",emoji:"💻"},
+    {text:"Yapamayacağını söyleyenler, yapanları durdurmamalıdır.",author:"Elon Musk",role:"SpaceX & Tesla CEO",emoji:"🚀"},
+    {text:"Başarı kötü bir öğretmendir. Akıllı insanları başarısız olamayacaklarına inandırır.",author:"Bill Gates",role:"Microsoft Kurucusu",emoji:"💼"},
+    {text:"Hayal gücü bilgiden daha önemlidir. Çünkü bilgi sınırlıdır, hayal gücü dünyayı kucaklar.",author:"Albert Einstein",role:"Fizikçi",emoji:"🧠"},
+    {text:"Kod yazmak, bir robotun düşünmesini öğretmektir.",author:"Steve Jobs",role:"Apple Kurucusu",emoji:"🍎"},
+    {text:"Robotlar insanların yerini almayacak; ama robotları kullanan insanlar, kullanmayanların yerini alacak.",author:"Andrew Ng",role:"AI Araştırmacısı",emoji:"🤖"},
+    {text:"Mühendislik, mevcut bilimi pratik problem çözmeye uygulamaktır.",author:"Nikola Tesla",role:"Mucit",emoji:"⚡"},
+    {text:"Eğer denediğin her şey işe yarıyorsa, yeterince zor şeyler denemiyorsun.",author:"Larry Page",role:"Google Kurucusu",emoji:"🔍"},
+    {text:"Yapay zeka insanlığın en önemli teknolojik gelişmelerinden biri olacak.",author:"Sundar Pichai",role:"Google CEO",emoji:"🧠"},
+    {text:"Hayatınızı bir başkasının yaşamına harcamayın. Cesur olun.",author:"Steve Jobs",role:"Apple Kurucusu",emoji:"🍎"},
+    {text:"Robotik, geleceğin değil; bugünün bilimidir.",author:"Rodney Brooks",role:"MIT Robotik Profesörü",emoji:"🦾"},
+    {text:"Her büyük buluş bir hayalle başlar. Önce hayal et, sonra kodla!",author:"Walt Disney",role:"Yaratıcı",emoji:"✨"},
+    {text:"Bir şeyi başaramayan kişi, vazgeçen kişidir. Asla pes etme.",author:"Thomas Edison",role:"Mucit",emoji:"💡"},
+    {text:"Teknoloji insanlık için bir araçtır; insanları bir araya getirmek için.",author:"Mark Zuckerberg",role:"Meta CEO",emoji:"🌐"},
+    {text:"Sadece kullanıcıların ne istediğine değil, neye ihtiyaç duyduğuna odaklanın.",author:"Jeff Bezos",role:"Amazon Kurucusu",emoji:"📦"},
+    {text:"Robotlar düşünmez, kod düşünür. İyi kod yazan, iyi robot yapar.",author:"Linus Torvalds",role:"Linux Yaratıcısı",emoji:"🐧"},
+    {text:"Başarı 1% ilham, 99% terdir. Görevlerini bitir!",author:"Thomas Edison",role:"Mucit",emoji:"💡"},
+    {text:"Cesaret bilgi değildir; bilgiyle birlikte gelen güvendir.",author:"Marie Curie",role:"Fizikçi & Kimyager",emoji:"🔬"},
+    {text:"Programlama bir sanat değil, sanat formundaki mühendisliktir.",author:"Donald Knuth",role:"Algoritma Üstadı",emoji:"📐"},
+    {text:"Bugün öğrendiğin küçük bir şey, yarın büyük bir robotun beyni olabilir.",author:"BerryBot",role:"Senin Robot Arkadaşın",emoji:"🤖"},
+  ];
+  const [quoteIdx,setQuoteIdx]=useState(()=>Math.floor(Math.random()*QUOTES.length));
+  useEffect(()=>{
+    const iv=setInterval(()=>setQuoteIdx(i=>(i+1)%QUOTES.length),8000);
+    return ()=>clearInterval(iv);
+  },[]);
+  const currentQuote=QUOTES[quoteIdx];
+
   // Difficulty labels
   const diffLabel=(d)=>{
     if(d<=1)return{l:"KOLAY",c:"#22c55e",bg:"#1a4a2e"};
@@ -918,6 +948,73 @@ function MissionBoard({user,prog,onSel,onHelp}){
         }}>
           {hasHelp?<>⏳ Bekleniyor</>:<>🖐 Eğitmen Çağır</>}
         </button>
+      </div>
+    </div>
+
+    {/* ═══ INSPIRATIONAL QUOTE BANNER — rotates every 8s ═══ */}
+    <div key={quoteIdx} style={{
+      position:"relative",marginBottom:14,
+      borderRadius:16,padding:"16px 22px",
+      background:`linear-gradient(135deg,${T.purple}33,${T.orange}22,${T.card})`,
+      border:`2px solid ${T.orange}55`,
+      overflow:"hidden",
+      animation:"quote-fade .8s ease-out",
+    }}>
+      <style>{`
+        @keyframes quote-fade {
+          0% { opacity: 0; transform: translateY(-8px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes quote-shine {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
+      {/* Decorative quote marks */}
+      <div style={{position:"absolute",top:-8,left:14,fontSize:60,color:T.orange,opacity:.2,fontFamily:"Georgia,serif",pointerEvents:"none",lineHeight:1}}>"</div>
+      <div style={{position:"absolute",bottom:-30,right:14,fontSize:60,color:T.purple,opacity:.2,fontFamily:"Georgia,serif",pointerEvents:"none",lineHeight:1}}>"</div>
+      {/* Shine sweep */}
+      <div style={{position:"absolute",inset:0,background:`linear-gradient(90deg,transparent,${T.orange}22,transparent)`,animation:"quote-shine 3s ease-in-out",pointerEvents:"none"}}/>
+
+      <div style={{position:"relative",display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+        {/* Author emoji avatar */}
+        <div style={{
+          width:54,height:54,borderRadius:"50%",flexShrink:0,
+          background:`radial-gradient(circle at 30% 30%,${T.orange}aa,${T.purple}88)`,
+          display:"flex",alignItems:"center",justifyContent:"center",
+          fontSize:28,
+          border:`2px solid ${T.orange}66`,
+          boxShadow:`0 4px 14px ${T.orange}55`,
+        }}>{currentQuote.emoji}</div>
+
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{
+            fontSize:15,color:T.tp,fontWeight:600,lineHeight:1.5,
+            fontStyle:"italic",fontFamily:"Georgia,serif",
+            marginBottom:6,
+          }}>"{currentQuote.text}"</div>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <span style={{
+              fontSize:13,fontWeight:800,color:T.orange,
+              letterSpacing:.5,
+            }}>— {currentQuote.author}</span>
+            <span style={{fontSize:11,padding:"2px 8px",borderRadius:8,background:T.purple+"33",color:T.pl,fontWeight:600}}>{currentQuote.role}</span>
+          </div>
+        </div>
+
+        {/* Progress dots */}
+        <div className="resp-hide-phone" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+          <div style={{fontSize:9,color:T.tm,letterSpacing:1,fontWeight:700}}>{quoteIdx+1}/{QUOTES.length}</div>
+          <div style={{display:"flex",gap:3,maxWidth:80,flexWrap:"wrap",justifyContent:"center"}}>
+            {QUOTES.map((_,i)=>(
+              <div key={i} style={{
+                width:5,height:5,borderRadius:"50%",
+                background:i===quoteIdx?T.orange:T.border,
+                boxShadow:i===quoteIdx?`0 0 6px ${T.orange}`:"none",
+              }}/>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
 
