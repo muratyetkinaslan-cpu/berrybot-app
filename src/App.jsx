@@ -265,7 +265,38 @@ function LoginPage({onLogin}){
       @keyframes float-bg { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(5deg)} }
       @keyframes star-blink { 0%,100%{opacity:.3} 50%{opacity:1} }
       @keyframes login-glow { 0%,100%{box-shadow:0 0 30px ${T.orange}55,0 0 60px ${T.purple}33} 50%{box-shadow:0 0 50px ${T.orange}88,0 0 80px ${T.purple}66} }
-      @keyframes title-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+
+      /* 3D BerryBot Robot Animations */
+      @keyframes robot-spin {
+        0% { transform: rotateY(0deg) translateY(0px); }
+        50% { transform: rotateY(180deg) translateY(-12px); }
+        100% { transform: rotateY(360deg) translateY(0px); }
+      }
+      @keyframes wheel-spin { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+      @keyframes board-pulse {
+        0%, 100% { box-shadow: 0 0 8px ${T.purple}, 0 0 16px ${T.purple}88; }
+        50% { box-shadow: 0 0 14px ${T.pl}, 0 0 28px ${T.pl}cc, 0 0 40px ${T.purple}66; }
+      }
+      @keyframes led-blink {
+        0%, 49% { background: #ff3344; }
+        50%, 100% { background: #44ff66; }
+      }
+      @keyframes shadow-pulse {
+        0%, 100% { width: 200px; opacity: .35; }
+        50% { width: 160px; opacity: .55; }
+      }
+      @keyframes sensor-ping {
+        0% { transform: scale(0); opacity: .8; }
+        100% { transform: scale(2.5); opacity: 0; }
+      }
+      .robot-3d {
+        transform-style: preserve-3d;
+        animation: robot-spin 8s infinite linear;
+      }
+      .robot-face {
+        position: absolute;
+        backface-visibility: hidden;
+      }
     `}</style>
 
     {/* Floating decorations */}
@@ -279,20 +310,240 @@ function LoginPage({onLogin}){
         opacity:.5,
         color:i%4===0?T.orange:i%4===1?T.pl:i%4===2?T.cyan:T.warn,
         pointerEvents:"none",
-      }}>{["✦","⚡","🤖","⭐","🚀","💫","🛸"][i%7]}</div>
+      }}>{["✦","⚡","⭐","💫","🛸"][i%5]}</div>
     ))}
 
     <div style={{width:440,maxWidth:"92vw",position:"relative",zIndex:2}}>
-      <div style={{textAlign:"center",marginBottom:32,animation:"title-pulse 3s infinite ease-in-out"}}>
-        <div style={{fontSize:80,marginBottom:8,filter:`drop-shadow(0 0 20px ${T.orange}88)`}}>🤖</div>
+
+      {/* ═══ 3D BERRYBOT ROBOT ═══ */}
+      <div style={{
+        height:240,marginBottom:8,position:"relative",
+        perspective:"800px",
+        display:"flex",alignItems:"center",justifyContent:"center",
+      }}>
+        {/* Floor shadow */}
+        <div style={{
+          position:"absolute",bottom:20,left:"50%",
+          transform:"translateX(-50%)",
+          height:18,borderRadius:"50%",
+          background:`radial-gradient(ellipse,${T.purple}aa,transparent 70%)`,
+          animation:"shadow-pulse 4s infinite ease-in-out",
+          filter:"blur(4px)",
+        }}/>
+
+        {/* Sensor ping waves (front) */}
+        {[0,1,2].map(i=>(
+          <div key={i} style={{
+            position:"absolute",
+            width:30,height:30,borderRadius:"50%",
+            border:`2px solid ${T.cyan}`,
+            top:120,left:"50%",marginLeft:-15,
+            animation:`sensor-ping 2.5s infinite ease-out`,
+            animationDelay:`${i*0.8}s`,
+            opacity:0,
+            pointerEvents:"none",
+          }}/>
+        ))}
+
+        {/* Robot — 3D rotating */}
+        <div className="robot-3d" style={{
+          width:200,height:160,position:"relative",
+        }}>
+          {/* ─── Wood Body (4 sides) ─── */}
+          {/* Front */}
+          <div className="robot-face" style={{
+            width:200,height:120,top:30,left:0,
+            background:`linear-gradient(180deg,#d4a872,#a07840 60%,#7a5a30)`,
+            borderRadius:"6px 6px 8px 8px",
+            transform:"translateZ(60px)",
+            border:"2px solid #6b4f12",
+            boxShadow:"inset 0 4px 8px #ffffff22, inset 0 -4px 8px #00000044",
+            overflow:"hidden",
+          }}>
+            {/* Wood grain lines */}
+            <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(90deg,transparent 0,transparent 6px,#6b4f1244 6px,#6b4f1244 7px)",opacity:.4}}/>
+            {/* Vent slots */}
+            <div style={{position:"absolute",top:30,left:30,width:80,height:60,
+              background:"repeating-linear-gradient(0deg,transparent 0,transparent 4px,#3a280844 4px,#3a280844 6px)",
+              borderRadius:4,
+            }}/>
+            {/* Ultrasonic sensors (eyes) */}
+            <div style={{position:"absolute",bottom:18,right:14,display:"flex",gap:6}}>
+              <div style={{width:22,height:22,borderRadius:"50%",background:"radial-gradient(circle at 30% 30%,#888,#333)",border:"2px solid #1a1a1a",boxShadow:"inset 0 0 4px #000"}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:"#222",margin:"6px auto 0"}}/>
+              </div>
+              <div style={{width:22,height:22,borderRadius:"50%",background:"radial-gradient(circle at 30% 30%,#888,#333)",border:"2px solid #1a1a1a",boxShadow:"inset 0 0 4px #000"}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:"#222",margin:"6px auto 0"}}/>
+              </div>
+            </div>
+          </div>
+
+          {/* Back */}
+          <div className="robot-face" style={{
+            width:200,height:120,top:30,left:0,
+            background:`linear-gradient(180deg,#c49862,#906830 60%,#6a4a20)`,
+            borderRadius:"6px 6px 8px 8px",
+            transform:"translateZ(-60px) rotateY(180deg)",
+            border:"2px solid #6b4f12",
+            overflow:"hidden",
+          }}>
+            <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(90deg,transparent 0,transparent 6px,#6b4f1244 6px,#6b4f1244 7px)",opacity:.4}}/>
+          </div>
+
+          {/* Right side (with wheel) */}
+          <div className="robot-face" style={{
+            width:120,height:120,top:30,left:40,
+            background:`linear-gradient(180deg,#c49862,#906830 60%,#6a4a20)`,
+            borderRadius:"6px 6px 8px 8px",
+            transform:"rotateY(90deg) translateZ(100px)",
+            border:"2px solid #6b4f12",
+          }}>
+            <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(90deg,transparent 0,transparent 6px,#6b4f1244 6px,#6b4f1244 7px)",opacity:.4}}/>
+            {/* Wheel */}
+            <div style={{
+              position:"absolute",bottom:-12,left:30,
+              width:60,height:60,borderRadius:"50%",
+              background:"radial-gradient(circle,#1a1a1a 30%,#000 70%)",
+              border:"3px solid #2a2a2a",
+              animation:"wheel-spin 1s infinite linear",
+            }}>
+              <div style={{
+                position:"absolute",inset:8,borderRadius:"50%",
+                background:`radial-gradient(circle,#d4a872,#7a5a30)`,
+                border:"2px solid #5a3a10",
+              }}>
+                {/* Wheel spokes */}
+                {[0,45,90,135].map(deg=>(
+                  <div key={deg} style={{
+                    position:"absolute",inset:0,
+                    transform:`rotate(${deg}deg)`,
+                  }}>
+                    <div style={{
+                      position:"absolute",left:"50%",top:4,bottom:4,
+                      width:3,marginLeft:-1.5,
+                      background:"#3a2808",borderRadius:2,
+                    }}/>
+                  </div>
+                ))}
+                <div style={{
+                  position:"absolute",top:"50%",left:"50%",
+                  transform:"translate(-50%,-50%)",
+                  width:10,height:10,borderRadius:"50%",
+                  background:"#1a1a1a",border:"2px solid #888",
+                }}/>
+              </div>
+            </div>
+          </div>
+
+          {/* Left side (with wheel) */}
+          <div className="robot-face" style={{
+            width:120,height:120,top:30,left:40,
+            background:`linear-gradient(180deg,#c49862,#906830 60%,#6a4a20)`,
+            borderRadius:"6px 6px 8px 8px",
+            transform:"rotateY(-90deg) translateZ(100px)",
+            border:"2px solid #6b4f12",
+          }}>
+            <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(90deg,transparent 0,transparent 6px,#6b4f1244 6px,#6b4f1244 7px)",opacity:.4}}/>
+            {/* Wheel */}
+            <div style={{
+              position:"absolute",bottom:-12,left:30,
+              width:60,height:60,borderRadius:"50%",
+              background:"radial-gradient(circle,#1a1a1a 30%,#000 70%)",
+              border:"3px solid #2a2a2a",
+              animation:"wheel-spin 1s infinite linear",
+            }}>
+              <div style={{
+                position:"absolute",inset:8,borderRadius:"50%",
+                background:`radial-gradient(circle,#d4a872,#7a5a30)`,
+                border:"2px solid #5a3a10",
+              }}>
+                {[0,45,90,135].map(deg=>(
+                  <div key={deg} style={{position:"absolute",inset:0,transform:`rotate(${deg}deg)`}}>
+                    <div style={{position:"absolute",left:"50%",top:4,bottom:4,width:3,marginLeft:-1.5,background:"#3a2808",borderRadius:2}}/>
+                  </div>
+                ))}
+                <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:10,height:10,borderRadius:"50%",background:"#1a1a1a",border:"2px solid #888"}}/>
+              </div>
+            </div>
+          </div>
+
+          {/* Top — Purple PCB Board */}
+          <div className="robot-face" style={{
+            width:200,height:120,top:0,left:0,
+            background:`linear-gradient(135deg,${T.purple},${T.pd})`,
+            borderRadius:6,
+            transform:"rotateX(-90deg) translateZ(60px) translateY(-30px)",
+            border:`2px solid ${T.pd}`,
+            animation:"board-pulse 2s infinite ease-in-out",
+            overflow:"hidden",
+          }}>
+            {/* PCB traces (decorative) */}
+            <div style={{position:"absolute",inset:0,opacity:.25,
+              background:`repeating-linear-gradient(45deg,transparent 0,transparent 12px,${T.ol} 12px,${T.ol} 13px),repeating-linear-gradient(-45deg,transparent 0,transparent 18px,${T.ol} 18px,${T.ol} 19px)`,
+            }}/>
+
+            {/* "BerryBot" text */}
+            <div style={{
+              position:"absolute",top:14,left:"50%",transform:"translateX(-50%)",
+              fontSize:18,fontWeight:900,color:"#fff",
+              letterSpacing:1,
+              textShadow:"0 1px 2px #00000088",
+              fontFamily:"'Segoe UI',sans-serif",
+            }}>BerryBot</div>
+
+            {/* LED matrix (8x4 dots) */}
+            <div style={{position:"absolute",top:42,right:14,display:"grid",gridTemplateColumns:"repeat(8,1fr)",gap:2}}>
+              {[...Array(32)].map((_,i)=>(
+                <div key={i} style={{
+                  width:5,height:5,borderRadius:"50%",
+                  background:"#ff3344",
+                  animation:`led-blink ${0.6+(i%5)*0.2}s infinite`,
+                  animationDelay:`${(i*0.05)%1}s`,
+                  boxShadow:"0 0 4px #ff3344",
+                }}/>
+              ))}
+            </div>
+
+            {/* Chip */}
+            <div style={{
+              position:"absolute",bottom:18,left:30,
+              width:36,height:30,borderRadius:3,
+              background:"#1a1a1a",
+              border:"1px solid #3a3a3a",
+              boxShadow:"0 1px 2px #00000088",
+            }}>
+              <div style={{position:"absolute",inset:3,
+                background:"repeating-linear-gradient(0deg,#3a3a3a 0,#3a3a3a 1px,transparent 1px,transparent 4px)",
+              }}/>
+            </div>
+
+            {/* Connectors (white) */}
+            <div style={{position:"absolute",top:8,left:8,width:18,height:10,background:"#f0f0f0",borderRadius:1,border:"1px solid #aaa"}}/>
+            <div style={{position:"absolute",top:8,right:8,width:24,height:10,background:"#f0f0f0",borderRadius:1,border:"1px solid #aaa"}}/>
+
+            {/* Status LED */}
+            <div style={{
+              position:"absolute",bottom:14,right:14,
+              width:10,height:10,borderRadius:"50%",
+              animation:"led-blink 1s infinite",
+              boxShadow:"0 0 8px #44ff66",
+            }}/>
+          </div>
+        </div>
+      </div>
+
+      {/* TITLE */}
+      <div style={{textAlign:"center",marginBottom:24}}>
         <div style={{
           fontSize:42,fontWeight:900,
           background:`linear-gradient(135deg,${T.orange},${T.pl})`,
           WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
           letterSpacing:1,
         }}>BerryBot</div>
-        <div style={{fontSize:14,color:T.ts,marginTop:4,letterSpacing:3,textTransform:"uppercase",fontWeight:600}}>Robotik Macera Akademisi</div>
+        <div style={{fontSize:13,color:T.ts,marginTop:2,letterSpacing:3,textTransform:"uppercase",fontWeight:600}}>Robotik Macera Akademisi</div>
       </div>
+
+      {/* LOGIN FORM */}
       <div style={{
         background:`linear-gradient(135deg,${T.card},#1a0e3a)`,
         borderRadius:20,padding:24,
