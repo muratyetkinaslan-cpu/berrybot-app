@@ -259,8 +259,10 @@ function LoginPage({onLogin}){
   const[e,setE]=useState("");const[p,setP]=useState("");const[err,setErr]=useState("");
   return(<div style={{
     background:`linear-gradient(135deg,#0f0828,#2a1050,#1a0a3a)`,
-    minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
+    height:"100vh",width:"100vw",
+    display:"flex",alignItems:"center",justifyContent:"center",
     position:"relative",overflow:"hidden",
+    padding:"20px",boxSizing:"border-box",
   }}>
     <style>{`
       @keyframes float-bg { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(5deg)} }
@@ -270,9 +272,10 @@ function LoginPage({onLogin}){
         0%, 100% { width: 200px; opacity: .35; }
         50% { width: 160px; opacity: .55; }
       }
+      @keyframes logo-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
     `}</style>
 
-    {/* Floating decorations */}
+    {/* Floating star decorations */}
     {[...Array(15)].map((_,i)=>(
       <div key={i} style={{
         position:"absolute",
@@ -286,60 +289,137 @@ function LoginPage({onLogin}){
       }}>{["✦","⚡","⭐","💫","🛸"][i%5]}</div>
     ))}
 
-    <div style={{width:480,maxWidth:"94vw",position:"relative",zIndex:2}}>
+    {/* MAIN CONTAINER — 2 columns side by side */}
+    <div style={{
+      width:"100%",maxWidth:980,
+      maxHeight:"100%",
+      display:"flex",alignItems:"center",justifyContent:"center",
+      gap:32,flexWrap:"wrap",
+      position:"relative",zIndex:2,
+    }}>
 
-      {/* ═══ 3D BERRYBOT ROBOT ═══ */}
+      {/* LEFT COLUMN — 3D Robot + Title */}
       <div style={{
-        height:280,marginBottom:8,position:"relative",
-        display:"flex",alignItems:"center",justifyContent:"center",
+        flex:"1 1 380px",maxWidth:480,minWidth:280,
+        display:"flex",flexDirection:"column",alignItems:"center",
       }}>
-        {/* Floor shadow */}
+        {/* 3D BerryBot — non-interactive, auto rotates */}
         <div style={{
-          position:"absolute",bottom:10,left:"50%",
-          transform:"translateX(-50%)",
-          height:14,borderRadius:"50%",
-          background:`radial-gradient(ellipse,${T.purple}aa,transparent 70%)`,
-          animation:"shadow-pulse 4s infinite ease-in-out",
-          filter:"blur(6px)",
-          zIndex:1,
-        }}/>
-        {/* Real 3D BerryBot model — auto-rotates, drag to spin */}
-        <div style={{position:"relative",zIndex:2,width:"100%"}}>
-          <BerryBot3D height={280} autoRotate={true} background="transparent"/>
+          width:"100%",position:"relative",
+          display:"flex",alignItems:"center",justifyContent:"center",
+        }}>
+          <div style={{
+            position:"absolute",bottom:10,left:"50%",
+            transform:"translateX(-50%)",
+            height:14,borderRadius:"50%",
+            background:`radial-gradient(ellipse,${T.purple}aa,transparent 70%)`,
+            animation:"shadow-pulse 4s infinite ease-in-out",
+            filter:"blur(6px)",
+            zIndex:1,
+          }}/>
+          <div style={{position:"relative",zIndex:2,width:"100%"}}>
+            <BerryBot3D height={280} autoRotate={true} background="transparent" interactive={false}/>
+          </div>
+        </div>
+
+        {/* Title */}
+        <div style={{textAlign:"center",marginTop:-8}}>
+          <div style={{
+            fontSize:46,fontWeight:900,lineHeight:1,
+            background:`linear-gradient(135deg,${T.orange},${T.pl})`,
+            WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
+            letterSpacing:1,
+          }}>BerryBot</div>
+          <div style={{fontSize:13,color:T.ts,marginTop:6,letterSpacing:2,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
         </div>
       </div>
 
-      {/* TITLE */}
-      <div style={{textAlign:"center",marginBottom:24}}>
-        <div style={{
-          fontSize:42,fontWeight:900,
-          background:`linear-gradient(135deg,${T.orange},${T.pl})`,
-          WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
-          letterSpacing:1,
-        }}>BerryBot</div>
-        <div style={{fontSize:13,color:T.ts,marginTop:2,letterSpacing:3,textTransform:"uppercase",fontWeight:600}}>Robotik Macera Akademisi</div>
-      </div>
-
-      {/* LOGIN FORM */}
+      {/* RIGHT COLUMN — Login form + sponsor logos */}
       <div style={{
-        background:`linear-gradient(135deg,${T.card},#1a0e3a)`,
-        borderRadius:20,padding:24,
-        border:`2px solid ${T.orange}55`,
-        animation:"login-glow 3s infinite ease-in-out",
+        flex:"1 1 340px",maxWidth:400,minWidth:280,
+        display:"flex",flexDirection:"column",gap:14,
       }}>
-        <input type="email" placeholder="📧 E-posta" value={e} onChange={x=>setE(x.target.value)} style={{width:"100%",padding:"14px 18px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:16,outline:"none",marginBottom:12,boxSizing:"border-box",fontWeight:500}}/>
-        <input type="password" placeholder="🔑 Şifre" value={p} onChange={x=>setP(x.target.value)} onKeyDown={x=>x.key==="Enter"&&(onLogin(e,p)||setErr("Hatalı!"))} style={{width:"100%",padding:"14px 18px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:16,outline:"none",boxSizing:"border-box",fontWeight:500}}/>
-        {err&&<div style={{fontSize:14,marginTop:10,padding:"10px 14px",borderRadius:10,background:"#5c1a1a",color:"#fca5a5",fontWeight:600,textAlign:"center"}}>⚠️ {err}</div>}
-        <button onClick={()=>onLogin(e,p)||setErr("Hatalı giriş!")} style={{
-          width:"100%",marginTop:16,padding:"16px",borderRadius:12,border:"none",
-          background:`linear-gradient(135deg,${T.orange},${T.od})`,
-          color:"#fff",fontSize:18,fontWeight:800,cursor:"pointer",
-          letterSpacing:1,textTransform:"uppercase",
-          boxShadow:`0 6px 20px ${T.orange}66`,
-          transition:"transform .2s",
-        }} onMouseDown={e=>e.currentTarget.style.transform="scale(0.98)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>
-          🚀 Maceraya Başla
-        </button>
+        {/* LOGIN FORM */}
+        <div style={{
+          background:`linear-gradient(135deg,${T.card},#1a0e3a)`,
+          borderRadius:20,padding:22,
+          border:`2px solid ${T.orange}55`,
+          animation:"login-glow 3s infinite ease-in-out",
+        }}>
+          <input type="email" placeholder="📧 E-posta" value={e} onChange={x=>setE(x.target.value)} style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:15,outline:"none",marginBottom:10,boxSizing:"border-box",fontWeight:500}}/>
+          <input type="password" placeholder="🔑 Şifre" value={p} onChange={x=>setP(x.target.value)} onKeyDown={x=>x.key==="Enter"&&(onLogin(e,p)||setErr("Hatalı!"))} style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:15,outline:"none",boxSizing:"border-box",fontWeight:500}}/>
+          {err&&<div style={{fontSize:13,marginTop:8,padding:"8px 12px",borderRadius:10,background:"#5c1a1a",color:"#fca5a5",fontWeight:600,textAlign:"center"}}>⚠️ {err}</div>}
+          <button onClick={()=>onLogin(e,p)||setErr("Hatalı giriş!")} style={{
+            width:"100%",marginTop:12,padding:"14px",borderRadius:12,border:"none",
+            background:`linear-gradient(135deg,${T.orange},${T.od})`,
+            color:"#fff",fontSize:17,fontWeight:800,cursor:"pointer",
+            letterSpacing:1,textTransform:"uppercase",
+            boxShadow:`0 6px 20px ${T.orange}66`,
+            transition:"transform .2s",
+          }} onMouseDown={e=>e.currentTarget.style.transform="scale(0.98)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>
+            🚀 Maceraya Başla
+          </button>
+        </div>
+
+        {/* SPONSOR LOGOS */}
+        <div style={{
+          padding:"14px 16px",
+          background:"#ffffff08",
+          borderRadius:14,
+          border:`1px solid ${T.border}66`,
+        }}>
+          <div style={{
+            fontSize:10,color:T.tm,textAlign:"center",
+            letterSpacing:3,fontWeight:700,marginBottom:10,
+          }}>POWERED BY</div>
+          <div style={{
+            display:"flex",alignItems:"center",justifyContent:"space-around",gap:8,
+            flexWrap:"wrap",
+          }}>
+            {/* Robotistan */}
+            <div style={{
+              display:"flex",flexDirection:"column",alignItems:"center",gap:4,
+              animation:"logo-float 3s infinite ease-in-out",
+            }}>
+              <div style={{
+                width:48,height:48,borderRadius:12,
+                background:`linear-gradient(135deg,#ff6b35,#c0392b)`,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:22,boxShadow:"0 4px 12px #ff6b3555",
+              }}>🤖</div>
+              <div style={{fontSize:11,fontWeight:700,color:"#ff8855"}}>Robotistan</div>
+            </div>
+
+            {/* RoboGPT */}
+            <div style={{
+              display:"flex",flexDirection:"column",alignItems:"center",gap:4,
+              animation:"logo-float 3s infinite ease-in-out .4s",
+            }}>
+              <div style={{
+                width:48,height:48,borderRadius:12,
+                background:`linear-gradient(135deg,${T.orange},${T.od})`,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:18,fontWeight:900,color:"#fff",
+                boxShadow:`0 4px 12px ${T.orange}66`,
+              }}>RG</div>
+              <div style={{fontSize:11,fontWeight:700,color:T.ol}}>RoboGPT</div>
+            </div>
+
+            {/* PicoBricks */}
+            <div style={{
+              display:"flex",flexDirection:"column",alignItems:"center",gap:4,
+              animation:"logo-float 3s infinite ease-in-out .8s",
+            }}>
+              <div style={{
+                width:48,height:48,borderRadius:12,
+                background:`linear-gradient(135deg,${T.pl},${T.purple})`,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:22,boxShadow:`0 4px 12px ${T.purple}66`,
+              }}>🧱</div>
+              <div style={{fontSize:11,fontWeight:700,color:T.pl}}>PicoBricks</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>);

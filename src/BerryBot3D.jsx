@@ -8,6 +8,7 @@ export default function BerryBot3D({
   background = "transparent",
   className = "",
   style = {},
+  interactive = true,
 }) {
   const mountRef = useRef(null);
 
@@ -423,10 +424,10 @@ export default function BerryBot3D({
     robot.add(wires);
 
     let dragging = false, lastX = 0, lastY = 0;
-    const onMouseDown = (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; container.style.cursor = "grabbing"; spinning = false; };
-    const onMouseUp = () => { dragging = false; container.style.cursor = "grab"; };
+    const onMouseDown = (e) => { if (!interactive) return; dragging = true; lastX = e.clientX; lastY = e.clientY; container.style.cursor = "grabbing"; spinning = false; };
+    const onMouseUp = () => { if (!interactive) return; dragging = false; container.style.cursor = "grab"; };
     const onMouseMove = (e) => {
-      if (!dragging) return;
+      if (!interactive || !dragging) return;
       camTheta -= (e.clientX - lastX) * 0.008;
       camPhi = Math.max(-0.2, Math.min(1.4, camPhi + (e.clientY - lastY) * 0.006));
       lastX = e.clientX; lastY = e.clientY;
@@ -448,10 +449,12 @@ export default function BerryBot3D({
     container.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mouseup", onMouseUp);
     window.addEventListener("mousemove", onMouseMove);
-    container.addEventListener("wheel", onWheel, { passive: false });
-    container.addEventListener("touchstart", onTouchStart, { passive: true });
-    container.addEventListener("touchmove", onTouchMove, { passive: false });
-    container.addEventListener("touchend", onTouchEnd);
+    if (interactive) {
+      container.addEventListener("wheel", onWheel, { passive: false });
+      container.addEventListener("touchstart", onTouchStart, { passive: true });
+      container.addEventListener("touchmove", onTouchMove, { passive: false });
+      container.addEventListener("touchend", onTouchEnd);
+    }
     window.addEventListener("resize", onResize);
 
     let animId;
@@ -467,10 +470,12 @@ export default function BerryBot3D({
       container.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("mousemove", onMouseMove);
-      container.removeEventListener("wheel", onWheel);
-      container.removeEventListener("touchstart", onTouchStart);
-      container.removeEventListener("touchmove", onTouchMove);
-      container.removeEventListener("touchend", onTouchEnd);
+      if (interactive) {
+        container.removeEventListener("wheel", onWheel);
+        container.removeEventListener("touchstart", onTouchStart);
+        container.removeEventListener("touchmove", onTouchMove);
+        container.removeEventListener("touchend", onTouchEnd);
+      }
       window.removeEventListener("resize", onResize);
       if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
       renderer.dispose();
@@ -483,7 +488,7 @@ export default function BerryBot3D({
         }
       });
     };
-  }, [height, autoRotate]);
+  }, [height, autoRotate, interactive]);
 
   return (
     <div
@@ -493,9 +498,10 @@ export default function BerryBot3D({
         width: "100%",
         height: `${height}px`,
         position: "relative",
-        cursor: "grab",
+        cursor: interactive ? "grab" : "default",
         userSelect: "none",
-        touchAction: "none",
+        touchAction: interactive ? "none" : "auto",
+        pointerEvents: interactive ? "auto" : "none",
         background,
         ...style,
       }}
