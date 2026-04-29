@@ -140,7 +140,7 @@ export default function App() {
   const data = useData();
   const { loading, currentUser: user, users, progress: prog, logs, classLayout,
     login: doLogin, logout, addUser, startTask, submitTask, approveTask,
-    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, refresh } = data;
+    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh } = data;
 
   const [page,setPage]=useState("dash");
   const [selS,setSelS]=useState(null);
@@ -149,6 +149,19 @@ export default function App() {
 
   const notify=(m,t="ok")=>{setNotif({m,t});setTimeout(()=>setNotif(null),3000);};
   const nav=(p)=>{setPage(p);setSelS(null);setSelT(null);};
+
+  // Track current page for student (for parent visibility)
+  useEffect(()=>{
+    if(user?.role==="student"){
+      let pageDesc="Görev Listesi (Mission Board)";
+      let taskId=null;
+      if(selT){pageDesc=`Görev #${selT.id}: ${selT.title}`;taskId=selT.id;}
+      setCurrentPage(pageDesc,taskId);
+      // Send heartbeat every 30s
+      const iv=setInterval(()=>setCurrentPage(pageDesc,taskId),30000);
+      return ()=>clearInterval(iv);
+    }
+  },[user,selT,setCurrentPage]);
 
   const handleLogin=async(e,p)=>{
     const u=await doLogin(e,p);
@@ -209,8 +222,7 @@ export default function App() {
         {user.role===ROLES.STUDENT&&selT&&<StudentTaskView user={user} task={selT} prog={prog} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
 
         {/* ──── PARENT ──── */}
-        {user.role===ROLES.PARENT&&page==="dash"&&<ParentDashboard parent={user} users={users} prog={prog} classLayout={classLayout}/>}
-        {user.role===ROLES.PARENT&&page==="cv"&&<ParentCV parent={user} users={users} prog={prog}/>}
+        {user.role===ROLES.PARENT&&<ParentView parent={user} users={users} prog={prog} classLayout={classLayout} logs={logs} initialTab={page==="cv"?"cv":"class"}/>}
       </main>
     </div>
   );
@@ -1115,228 +1127,6 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
 // ═══════════════════════════════════════
 //  PARENT: DASHBOARD — kendi çocuğunun durumunu görür
 // ═══════════════════════════════════════
-function ParentDashboard({parent,users,prog,classLayout}){
-  const child=users.find(u=>u.id===parent.childId);
-  if(!child)return<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:16}}>Çocuk bilgisi bulunamadı. Admin'e başvurun.</div></Card>;
-
-  const sp=prog[child.id]||{};
-  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
-  const xp=completed.reduce((a,t)=>a+t.xp,0);
-  const lv=getLevel(xp);
-  const nlv=getNextLevel(xp);
-  const pct=Math.round(completed.length/36*100);
-
-  // Total time
-  let totalMs=0;
-  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
-
-  // Currently working on
-  const current=TASKS.find(t=>sp[t.id]?.status===TS.ACTIVE||sp[t.id]?.status===TS.IN_PROGRESS||sp[t.id]?.status===TS.PENDING);
-
-  // Allcategories with progress
-  const cats=[...new Set(TASKS.map(t=>t.cat))];
-
-  return(<div>
-    <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 4px"}}>👨‍👩‍👧 {child.name}</h1>
-    <div style={{fontSize:14,color:T.tm,marginBottom:16}}>Çocuğunuzun robotik eğitim ilerlemesi</div>
-
-    {/* HERO STATS */}
-    <Card style={{marginBottom:16,background:`linear-gradient(135deg,${T.purple}40,${T.orange}20)`,border:`1px solid ${T.orange}44`}}>
-      <div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
-        <div style={{width:72,height:72,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,background:T.orange+"20",border:`3px solid ${T.orange}88`}}>{lv.icon}</div>
-        <div style={{flex:1,minWidth:200}}>
-          <div style={{fontSize:24,fontWeight:800,color:T.orange}}>Level {lv.lv} — {lv.name}</div>
-          <div style={{fontSize:16,color:T.ol,fontWeight:700,marginTop:2}}>{xp} XP {nlv&&<span style={{fontSize:14,color:T.tm,fontWeight:400}}>• Sonraki: {nlv.icon} {nlv.name} ({nlv.min} XP)</span>}</div>
-          <div style={{width:"100%",height:12,borderRadius:6,background:T.border,overflow:"hidden",marginTop:8}}>
-            <div style={{height:"100%",borderRadius:6,background:`linear-gradient(90deg,${T.orange},${T.pl})`,width:`${nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100}%`}}/>
-          </div>
-        </div>
-        <div style={{textAlign:"center",minWidth:100}}>
-          <div style={{fontSize:32,fontWeight:800,color:T.orange}}>{completed.length}<span style={{fontSize:18,color:T.tm}}>/36</span></div>
-          <div style={{fontSize:12,color:T.tm}}>Tamamlanan</div>
-        </div>
-      </div>
-    </Card>
-
-    {/* QUICK STATS */}
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:16}}>
-      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.ok}}>{pct}%</div><div style={{fontSize:13,color:T.ts}}>İlerleme</div></Card>
-      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.cyan}}>{fd(totalMs)}</div><div style={{fontSize:13,color:T.ts}}>Toplam Süre</div></Card>
-      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.warn}}>{xp}</div><div style={{fontSize:13,color:T.ts}}>XP Puanı</div></Card>
-      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.pl}}>{lv.lv}</div><div style={{fontSize:13,color:T.ts}}>Level</div></Card>
-    </div>
-
-    {/* CURRENT TASK */}
-    {current&&<Card style={{marginBottom:16,borderColor:T.orange+"55"}}>
-      <div style={{fontSize:14,color:T.orange,fontWeight:700,marginBottom:6}}>🎯 Şu An Üzerinde Çalışıyor</div>
-      <div style={{display:"flex",alignItems:"center",gap:12}}>
-        <TaskImage taskId={current.id} type="gorsel" size={56} fallbackEmoji={current.img}/>
-        <div style={{flex:1}}>
-          <div style={{fontSize:17,fontWeight:700}}>#{current.id} {current.title}</div>
-          <div style={{fontSize:13,color:T.ts}}>{current.desc}</div>
-          <div style={{marginTop:4}}><Badge s={sp[current.id]?.status}/></div>
-        </div>
-      </div>
-    </Card>}
-
-    {/* COMPLETED TASKS WITH LEARNINGS */}
-    <div style={{fontSize:18,fontWeight:700,color:T.ol,marginBottom:10}}>✓ Tamamlanan Görevler & Kazanımlar ({completed.length})</div>
-    {completed.length===0?<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:14}}>Henüz tamamlanmış görev yok.</div></Card>:
-    cats.map(cat=>{
-      const ct=completed.filter(t=>t.cat===cat);
-      if(ct.length===0)return null;
-      return(<div key={cat} style={{marginBottom:16}}>
-        <div style={{fontSize:15,fontWeight:700,color:T.orange,padding:"4px 14px",background:T.orange+"15",borderRadius:8,display:"inline-block",marginBottom:8}}>{cat} ({ct.length})</div>
-        {ct.map(t=>{
-          const tp=sp[t.id];
-          const dur=(tp.startedAt&&tp.completedAt)?fd(tp.completedAt-tp.startedAt):null;
-          return(<Card key={t.id} style={{marginBottom:8,padding:14}}>
-            <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
-              <TaskImage taskId={t.id} type="gorsel" size={48} fallbackEmoji={t.img}/>
-              <div style={{flex:1}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
-                  <span style={{fontSize:15,fontWeight:700}}>#{t.id} {t.title}</span>
-                  <span style={{fontSize:12,padding:"2px 8px",borderRadius:5,background:T.ok+"20",color:T.ok,fontWeight:600}}>✓ Tamamlandı</span>
-                  {dur&&<span style={{fontSize:12,color:T.cyan}}>⏱ {dur}</span>}
-                  <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{t.xp} XP</span>
-                </div>
-                <div style={{fontSize:13,color:T.ts,marginBottom:6}}>{t.desc}</div>
-                {t.learnings&&t.learnings.length>0&&<div style={{marginTop:6}}>
-                  <div style={{fontSize:12,color:T.pl,fontWeight:700,marginBottom:4}}>📚 Kazanımlar:</div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                    {t.learnings.map((lr,i)=><span key={i} style={{fontSize:12,padding:"3px 10px",borderRadius:5,background:T.purple+"22",color:T.pl,border:`1px solid ${T.purple}33`}}>{lr}</span>)}
-                  </div>
-                </div>}
-              </div>
-            </div>
-          </Card>);
-        })}
-      </div>);
-    })}
-  </div>);
-}
-
-// ═══════════════════════════════════════
-//  PARENT: CV EXPORT — RoboGPT referansıyla
-// ═══════════════════════════════════════
-function ParentCV({parent,users,prog}){
-  const child=users.find(u=>u.id===parent.childId);
-  if(!child)return<Card><div style={{padding:30,textAlign:"center",color:T.tm}}>Çocuk bilgisi bulunamadı.</div></Card>;
-
-  const sp=prog[child.id]||{};
-  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
-  const xp=completed.reduce((a,t)=>a+t.xp,0);
-  const lv=getLevel(xp);
-  let totalMs=0;
-  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
-
-  // All learnings deduped
-  const allLearnings=[...new Set(completed.flatMap(t=>t.learnings||[]))];
-  const cats=[...new Set(completed.map(t=>t.cat))];
-
-  const today=new Date().toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"});
-
-  const handlePrint=()=>{window.print();};
-
-  return(<div>
-    <style>{`
-      @media print {
-        nav, .no-print { display: none !important; }
-        body { background: #fff !important; color: #000 !important; }
-        .cv-container { background: #fff !important; color: #000 !important; box-shadow: none !important; padding: 30px !important; }
-        .cv-container * { color: #000 !important; }
-        .cv-container .cv-tag { background: #f0f0f0 !important; color: #333 !important; }
-        .cv-container .cv-purple { color: #6B3FA0 !important; }
-        .cv-container .cv-orange { color: #c96f10 !important; }
-      }
-    `}</style>
-
-    <div className="no-print" style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
-      <button onClick={handlePrint} style={{padding:"12px 24px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.orange},${T.od})`,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}}>🖨 Yazdır / PDF Olarak Kaydet</button>
-      <span style={{fontSize:13,color:T.tm,alignSelf:"center"}}>"Yazdır" deyince PDF olarak da kaydedebilirsin (Hedef: PDF olarak kaydet)</span>
-    </div>
-
-    {/* CV PRINTABLE */}
-    <div className="cv-container" style={{background:"#fff",color:"#1a1035",borderRadius:14,padding:36,fontFamily:"'Segoe UI',sans-serif",boxShadow:"0 8px 30px #0006"}}>
-      {/* HEADER */}
-      <div style={{borderBottom:`3px solid #6B3FA0`,paddingBottom:14,marginBottom:20,display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
-        <div>
-          <h1 className="cv-purple" style={{margin:0,fontSize:30,fontWeight:800,color:"#6B3FA0"}}>{child.name}</h1>
-          <div style={{fontSize:15,color:"#555",marginTop:4}}>Robotik Eğitim Sertifikası</div>
-        </div>
-        <div style={{textAlign:"right"}}>
-          <div className="cv-orange" style={{fontSize:22,fontWeight:800,color:"#c96f10"}}>🤖 RoboGPT</div>
-          <div style={{fontSize:12,color:"#555"}}>BerryBot Robotik Akademisi</div>
-          <div style={{fontSize:11,color:"#888",marginTop:2}}>{today}</div>
-        </div>
-      </div>
-
-      {/* SUMMARY */}
-      <div style={{marginBottom:20,padding:14,background:"#f5f0ff",borderRadius:10,border:"1px solid #e0d0ff"}}>
-        <div style={{fontSize:14,fontWeight:700,color:"#6B3FA0",marginBottom:6}}>📋 ÖZET</div>
-        <div style={{fontSize:14,lineHeight:1.7,color:"#333"}}>
-          {child.name}, RoboGPT BerryBot programında <b>{completed.length} robotik görevini başarıyla tamamlamıştır</b>. 
-          Toplamda <b>{xp} XP puan</b> kazanmış, <b>Level {lv.lv} - {lv.name}</b> seviyesine ulaşmıştır.
-          Bu süreçte <b>{cats.length} farklı kategoride</b> ({cats.join(", ")}) deneyim kazanmış,
-          eğitime toplam <b>{fd(totalMs)}</b> aktif zaman ayırmıştır.
-        </div>
-      </div>
-
-      {/* STATS */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
-        <div style={{padding:12,background:"#fff5e6",borderRadius:8,textAlign:"center",border:"1px solid #f5d99a"}}>
-          <div className="cv-orange" style={{fontSize:24,fontWeight:800,color:"#c96f10"}}>{completed.length}</div>
-          <div style={{fontSize:11,color:"#555"}}>Tamamlanan Görev</div>
-        </div>
-        <div style={{padding:12,background:"#fff5e6",borderRadius:8,textAlign:"center",border:"1px solid #f5d99a"}}>
-          <div className="cv-orange" style={{fontSize:24,fontWeight:800,color:"#c96f10"}}>{xp}</div>
-          <div style={{fontSize:11,color:"#555"}}>XP Puanı</div>
-        </div>
-        <div style={{padding:12,background:"#f5f0ff",borderRadius:8,textAlign:"center",border:"1px solid #d0c0ff"}}>
-          <div className="cv-purple" style={{fontSize:24,fontWeight:800,color:"#6B3FA0"}}>Lv.{lv.lv}</div>
-          <div style={{fontSize:11,color:"#555"}}>{lv.name}</div>
-        </div>
-        <div style={{padding:12,background:"#f0f8f0",borderRadius:8,textAlign:"center",border:"1px solid #c0e0c0"}}>
-          <div style={{fontSize:24,fontWeight:800,color:"#22a55a"}}>{fd(totalMs)}</div>
-          <div style={{fontSize:11,color:"#555"}}>Eğitim Süresi</div>
-        </div>
-      </div>
-
-      {/* COMPETENCIES */}
-      <div style={{marginBottom:20}}>
-        <div style={{fontSize:16,fontWeight:700,color:"#6B3FA0",marginBottom:10,paddingBottom:5,borderBottom:"2px solid #e0d0ff"}}>🎯 KAZANILAN YETKİNLİKLER</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-          {allLearnings.map((lr,i)=><span key={i} className="cv-tag" style={{fontSize:12,padding:"5px 12px",borderRadius:5,background:"#f5f0ff",color:"#5a3580",border:"1px solid #d0c0ff"}}>{lr}</span>)}
-        </div>
-      </div>
-
-      {/* COMPLETED TASKS */}
-      <div style={{marginBottom:20}}>
-        <div style={{fontSize:16,fontWeight:700,color:"#6B3FA0",marginBottom:10,paddingBottom:5,borderBottom:"2px solid #e0d0ff"}}>✓ TAMAMLANAN GÖREVLER ({completed.length}/36)</div>
-        {cats.map(cat=>{
-          const ct=completed.filter(t=>t.cat===cat);
-          if(ct.length===0)return null;
-          return(<div key={cat} style={{marginBottom:10}}>
-            <div className="cv-orange" style={{fontSize:13,fontWeight:700,color:"#c96f10",marginBottom:4}}>{cat}</div>
-            <div style={{paddingLeft:14}}>
-              {ct.map(t=><div key={t.id} style={{fontSize:13,marginBottom:3,color:"#333"}}>• #{t.id} {t.title} <span style={{color:"#888",fontSize:11}}>(+{t.xp} XP)</span></div>)}
-            </div>
-          </div>);
-        })}
-      </div>
-
-      {/* FOOTER */}
-      <div style={{marginTop:30,paddingTop:14,borderTop:"2px solid #e0d0ff",textAlign:"center"}}>
-        <div style={{fontSize:13,color:"#666",marginBottom:4}}>Bu sertifika <b>RoboGPT BerryBot Robotik Akademisi</b> tarafından düzenlenmiştir.</div>
-        <div style={{fontSize:11,color:"#999"}}>www.robogpt.com.tr • Doğrulama Kodu: BB-{child.id.toUpperCase()}-{Date.now().toString(36).toUpperCase()}</div>
-      </div>
-    </div>
-  </div>);
-}
-
-// ═══════════════════════════════════════
-//  INSTRUCTOR: DAILY SHOW — günlük özet
-// ═══════════════════════════════════════
 function DailyShow({users,prog,logs,onSel}){
   const[selStudent,setSelStudent]=useState(null);
   const[dayFilter,setDayFilter]=useState("today"); // today, week, all
@@ -1449,5 +1239,401 @@ function DailyShow({users,prog,logs,onSel}){
         </div>
       </Card>
     ))}
+  </div>);
+}
+
+// ═══════════════════════════════════════
+//  PARENT: NEW UNIFIED VIEW — 3 sekme: Sınıf | Kazanımlar | CV
+// ═══════════════════════════════════════
+function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
+  const[tab,setTab]=useState(initialTab);
+  const child=users.find(u=>u.id===parent.childId);
+
+  if(!child)return<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:16}}>Çocuk bilgisi bulunamadı. Admin'e başvurun.</div></Card>;
+
+  const sp=prog[child.id]||{};
+
+  return(<div>
+    {/* TABS */}
+    <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+      {[
+        {k:"class",l:"🏫 Sınıf & Aktivite",c:T.orange},
+        {k:"learnings",l:"📚 Kazanımlar",c:T.pl},
+        {k:"cv",l:"📜 CV / Sertifika",c:T.cyan},
+      ].map(t=>
+        <button key={t.k} onClick={()=>setTab(t.k)} style={{fontSize:14,padding:"10px 18px",borderRadius:10,border:tab===t.k?`2px solid ${t.c}`:`1px solid ${T.border}`,background:tab===t.k?t.c+"20":T.card,color:tab===t.k?t.c:T.ts,cursor:"pointer",fontWeight:tab===t.k?700:500}}>{t.l}</button>
+      )}
+    </div>
+
+    {tab==="class"&&<ParentClassroomView child={child} sp={sp} classLayout={classLayout} logs={logs} prog={prog}/>}
+    {tab==="learnings"&&<ParentLearningsView child={child} sp={sp}/>}
+    {tab==="cv"&&<ParentCVView child={child} sp={sp}/>}
+  </div>);
+}
+
+// ─── TAB 1: SINIF (Layout + Aktif Görev Popup + Audit Log) ───
+function ParentClassroomView({child,sp,classLayout,logs,prog}){
+  // Find which class & seat
+  let mySeat=null;
+  let myClass=null;
+  for(const c of (classLayout||[])){
+    for(const t of (c.tables||[])){
+      const seatIdx=t.seats?.indexOf(child.id);
+      if(seatIdx>=0){mySeat={tableId:t.id,seatIdx,table:t};myClass=c;break;}
+    }
+    if(myClass)break;
+  }
+
+  // Current task
+  const current=TASKS.find(t=>sp[t.id]?.status===TS.ACTIVE||sp[t.id]?.status===TS.IN_PROGRESS||sp[t.id]?.status===TS.PENDING);
+  const isOnline=child.online||(prog[child.id]?.online);
+  const lastSeen=prog[child.id]?.lastSeen;
+  const currentPage=prog[child.id]?.currentPage;
+  const currentTaskId=prog[child.id]?.currentTaskId;
+  const pageUpdatedAt=prog[child.id]?.pageUpdatedAt;
+  const isRecentlyActive=pageUpdatedAt&&(Date.now()-pageUpdatedAt<2*60*1000); // 2 min
+
+  return(<div>
+    {/* HEADER */}
+    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14,flexWrap:"wrap"}}>
+      <div style={{width:64,height:64,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,fontWeight:800,background:T.orange+"20",color:T.orange,border:`3px solid ${T.orange}66`}}>{child.name[0]}</div>
+      <div style={{flex:1}}>
+        <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:0}}>{child.name}</h1>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginTop:4,flexWrap:"wrap"}}>
+          {isRecentlyActive?
+            <span style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.ok+"22",color:T.ok,fontWeight:600,display:"inline-flex",alignItems:"center",gap:6}}>
+              <span style={{width:8,height:8,borderRadius:"50%",background:T.ok,animation:"pulse 1.5s infinite"}}/>
+              Online — Şu an aktif
+            </span>:
+            <span style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.tm+"22",color:T.tm,fontWeight:500}}>
+              Çevrimdışı {lastSeen?`• Son görülme: ${ft(lastSeen)}`:""}
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+
+    {/* CURRENT WEB ACTIVITY */}
+    {isRecentlyActive&&currentPage&&<Card style={{marginBottom:14,background:`linear-gradient(135deg,${T.ok}20,${T.cyan}10)`,borderColor:T.ok+"55"}}>
+      <div style={{fontSize:12,fontWeight:700,color:T.ok,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>🌐 Şu An Web Sayfası</div>
+      <div style={{fontSize:18,fontWeight:700,color:T.tp}}>{currentPage}</div>
+      {currentTaskId&&<div style={{fontSize:13,color:T.tm,marginTop:4}}>Görev #{currentTaskId} açık • Son güncelleme {fd(Date.now()-pageUpdatedAt)} önce</div>}
+    </Card>}
+
+    {/* CLASSROOM LAYOUT — read only */}
+    {myClass&&mySeat&&<Card style={{marginBottom:14,padding:14}}>
+      <div style={{fontSize:15,fontWeight:700,color:T.orange,marginBottom:8}}>🏫 Çocuğunuzun Yeri — {myClass.name}</div>
+      <ParentMiniClassroom myClass={myClass} childId={child.id}/>
+    </Card>}
+    {!myClass&&<Card style={{marginBottom:14}}><div style={{padding:14,textAlign:"center",color:T.tm,fontSize:13}}>Çocuk henüz bir sınıfa atanmamış</div></Card>}
+
+    {/* CURRENT TASK POPUP */}
+    {current&&<Card style={{marginBottom:14,borderColor:T.orange+"55",position:"relative"}}>
+      <div style={{fontSize:12,color:T.orange,fontWeight:700,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>🎯 Şu An Üzerinde Çalıştığı Görev</div>
+      <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
+        <TaskImage taskId={current.id} type="gorsel" size={80} fallbackEmoji={current.img}/>
+        <div style={{flex:1}}>
+          <div style={{fontSize:18,fontWeight:800,marginBottom:4}}>#{current.id} — {current.title}</div>
+          <div style={{fontSize:13,padding:"3px 10px",borderRadius:5,background:T.purple+"30",color:T.pl,display:"inline-block",marginBottom:6}}>{current.cat}</div>
+          <div style={{fontSize:14,color:T.ts,lineHeight:1.5}}>{current.desc}</div>
+          <div style={{marginTop:8,display:"flex",gap:8,alignItems:"center"}}>
+            <Badge s={sp[current.id]?.status}/>
+            <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{current.xp} XP</span>
+            {sp[current.id]?.startedAt&&<span style={{fontSize:12,color:T.cyan}}>⏱ {fd(Date.now()-sp[current.id].startedAt)} önce başladı</span>}
+          </div>
+        </div>
+      </div>
+    </Card>}
+
+    {/* AUDIT LOG — only for this child */}
+    <div style={{fontSize:16,fontWeight:700,color:T.pl,marginBottom:8}}>📋 Aktivite Geçmişi</div>
+    <Card>
+      {logs.length===0?<div style={{padding:14,textAlign:"center",color:T.tm,fontSize:13}}>Henüz aktivite yok</div>:
+      <div style={{maxHeight:500,overflowY:"auto"}}>
+        {logs.slice(0,80).map(lg=>{
+          const tc={login:T.tm,task_started:T.cyan,task_completed:T.pl,task_approved:T.ok,task_rejected:T.err,help_request:T.err}[lg.type]||T.tm;
+          const icon={login:"🔐",task_started:"🎯",task_completed:"📤",task_approved:"✓",task_rejected:"🔄",help_request:"🖐"}[lg.type]||"•";
+          return(<div key={lg.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:`1px solid ${T.border}33`}}>
+            <span style={{fontSize:18,width:24,textAlign:"center"}}>{icon}</span>
+            <span style={{fontSize:13,color:tc,fontWeight:600,minWidth:100}}>{ft(lg.ts)}</span>
+            <span style={{fontSize:14,color:T.tp,flex:1}}>{lg.detail}</span>
+            {lg.taskId&&<span style={{fontSize:11,padding:"2px 8px",borderRadius:5,background:T.purple+"22",color:T.pl}}>G.{lg.taskId}</span>}
+          </div>);
+        })}
+      </div>}
+    </Card>
+  </div>);
+}
+
+// Mini classroom — only show parent's child highlighted
+function ParentMiniClassroom({myClass,childId}){
+  const renderTable=(table)=>{
+    const isMyTable=table.seats?.includes(childId);
+    return(<div key={table.id} style={{
+      position:"absolute",left:table.x,top:table.y,
+      width:table.w,height:table.h,
+      background:"linear-gradient(160deg, #A07828, #8B6914 30%, #7A5C12 60%, #6B4F12)",
+      borderRadius:10,border:isMyTable?`3px solid ${T.orange}`:"3px solid #5C4010",
+      boxShadow:isMyTable?`0 0 24px ${T.orange}88`:"0 4px 12px #00000055",
+      display:"flex",flexDirection:"column",overflow:"hidden",
+    }}>
+      <div style={{padding:"3px 8px",background:"#5C401088",borderBottom:"1px solid #4a350e",fontSize:9,color:"#C4A868",fontWeight:700}}>
+        {TABLE_PRESETS[table.type]?.label||"Masa"}
+      </div>
+      <div style={{flex:1,display:"grid",gridTemplateColumns:`repeat(${table.horizontal?(TABLE_PRESETS[table.type]?.rows||1):(TABLE_PRESETS[table.type]?.cols||2)},1fr)`,gap:3,padding:4}}>
+        {table.seats.map((sid,i)=>{
+          const isMe=sid===childId;
+          return(<div key={i} style={{
+            background:isMe?T.orange+"33":sid?"#1a1408":"transparent",
+            border:isMe?`2px solid ${T.orange}`:sid?`1px solid #5C401044`:"1px dashed #5C401033",
+            borderRadius:6,minHeight:42,display:"flex",alignItems:"center",justifyContent:"center",
+            position:"relative",
+          }}>
+            {isMe&&<>
+              <div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",fontSize:14,zIndex:2}}>📍</div>
+              <div style={{fontSize:11,fontWeight:700,color:T.orange}}>BEN</div>
+            </>}
+            {!isMe&&sid&&<div style={{fontSize:14,color:WOOD.textDim,opacity:.4}}>•</div>}
+            {!sid&&<div style={{fontSize:11,color:T.tm,opacity:.5}}>boş</div>}
+          </div>);
+        })}
+      </div>
+    </div>);
+  };
+
+  return(<div style={{position:"relative",width:"100%",height:Math.min(myClass.canvasH||500,500),background:"linear-gradient(180deg,#13101e,#0f0c18)",border:`1px solid ${T.border}`,borderRadius:10,overflow:"auto"}}>
+    <div style={{position:"absolute",top:8,left:"50%",transform:"translateX(-50%)",padding:"4px 16px",borderRadius:6,background:"#1a4a2e88",border:"2px solid #2d8a5666",fontSize:11,fontWeight:700,color:"#86efac",zIndex:5}}>🖥️ AKILLI TAHTA</div>
+    {(myClass.objects||[]).filter(o=>o.type==="tv").map(o=>(
+      <div key={o.id} style={{position:"absolute",left:o.x,top:o.y,width:o.w,height:o.h,background:"linear-gradient(180deg,#1a1a2e,#0f0f1e)",borderRadius:6,border:"2px solid #333",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#67e8f9",fontWeight:700}}>🖥️ {o.label||"TV"}</div>
+    ))}
+    {(myClass.tables||[]).map(renderTable)}
+  </div>);
+}
+
+// ─── TAB 2: KAZANIMLAR ───
+function ParentLearningsView({child,sp}){
+  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+  const xp=completed.reduce((a,t)=>a+t.xp,0);
+  const lv=getLevel(xp);
+  const nlv=getNextLevel(xp);
+  let totalMs=0;
+  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+  const cats=[...new Set(TASKS.map(t=>t.cat))];
+  const allLearnings=[...new Set(completed.flatMap(t=>t.learnings||[]))];
+
+  return(<div>
+    {/* HERO */}
+    <Card style={{marginBottom:14,background:`linear-gradient(135deg,${T.purple}40,${T.orange}20)`,border:`1px solid ${T.orange}44`}}>
+      <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+        <div style={{width:64,height:64,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,background:T.orange+"20",border:`3px solid ${T.orange}88`}}>{lv.icon}</div>
+        <div style={{flex:1,minWidth:180}}>
+          <div style={{fontSize:22,fontWeight:800,color:T.orange}}>Level {lv.lv} — {lv.name}</div>
+          <div style={{fontSize:14,color:T.ol,fontWeight:700,marginTop:2}}>{xp} XP {nlv&&<span style={{fontSize:12,color:T.tm,fontWeight:400}}>• Sonraki: {nlv.icon} {nlv.name} ({nlv.min})</span>}</div>
+          <div style={{width:"100%",height:10,borderRadius:5,background:T.border,overflow:"hidden",marginTop:6}}>
+            <div style={{height:"100%",borderRadius:5,background:`linear-gradient(90deg,${T.orange},${T.pl})`,width:`${nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100}%`}}/>
+          </div>
+        </div>
+        <div style={{textAlign:"center",minWidth:90}}>
+          <div style={{fontSize:30,fontWeight:800,color:T.orange}}>{completed.length}<span style={{fontSize:18,color:T.tm}}>/36</span></div>
+          <div style={{fontSize:11,color:T.tm}}>Tamamlanan</div>
+        </div>
+      </div>
+    </Card>
+
+    {/* STATS */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
+      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.cyan}}>{fd(totalMs)}</div><div style={{fontSize:12,color:T.ts}}>Toplam Süre</div></Card>
+      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.warn}}>{xp}</div><div style={{fontSize:12,color:T.ts}}>XP Puanı</div></Card>
+      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.pl}}>{allLearnings.length}</div><div style={{fontSize:12,color:T.ts}}>Yetkinlik</div></Card>
+      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.ok}}>{Math.round(completed.length/36*100)}%</div><div style={{fontSize:12,color:T.ts}}>İlerleme</div></Card>
+    </div>
+
+    {/* CATEGORY BREAKDOWN */}
+    {completed.length===0?<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:14}}>Henüz tamamlanmış görev yok.</div></Card>:
+    cats.map(cat=>{
+      const ct=completed.filter(t=>t.cat===cat);
+      if(ct.length===0)return null;
+      const ctTotal=TASKS.filter(t=>t.cat===cat).length;
+      return(<div key={cat} style={{marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+          <span style={{fontSize:15,fontWeight:700,color:T.orange,padding:"4px 14px",background:T.orange+"15",borderRadius:8}}>{cat}</span>
+          <span style={{fontSize:12,color:T.ts}}>{ct.length}/{ctTotal} tamamlandı</span>
+        </div>
+        {ct.map(t=>{
+          const tp=sp[t.id];
+          const dur=(tp.startedAt&&tp.completedAt)?fd(tp.completedAt-tp.startedAt):null;
+          return(<Card key={t.id} style={{marginBottom:8,padding:12}}>
+            <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+              <TaskImage taskId={t.id} type="gorsel" size={48} fallbackEmoji={t.img}/>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                  <span style={{fontSize:15,fontWeight:700}}>#{t.id} {t.title}</span>
+                  <span style={{fontSize:12,padding:"2px 8px",borderRadius:5,background:T.ok+"20",color:T.ok,fontWeight:600}}>✓ Tamamlandı</span>
+                  {dur&&<span style={{fontSize:12,color:T.cyan}}>⏱ {dur}</span>}
+                  <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{t.xp} XP</span>
+                </div>
+                <div style={{fontSize:13,color:T.ts,marginBottom:6}}>{t.desc}</div>
+                {t.learnings&&t.learnings.length>0&&<div>
+                  <div style={{fontSize:11,color:T.pl,fontWeight:700,marginBottom:4}}>📚 KAZANIMLAR</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                    {t.learnings.map((lr,i)=><span key={i} style={{fontSize:12,padding:"3px 10px",borderRadius:5,background:T.purple+"22",color:T.pl,border:`1px solid ${T.purple}33`}}>{lr}</span>)}
+                  </div>
+                </div>}
+              </div>
+            </div>
+          </Card>);
+        })}
+      </div>);
+    })}
+  </div>);
+}
+
+// ─── TAB 3: CV / SERTIFIKA ───
+function ParentCVView({child,sp}){
+  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+  const xp=completed.reduce((a,t)=>a+t.xp,0);
+  const lv=getLevel(xp);
+  let totalMs=0;
+  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+  const allLearnings=[...new Set(completed.flatMap(t=>t.learnings||[]))];
+  const cats=[...new Set(completed.map(t=>t.cat))];
+  const today=new Date().toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"});
+
+  // Avg time per task
+  const avgMin=completed.length>0?Math.round((totalMs/completed.length)/60000):0;
+  // Difficulty stats
+  const easyDone=completed.filter(t=>t.diff<=2).length;
+  const medDone=completed.filter(t=>t.diff===3).length;
+  const hardDone=completed.filter(t=>t.diff>=4).length;
+  // Top categories
+  const catCounts={};
+  completed.forEach(t=>{catCounts[t.cat]=(catCounts[t.cat]||0)+1;});
+  const topCats=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+
+  const handlePrint=()=>{window.print();};
+
+  return(<div>
+    <style>{`
+      @media print {
+        nav, .no-print { display: none !important; }
+        body { background: #fff !important; }
+        .cv-container { box-shadow: none !important; padding: 24px !important; max-width: 100% !important; }
+      }
+    `}</style>
+
+    <div className="no-print" style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+      <button onClick={handlePrint} style={{padding:"12px 24px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.orange},${T.od})`,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}}>🖨 Yazdır / PDF Olarak Kaydet</button>
+      <span style={{fontSize:12,color:T.tm}}>"Yazdır" → Hedef: "PDF olarak kaydet" seç</span>
+    </div>
+
+    <div className="cv-container" style={{background:"#fff",color:"#1a1035",borderRadius:14,padding:36,fontFamily:"'Segoe UI',sans-serif",boxShadow:"0 8px 30px #0006",maxWidth:840,margin:"0 auto"}}>
+      {/* HEADER */}
+      <div style={{borderBottom:"4px double #6B3FA0",paddingBottom:16,marginBottom:20,display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+        <div>
+          <div style={{fontSize:11,color:"#888",letterSpacing:2,textTransform:"uppercase",marginBottom:4}}>Robotik Eğitim Sertifikası</div>
+          <h1 style={{margin:0,fontSize:34,fontWeight:800,color:"#6B3FA0",letterSpacing:.5}}>{child.name}</h1>
+          <div style={{fontSize:14,color:"#666",marginTop:6}}>📜 Tamamlanan Müfredat: BerryBot Robotik Programı</div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:24,fontWeight:800,color:"#c96f10",letterSpacing:.5}}>🤖 RoboGPT</div>
+          <div style={{fontSize:11,color:"#666",fontWeight:600}}>BERRYBOT ROBOTİK AKADEMİSİ</div>
+          <div style={{fontSize:10,color:"#999",marginTop:4}}>{today}</div>
+        </div>
+      </div>
+
+      {/* SUMMARY PARAGRAPH */}
+      <div style={{padding:16,background:"linear-gradient(135deg,#f5f0ff,#fff5e6)",borderRadius:10,marginBottom:18,border:"1px solid #e0d0ff"}}>
+        <div style={{fontSize:11,letterSpacing:2,color:"#6B3FA0",fontWeight:700,marginBottom:6}}>ÖZET</div>
+        <div style={{fontSize:14,lineHeight:1.7,color:"#333"}}>
+          <b>{child.name}</b>, BerryBot Robotik Akademisi'nin <b>36 görevlik</b> kapsamlı müfredatında 
+          <b style={{color:"#c96f10"}}> {completed.length} görevi</b> başarıyla tamamlamıştır. 
+          Bu süreçte <b>{xp} XP</b> kazanmış, <b>Level {lv.lv} ({lv.name})</b> seviyesine ulaşmıştır.
+          {cats.length>0&&<> Eğitim boyunca <b>{cats.length} farklı disiplinde</b> deneyim kazanmış,
+          özellikle {topCats.map(([c])=>`"${c}"`).join(", ")} kategorilerinde yoğunlaşmıştır.</>}
+          {totalMs>0&&<> Toplamda <b>{fd(totalMs)}</b> aktif eğitim süresi tamamlamış,
+          görev başına ortalama <b>{avgMin} dakika</b> harcamıştır.</>}
+        </div>
+      </div>
+
+      {/* KEY METRICS */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:18}}>
+        <div style={{padding:12,background:"#fff5e6",borderRadius:8,textAlign:"center",border:"1px solid #f5d99a"}}>
+          <div style={{fontSize:26,fontWeight:800,color:"#c96f10"}}>{completed.length}<span style={{fontSize:14,color:"#888"}}>/36</span></div>
+          <div style={{fontSize:10,color:"#666",fontWeight:600,letterSpacing:1}}>GÖREV</div>
+        </div>
+        <div style={{padding:12,background:"#fff0e6",borderRadius:8,textAlign:"center",border:"1px solid #f5b88a"}}>
+          <div style={{fontSize:26,fontWeight:800,color:"#c96f10"}}>{xp}</div>
+          <div style={{fontSize:10,color:"#666",fontWeight:600,letterSpacing:1}}>XP PUANI</div>
+        </div>
+        <div style={{padding:12,background:"#f5f0ff",borderRadius:8,textAlign:"center",border:"1px solid #d0c0ff"}}>
+          <div style={{fontSize:26,fontWeight:800,color:"#6B3FA0"}}>Lv.{lv.lv}</div>
+          <div style={{fontSize:10,color:"#666",fontWeight:600,letterSpacing:1}}>{lv.name.toUpperCase()}</div>
+        </div>
+        <div style={{padding:12,background:"#f0f8f0",borderRadius:8,textAlign:"center",border:"1px solid #c0e0c0"}}>
+          <div style={{fontSize:26,fontWeight:800,color:"#22a55a"}}>{fd(totalMs)}</div>
+          <div style={{fontSize:10,color:"#666",fontWeight:600,letterSpacing:1}}>EĞİTİM SÜRESİ</div>
+        </div>
+      </div>
+
+      {/* DIFFICULTY BREAKDOWN */}
+      <div style={{marginBottom:18}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#6B3FA0",marginBottom:8,paddingBottom:4,borderBottom:"1px solid #e0d0ff",letterSpacing:1}}>📊 ZORLUK ANALİZİ</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,fontSize:12}}>
+          <div style={{padding:10,background:"#e6f7ed",borderRadius:6,textAlign:"center"}}>
+            <div style={{fontSize:18,fontWeight:800,color:"#22a55a"}}>{easyDone}</div>
+            <div style={{color:"#666"}}>Kolay (★★)</div>
+          </div>
+          <div style={{padding:10,background:"#fef3e6",borderRadius:6,textAlign:"center"}}>
+            <div style={{fontSize:18,fontWeight:800,color:"#c96f10"}}>{medDone}</div>
+            <div style={{color:"#666"}}>Orta (★★★)</div>
+          </div>
+          <div style={{padding:10,background:"#fde6e6",borderRadius:6,textAlign:"center"}}>
+            <div style={{fontSize:18,fontWeight:800,color:"#c93030"}}>{hardDone}</div>
+            <div style={{color:"#666"}}>Zor (★★★★+)</div>
+          </div>
+        </div>
+      </div>
+
+      {/* COMPETENCIES */}
+      <div style={{marginBottom:18}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#6B3FA0",marginBottom:8,paddingBottom:4,borderBottom:"1px solid #e0d0ff",letterSpacing:1}}>🎯 KAZANILAN YETKİNLİKLER ({allLearnings.length})</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+          {allLearnings.length===0?<span style={{fontSize:12,color:"#888",fontStyle:"italic"}}>Henüz yetkinlik kazanılmadı</span>:
+          allLearnings.map((lr,i)=><span key={i} style={{fontSize:11,padding:"4px 11px",borderRadius:5,background:"#f5f0ff",color:"#5a3580",border:"1px solid #d0c0ff",fontWeight:500}}>{lr}</span>)}
+        </div>
+      </div>
+
+      {/* COMPLETED TASKS BY CATEGORY */}
+      <div style={{marginBottom:18}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#6B3FA0",marginBottom:8,paddingBottom:4,borderBottom:"1px solid #e0d0ff",letterSpacing:1}}>✓ TAMAMLANAN GÖREVLER</div>
+        {cats.length===0?<div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>Henüz tamamlanmış görev yok</div>:
+        cats.map(cat=>{
+          const ct=completed.filter(t=>t.cat===cat);
+          if(ct.length===0)return null;
+          const catXP=ct.reduce((a,t)=>a+t.xp,0);
+          return(<div key={cat} style={{marginBottom:10}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{fontSize:13,fontWeight:700,color:"#c96f10"}}>{cat}</span>
+              <span style={{fontSize:11,color:"#888"}}>{ct.length} görev • {catXP} XP</span>
+            </div>
+            <div style={{paddingLeft:14,fontSize:12,color:"#444",lineHeight:1.6}}>
+              {ct.map(t=><span key={t.id}><b>#{t.id}</b> {t.title} <span style={{color:"#888",fontSize:10}}>(+{t.xp})</span>{t.id!==ct[ct.length-1].id?" • ":""}</span>)}
+            </div>
+          </div>);
+        })}
+      </div>
+
+      {/* FOOTER / SIGNATURE */}
+      <div style={{marginTop:30,paddingTop:14,borderTop:"4px double #6B3FA0",display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:10}}>
+        <div>
+          <div style={{fontSize:11,color:"#666",marginBottom:2}}>Bu sertifika RoboGPT BerryBot Akademisi tarafından düzenlenmiştir.</div>
+          <div style={{fontSize:10,color:"#999"}}>www.robogpt.com.tr</div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:10,color:"#999"}}>Doğrulama Kodu</div>
+          <div style={{fontSize:11,fontFamily:"monospace",color:"#666",fontWeight:700}}>BB-{child.id.toUpperCase()}-{Date.now().toString(36).toUpperCase().slice(-6)}</div>
+        </div>
+      </div>
+    </div>
   </div>);
 }

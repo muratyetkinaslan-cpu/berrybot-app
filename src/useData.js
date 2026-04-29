@@ -61,6 +61,15 @@ export function useData() {
         ]);
         setProgress(prev => ({ ...prev, [u.id]: sp }));
         setMeta(m);
+      } else if (u?.role === 'parent' && u.childId) {
+        const [sp, m, l] = await Promise.all([
+          db.getStudentProgress(u.childId),
+          db.getAllMeta(),
+          db.getLogs(500),
+        ]);
+        setProgress(prev => ({ ...prev, [u.childId]: sp }));
+        setMeta(m);
+        setLogs(l.filter(lg => lg.userId === u.childId || lg.targetUser === u.childId));
       } else {
         // Admin/instructor: fetch everything
         const [us, p, m, l, cl] = await Promise.all([
@@ -97,9 +106,16 @@ export function useData() {
                   setProgress({[restored.id]: sp});
                   setMeta(m);
                 } else if (restored.role === 'parent' && restored.childId) {
-                  const [sp, m] = await Promise.all([db.getStudentProgress(restored.childId), db.getAllMeta()]);
+                  const [sp, m, l, cl] = await Promise.all([
+                    db.getStudentProgress(restored.childId),
+                    db.getAllMeta(),
+                    db.getLogs(500),
+                    db.getClassLayouts(),
+                  ]);
                   setProgress({[restored.childId]: sp});
                   setMeta(m);
+                  setLogs(l.filter(lg => lg.userId === restored.childId || lg.targetUser === restored.childId));
+                  if (cl.length > 0) setClassLayout(cl);
                 } else {
                   const [p, m, l] = await Promise.all([db.getAllProgress(), db.getAllMeta(), db.getLogs(200)]);
                   setProgress(p); setMeta(m); setLogs(l);
@@ -138,10 +154,18 @@ export function useData() {
         setProgress(prev => ({ ...prev, [u.id]: sp }));
         setMeta(m);
       } else if (u.role === 'parent' && u.childId) {
-        // Parent: load own child's progress
-        const [sp, m] = await Promise.all([db.getStudentProgress(u.childId), db.getAllMeta()]);
+        // Parent: load own child's progress + child's logs + class layouts
+        const [sp, m, l, cl] = await Promise.all([
+          db.getStudentProgress(u.childId),
+          db.getAllMeta(),
+          db.getLogs(500),
+          db.getClassLayouts(),
+        ]);
         setProgress(prev => ({ ...prev, [u.childId]: sp }));
         setMeta(m);
+        // Filter logs to only this child
+        setLogs(l.filter(lg => lg.userId === u.childId || lg.targetUser === u.childId));
+        if (cl.length > 0) setClassLayout(cl);
       } else {
         const [us, p, m, l, cl] = await Promise.all([
           db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
@@ -242,11 +266,20 @@ export function useData() {
     merged[sid].helpRequest = meta[sid]?.help_request;
     merged[sid].online = meta[sid]?.online;
     merged[sid].lastSeen = meta[sid]?.last_seen;
+    merged[sid].currentPage = meta[sid]?.current_page;
+    merged[sid].currentTaskId = meta[sid]?.current_task_id;
+    merged[sid].pageUpdatedAt = meta[sid]?.page_updated_at;
   });
+
+  const setCurrentPage = useCallback((page, taskId) => {
+    if (currentUser?.role === 'student') {
+      db.setCurrentPage(currentUser.id, page, taskId);
+    }
+  }, [currentUser]);
 
   return {
     loading, currentUser, users, progress: merged, logs, classLayout,
     login, logout, addUser, startTask, submitTask, approveTask,
-    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, refresh: loadAll,
+    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh: loadAll,
   };
 }

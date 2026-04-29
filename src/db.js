@@ -187,6 +187,17 @@ export async function setOnline(studentId, online) {
   await supabase.from('bb_student_meta').update({ online, last_seen: Date.now() }).eq('student_id', studentId);
 }
 
+// Track current page student is on
+export async function setCurrentPage(studentId, page, taskId) {
+  await supabase.from('bb_student_meta').update({ 
+    current_page: page, 
+    current_task_id: taskId || null,
+    page_updated_at: Date.now(),
+    last_seen: Date.now(),
+    online: true,
+  }).eq('student_id', studentId);
+}
+
 // ═══ LOGS ═══
 export async function addLog({ type, userId, targetUser, taskId, detail }) {
   await supabase.from('bb_logs').insert({
