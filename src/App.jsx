@@ -70,42 +70,42 @@ const WOOD = {
 
 // ─── 36 TASKS — kazanımlar (learnings) velilerin görmesi için ───
 const TASKS=[
-  {id:1,title:"RGB LED Yakma",cat:"RGB LED",diff:1,xp:10,img:"💡",desc:"Kırmızı, Yeşil, Mavi LED'leri ayrı ayrı yak.",answer:"Doğru blok: set_rgb(255,0,0)",learnings:["RGB renk sistemi","Pin çıkışı kontrolü","Temel blok kod yazımı"]},
-  {id:2,title:"LED Renk Karışımı",cat:"RGB LED",diff:1,xp:10,img:"🌈",desc:"İki rengi karıştırarak yeni renk elde et.",answer:"set_rgb(255,255,0) → sarı",learnings:["Renk karışımı (additive)","RGB değer kombinasyonları","Yaratıcı düşünme"]},
-  {id:3,title:"LED Yanıp Sönme",cat:"RGB LED",diff:2,xp:15,img:"✨",desc:"LED'i 1 saniye aralıkla yanıp söndür.",answer:"while true: set_rgb → wait(1) → off → wait(1)",learnings:["Sonsuz döngü kavramı","Zamanlama (delay)","Durum değişimi"]},
-  {id:4,title:"Gökkuşağı Efekti",cat:"RGB LED",diff:2,xp:15,img:"🌈",desc:"Sırayla 7 rengi göster.",answer:"7 renk döngüsü",learnings:["Sıralı işlem","Renk geçişleri","Animasyon mantığı"]},
-  {id:5,title:"SOS Sinyali",cat:"RGB LED",diff:3,xp:20,img:"🆘",desc:"Mors koduyla SOS sinyali gönder.",answer:"3 kısa, 3 uzun, 3 kısa",learnings:["Mors kodu","Desen tekrarı","Zamanlama hassasiyeti","İletişim sistemleri"]},
-  {id:6,title:"Nefes Alan LED",cat:"RGB LED",diff:3,xp:20,img:"💫",desc:"LED parlaklığını yavaşça artır azalt.",answer:"for loop ile PWM",learnings:["PWM (Pulse Width Modulation)","Yumuşak geçiş","Sayaç döngüleri"]},
-  {id:7,title:"Motor İleri Geri",cat:"Motor",diff:2,xp:15,img:"⚙️",desc:"Motoru ileri ve geri hareket ettir.",answer:"motor.forward() / motor.backward()",learnings:["DC motor kontrolü","Yön belirleme","Hareketin temel komutları"]},
-  {id:8,title:"Hız Kontrolü",cat:"Motor",diff:2,xp:15,img:"🏎️",desc:"Motor hızını kademeli artır.",answer:"speed değişkeni ile PWM",learnings:["Değişken kullanımı","Kademeli kontrol","PWM ile hız ayarı"]},
-  {id:9,title:"Kare Çizme",cat:"Motor",diff:3,xp:25,img:"◻️",desc:"Robotla kare şekli çiz.",answer:"4x ileri+90° dönüş",learnings:["Geometri (kare)","Döngü ile tekrar","Açı kavramı (90°)","Adım adım planlama"]},
-  {id:10,title:"Buzzer Melodisi",cat:"Sensör+LED+Buzzer",diff:1,xp:10,img:"🔔",desc:"Buzzer ile basit melodi çal.",answer:"tone(freq, dur)",learnings:["Frekans ve ses","Müzik notası mantığı","Süre kontrolü"]},
-  {id:11,title:"Işık Sensörü Okuma",cat:"Sensör+LED+Buzzer",diff:2,xp:15,img:"☀️",desc:"Işık sensöründen değer oku ve göster.",answer:"light = ldr.read()",learnings:["Sensör verisi okuma","Analog değerler","LDR çalışma prensibi"]},
-  {id:12,title:"Sıcaklık Alarmı",cat:"Sensör+LED+Buzzer",diff:2,xp:15,img:"🌡️",desc:"Sıcaklık eşik değeri geçince alarm ver.",answer:"if temp > 30: buzzer.on()",learnings:["Koşullu ifadeler (if)","Eşik değer","Sensör + aktüatör birleştirme"]},
-  {id:13,title:"Işık Takip Başlangıç",cat:"Işık Sensörü",diff:2,xp:15,img:"🔦",desc:"Işık kaynağına doğru dön.",answer:"LDR farkına göre motor yönlendir",learnings:["İki sensör karşılaştırma","Yönlendirme algoritması","Tepkisel davranış"]},
-  {id:14,title:"Işık Yoğunluk Haritası",cat:"Işık Sensörü",diff:3,xp:20,img:"🗺️",desc:"Ortamdaki ışık dağılımını LED ile göster.",answer:"LDR oku → RGB map",learnings:["Veri görselleştirme","Aralık eşleştirme (map)","Çoklu sensör"]},
-  {id:15,title:"IR Kumanda Okuma",cat:"IR Kumanda",diff:2,xp:15,img:"📡",desc:"IR kumandadan sinyal al ve göster.",answer:"ir.read() → serial",learnings:["Kızılötesi iletişim","Tuş kodları","Seri port debug"]},
-  {id:16,title:"Kumanda ile LED",cat:"IR Kumanda",diff:2,xp:15,img:"🎮",desc:"Kumanda tuşlarıyla LED rengini değiştir.",answer:"if key==1: red, key==2: green",learnings:["Çoklu koşul (if/elif)","Kullanıcı girdisi","Etkileşimli sistem"]},
-  {id:17,title:"Kumanda ile Motor",cat:"IR Kumanda",diff:3,xp:25,img:"🕹️",desc:"Kumandayla robotu yönlendir.",answer:"key mapping → motor direction",learnings:["Uzaktan kumanda mantığı","Tuş eşleme","Gerçek zamanlı kontrol"]},
-  {id:18,title:"Fonksiyon Tanımlama",cat:"Fonksiyon",diff:2,xp:15,img:"📦",desc:"Tekrarlayan işlemi fonksiyon yap.",answer:"def my_func(): ...",learnings:["Fonksiyon kavramı","Kod tekrarını önleme","Modüler programlama"]},
-  {id:19,title:"Mesafe Ölçme",cat:"Mesafe/Navigasyon",diff:2,xp:15,img:"📏",desc:"Ultrasonik sensörle mesafe ölç.",answer:"dist = ultrasonic.read()",learnings:["Ultrasonik dalgalar","Mesafe hesaplama","Birim dönüşümleri (cm)"]},
-  {id:20,title:"Otonom Navigasyon",cat:"Mesafe/Navigasyon",diff:4,xp:30,img:"🧭",desc:"Engellere çarpmadan ilerle.",answer:"if dist < 20: turn()",learnings:["Otonom karar verme","Sensör entegrasyonu","Reaktif robotik","Güvenlik mesafesi"]},
-  {id:21,title:"Engel Algılama",cat:"Engel Algılama",diff:3,xp:20,img:"🚧",desc:"Önündeki engeli tespit et ve dur.",answer:"while dist > 15: forward()",learnings:["While döngüsü","Sürekli kontrol","Acil durdurma"]},
-  {id:22,title:"Engelden Kaçınma",cat:"Engel Algılama",diff:4,xp:30,img:"🔀",desc:"Engel varsa etrafından dolaş.",answer:"detect → turn → check → forward",learnings:["Çok adımlı strateji","Algılama-eylem döngüsü","Problem çözme"]},
-  {id:23,title:"Çizgi Algılama",cat:"Çizgi Takip",diff:2,xp:15,img:"➖",desc:"Siyah çizgiyi sensörle algıla.",answer:"line = ir_sensor.read()",learnings:["Yansıma sensörleri","Siyah/beyaz ayrımı","İkili veri (binary)"]},
-  {id:24,title:"Çizgi Takip Basit",cat:"Çizgi Takip",diff:3,xp:25,img:"〰️",desc:"Basit çizgi takip robotu yap.",answer:"if left: turn_right, if right: turn_left",learnings:["Bang-bang kontrol","Çizgi takip algoritması","Sensör konumlandırma"]},
-  {id:25,title:"Kesişim Yönetimi",cat:"Çizgi Takip",diff:4,xp:30,img:"✖️",desc:"Çizgi kesişimlerinde doğru karar ver.",answer:"count intersections → decide",learnings:["Sayaç değişkeni","Karar mekanizması","Harita mantığı"]},
-  {id:26,title:"Hızlı Çizgi Takip",cat:"Çizgi Takip",diff:5,xp:40,img:"⚡",desc:"PID kontrolle hızlı çizgi takip.",answer:"PID: error*Kp + integral*Ki + derivative*Kd",learnings:["PID kontrol algoritması","Hata düzeltme","İleri matematik kullanımı","Optimizasyon"]},
-  {id:27,title:"Sumo Duruş",cat:"Sumo Robot",diff:2,xp:15,img:"🤼",desc:"Ring içinde kal, dışarı çıkma.",answer:"if edge: backward + turn",learnings:["Sınır algılama","Savunma davranışı","Acil tepki"]},
-  {id:28,title:"Rakip Bulma",cat:"Sumo Robot",diff:3,xp:25,img:"🔍",desc:"Ultrasonik ile rakibi bul.",answer:"scan 360° → closest target",learnings:["Tarama (scanning)","Hedef takibi","Mesafe karşılaştırma"]},
-  {id:29,title:"Sumo Saldırı",cat:"Sumo Robot",diff:3,xp:25,img:"💥",desc:"Rakibi bul ve it.",answer:"detect → full speed forward",learnings:["Hedef kilitleme","Maksimum güç kullanımı","Rekabetçi strateji"]},
-  {id:30,title:"Sumo Strateji",cat:"Sumo Robot",diff:4,xp:35,img:"🧠",desc:"Savunma ve saldırı stratejisi.",answer:"state machine: search/attack/defend",learnings:["Durum makinesi","Stratejik düşünme","Çoklu mod yönetimi","Yapay zeka temelleri"]},
-  {id:31,title:"Mini Sumo Turnuva",cat:"Sumo Robot",diff:4,xp:35,img:"🏆",desc:"Turnuva kurallarına uygun sumo robotu.",answer:"combine all sumo skills",learnings:["Kural odaklı tasarım","Tüm becerileri birleştirme","Rekabet hazırlığı"]},
-  {id:32,title:"Sumo Şampiyonu",cat:"Sumo Robot",diff:5,xp:50,img:"👑",desc:"En iyi sumo stratejisini geliştir.",answer:"adaptive strategy",learnings:["Adaptif algoritma","Rakip analizi","Yapay zeka davranışı","İleri robotik"]},
-  {id:33,title:"Işık Kaynağı Bulma",cat:"Işık Takip",diff:3,xp:20,img:"💡",desc:"En parlak ışık kaynağına git.",answer:"compare LDRs → move toward max",learnings:["Maksimum bulma","Gradyan takibi","Çoklu sensör birleşimi"]},
-  {id:34,title:"Işıktan Kaçınma",cat:"Işık Takip",diff:3,xp:20,img:"🌑",desc:"Karanlık bölgeye git.",answer:"move toward min light",learnings:["Minimum bulma","Negatif fototaksis","Davranış değiştirme"]},
-  {id:35,title:"Işık Labirenti",cat:"Işık Takip",diff:4,xp:35,img:"🌟",desc:"Işık ipuçlarıyla labirentten çık.",answer:"follow light gradient",learnings:["Labirent çözme","İpucu takibi","Karmaşık navigasyon"]},
-  {id:36,title:"Final Projesi",cat:"Işık Takip",diff:5,xp:50,img:"🎓",desc:"Tüm becerileri birleştiren proje.",answer:"combined autonomous robot",learnings:["Sistem entegrasyonu","Proje tasarımı","Sunum becerileri","Otonom robot"]},
+  {id:1,title:"RGB LED Yakma",cat:"RGB LED",diff:1,expectedMin:8,xp:10,img:"💡",desc:"Kırmızı, Yeşil, Mavi LED'leri ayrı ayrı yak.",answer:"Doğru blok: set_rgb(255,0,0)",learnings:["RGB renk sistemi","Pin çıkışı kontrolü","Temel blok kod yazımı"]},
+  {id:2,title:"LED Renk Karışımı",cat:"RGB LED",diff:1,expectedMin:10,xp:10,img:"🌈",desc:"İki rengi karıştırarak yeni renk elde et.",answer:"set_rgb(255,255,0) → sarı",learnings:["Renk karışımı (additive)","RGB değer kombinasyonları","Yaratıcı düşünme"]},
+  {id:3,title:"LED Yanıp Sönme",cat:"RGB LED",diff:2,expectedMin:12,xp:15,img:"✨",desc:"LED'i 1 saniye aralıkla yanıp söndür.",answer:"while true: set_rgb → wait(1) → off → wait(1)",learnings:["Sonsuz döngü kavramı","Zamanlama (delay)","Durum değişimi"]},
+  {id:4,title:"Gökkuşağı Efekti",cat:"RGB LED",diff:2,expectedMin:15,xp:15,img:"🌈",desc:"Sırayla 7 rengi göster.",answer:"7 renk döngüsü",learnings:["Sıralı işlem","Renk geçişleri","Animasyon mantığı"]},
+  {id:5,title:"SOS Sinyali",cat:"RGB LED",diff:3,expectedMin:15,xp:20,img:"🆘",desc:"Mors koduyla SOS sinyali gönder.",answer:"3 kısa, 3 uzun, 3 kısa",learnings:["Mors kodu","Desen tekrarı","Zamanlama hassasiyeti","İletişim sistemleri"]},
+  {id:6,title:"Nefes Alan LED",cat:"RGB LED",diff:3,expectedMin:18,xp:20,img:"💫",desc:"LED parlaklığını yavaşça artır azalt.",answer:"for loop ile PWM",learnings:["PWM (Pulse Width Modulation)","Yumuşak geçiş","Sayaç döngüleri"]},
+  {id:7,title:"Motor İleri Geri",cat:"Motor",diff:2,expectedMin:12,xp:15,img:"⚙️",desc:"Motoru ileri ve geri hareket ettir.",answer:"motor.forward() / motor.backward()",learnings:["DC motor kontrolü","Yön belirleme","Hareketin temel komutları"]},
+  {id:8,title:"Hız Kontrolü",cat:"Motor",diff:2,expectedMin:15,xp:15,img:"🏎️",desc:"Motor hızını kademeli artır.",answer:"speed değişkeni ile PWM",learnings:["Değişken kullanımı","Kademeli kontrol","PWM ile hız ayarı"]},
+  {id:9,title:"Kare Çizme",cat:"Motor",diff:3,expectedMin:25,xp:25,img:"◻️",desc:"Robotla kare şekli çiz.",answer:"4x ileri+90° dönüş",learnings:["Geometri (kare)","Döngü ile tekrar","Açı kavramı (90°)","Adım adım planlama"]},
+  {id:10,title:"Buzzer Melodisi",cat:"Sensör+LED+Buzzer",diff:1,expectedMin:8,xp:10,img:"🔔",desc:"Buzzer ile basit melodi çal.",answer:"tone(freq, dur)",learnings:["Frekans ve ses","Müzik notası mantığı","Süre kontrolü"]},
+  {id:11,title:"Işık Sensörü Okuma",cat:"Sensör+LED+Buzzer",diff:2,expectedMin:12,xp:15,img:"☀️",desc:"Işık sensöründen değer oku ve göster.",answer:"light = ldr.read()",learnings:["Sensör verisi okuma","Analog değerler","LDR çalışma prensibi"]},
+  {id:12,title:"Sıcaklık Alarmı",cat:"Sensör+LED+Buzzer",diff:2,expectedMin:15,xp:15,img:"🌡️",desc:"Sıcaklık eşik değeri geçince alarm ver.",answer:"if temp > 30: buzzer.on()",learnings:["Koşullu ifadeler (if)","Eşik değer","Sensör + aktüatör birleştirme"]},
+  {id:13,title:"Işık Takip Başlangıç",cat:"Işık Sensörü",diff:2,expectedMin:12,xp:15,img:"🔦",desc:"Işık kaynağına doğru dön.",answer:"LDR farkına göre motor yönlendir",learnings:["İki sensör karşılaştırma","Yönlendirme algoritması","Tepkisel davranış"]},
+  {id:14,title:"Işık Yoğunluk Haritası",cat:"Işık Sensörü",diff:3,expectedMin:18,xp:20,img:"🗺️",desc:"Ortamdaki ışık dağılımını LED ile göster.",answer:"LDR oku → RGB map",learnings:["Veri görselleştirme","Aralık eşleştirme (map)","Çoklu sensör"]},
+  {id:15,title:"IR Kumanda Okuma",cat:"IR Kumanda",diff:2,expectedMin:12,xp:15,img:"📡",desc:"IR kumandadan sinyal al ve göster.",answer:"ir.read() → serial",learnings:["Kızılötesi iletişim","Tuş kodları","Seri port debug"]},
+  {id:16,title:"Kumanda ile LED",cat:"IR Kumanda",diff:2,expectedMin:15,xp:15,img:"🎮",desc:"Kumanda tuşlarıyla LED rengini değiştir.",answer:"if key==1: red, key==2: green",learnings:["Çoklu koşul (if/elif)","Kullanıcı girdisi","Etkileşimli sistem"]},
+  {id:17,title:"Kumanda ile Motor",cat:"IR Kumanda",diff:3,expectedMin:25,xp:25,img:"🕹️",desc:"Kumandayla robotu yönlendir.",answer:"key mapping → motor direction",learnings:["Uzaktan kumanda mantığı","Tuş eşleme","Gerçek zamanlı kontrol"]},
+  {id:18,title:"Fonksiyon Tanımlama",cat:"Fonksiyon",diff:2,expectedMin:15,xp:15,img:"📦",desc:"Tekrarlayan işlemi fonksiyon yap.",answer:"def my_func(): ...",learnings:["Fonksiyon kavramı","Kod tekrarını önleme","Modüler programlama"]},
+  {id:19,title:"Mesafe Ölçme",cat:"Mesafe/Navigasyon",diff:2,expectedMin:12,xp:15,img:"📏",desc:"Ultrasonik sensörle mesafe ölç.",answer:"dist = ultrasonic.read()",learnings:["Ultrasonik dalgalar","Mesafe hesaplama","Birim dönüşümleri (cm)"]},
+  {id:20,title:"Otonom Navigasyon",cat:"Mesafe/Navigasyon",diff:4,expectedMin:30,xp:30,img:"🧭",desc:"Engellere çarpmadan ilerle.",answer:"if dist < 20: turn()",learnings:["Otonom karar verme","Sensör entegrasyonu","Reaktif robotik","Güvenlik mesafesi"]},
+  {id:21,title:"Engel Algılama",cat:"Engel Algılama",diff:3,expectedMin:18,xp:20,img:"🚧",desc:"Önündeki engeli tespit et ve dur.",answer:"while dist > 15: forward()",learnings:["While döngüsü","Sürekli kontrol","Acil durdurma"]},
+  {id:22,title:"Engelden Kaçınma",cat:"Engel Algılama",diff:4,expectedMin:30,xp:30,img:"🔀",desc:"Engel varsa etrafından dolaş.",answer:"detect → turn → check → forward",learnings:["Çok adımlı strateji","Algılama-eylem döngüsü","Problem çözme"]},
+  {id:23,title:"Çizgi Algılama",cat:"Çizgi Takip",diff:2,expectedMin:12,xp:15,img:"➖",desc:"Siyah çizgiyi sensörle algıla.",answer:"line = ir_sensor.read()",learnings:["Yansıma sensörleri","Siyah/beyaz ayrımı","İkili veri (binary)"]},
+  {id:24,title:"Çizgi Takip Basit",cat:"Çizgi Takip",diff:3,expectedMin:25,xp:25,img:"〰️",desc:"Basit çizgi takip robotu yap.",answer:"if left: turn_right, if right: turn_left",learnings:["Bang-bang kontrol","Çizgi takip algoritması","Sensör konumlandırma"]},
+  {id:25,title:"Kesişim Yönetimi",cat:"Çizgi Takip",diff:4,expectedMin:30,xp:30,img:"✖️",desc:"Çizgi kesişimlerinde doğru karar ver.",answer:"count intersections → decide",learnings:["Sayaç değişkeni","Karar mekanizması","Harita mantığı"]},
+  {id:26,title:"Hızlı Çizgi Takip",cat:"Çizgi Takip",diff:5,expectedMin:40,xp:40,img:"⚡",desc:"PID kontrolle hızlı çizgi takip.",answer:"PID: error*Kp + integral*Ki + derivative*Kd",learnings:["PID kontrol algoritması","Hata düzeltme","İleri matematik kullanımı","Optimizasyon"]},
+  {id:27,title:"Sumo Duruş",cat:"Sumo Robot",diff:2,expectedMin:15,xp:15,img:"🤼",desc:"Ring içinde kal, dışarı çıkma.",answer:"if edge: backward + turn",learnings:["Sınır algılama","Savunma davranışı","Acil tepki"]},
+  {id:28,title:"Rakip Bulma",cat:"Sumo Robot",diff:3,expectedMin:25,xp:25,img:"🔍",desc:"Ultrasonik ile rakibi bul.",answer:"scan 360° → closest target",learnings:["Tarama (scanning)","Hedef takibi","Mesafe karşılaştırma"]},
+  {id:29,title:"Sumo Saldırı",cat:"Sumo Robot",diff:3,expectedMin:25,xp:25,img:"💥",desc:"Rakibi bul ve it.",answer:"detect → full speed forward",learnings:["Hedef kilitleme","Maksimum güç kullanımı","Rekabetçi strateji"]},
+  {id:30,title:"Sumo Strateji",cat:"Sumo Robot",diff:4,expectedMin:35,xp:35,img:"🧠",desc:"Savunma ve saldırı stratejisi.",answer:"state machine: search/attack/defend",learnings:["Durum makinesi","Stratejik düşünme","Çoklu mod yönetimi","Yapay zeka temelleri"]},
+  {id:31,title:"Mini Sumo Turnuva",cat:"Sumo Robot",diff:4,expectedMin:35,xp:35,img:"🏆",desc:"Turnuva kurallarına uygun sumo robotu.",answer:"combine all sumo skills",learnings:["Kural odaklı tasarım","Tüm becerileri birleştirme","Rekabet hazırlığı"]},
+  {id:32,title:"Sumo Şampiyonu",cat:"Sumo Robot",diff:5,expectedMin:45,xp:50,img:"👑",desc:"En iyi sumo stratejisini geliştir.",answer:"adaptive strategy",learnings:["Adaptif algoritma","Rakip analizi","Yapay zeka davranışı","İleri robotik"]},
+  {id:33,title:"Işık Kaynağı Bulma",cat:"Işık Takip",diff:3,expectedMin:18,xp:20,img:"💡",desc:"En parlak ışık kaynağına git.",answer:"compare LDRs → move toward max",learnings:["Maksimum bulma","Gradyan takibi","Çoklu sensör birleşimi"]},
+  {id:34,title:"Işıktan Kaçınma",cat:"Işık Takip",diff:3,expectedMin:18,xp:20,img:"🌑",desc:"Karanlık bölgeye git.",answer:"move toward min light",learnings:["Minimum bulma","Negatif fototaksis","Davranış değiştirme"]},
+  {id:35,title:"Işık Labirenti",cat:"Işık Takip",diff:4,expectedMin:30,xp:35,img:"🌟",desc:"Işık ipuçlarıyla labirentten çık.",answer:"follow light gradient",learnings:["Labirent çözme","İpucu takibi","Karmaşık navigasyon"]},
+  {id:36,title:"Final Projesi",cat:"Işık Takip",diff:5,expectedMin:60,xp:50,img:"🎓",desc:"Tüm becerileri birleştiren proje.",answer:"combined autonomous robot",learnings:["Sistem entegrasyonu","Proje tasarımı","Sunum becerileri","Otonom robot"]},
 ];
 
 // ─── LEVELS ───
@@ -127,6 +127,56 @@ const getNextLevel=(xp)=>{const cur=getLevel(xp);const idx=LEVELS.indexOf(cur);r
 // ─── FORMAT HELPERS ───
 const ft=(ts)=>ts?new Date(ts).toLocaleString("tr-TR",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"}):"—";
 const fd=(ms)=>{const m=Math.floor(ms/60000);return m<60?`${m}dk`:`${Math.floor(m/60)}sa ${m%60}dk`;};
+
+// ═══ PERFORMANCE SCORING ═══
+// Compares actual completion time vs expected time
+// Returns 0-100 score + grade
+function calcTaskScore(actualMs,expectedMin){
+  if(!actualMs||!expectedMin)return null;
+  const actualMin=actualMs/60000;
+  const ratio=actualMin/expectedMin; // <1 = fast, 1 = on time, >1 = slow
+  let score;
+  if(ratio<=0.5)score=100;        // Çok hızlı (yarısında)
+  else if(ratio<=0.8)score=95;    // Hızlı
+  else if(ratio<=1.0)score=90;    // Beklendiği gibi
+  else if(ratio<=1.3)score=80;    // Biraz uzun
+  else if(ratio<=1.6)score=70;    // Uzun
+  else if(ratio<=2.0)score=60;    // Çok uzun
+  else if(ratio<=3.0)score=50;
+  else score=40;
+  return Math.round(score);
+}
+function gradeColor(score){
+  if(!score)return T.tm;
+  if(score>=90)return"#22c55e";   // Yeşil — Mükemmel
+  if(score>=80)return"#3b82f6";   // Mavi — İyi
+  if(score>=70)return"#f59e0b";   // Turuncu — Orta
+  if(score>=60)return"#ef4444";   // Kırmızı — Zayıf
+  return"#64748b";                 // Gri — Çok zayıf
+}
+function gradeLabel(score){
+  if(!score)return"—";
+  if(score>=95)return"⚡ ÇOK HIZLI";
+  if(score>=90)return"⭐ MÜKEMMEL";
+  if(score>=80)return"👍 İYİ";
+  if(score>=70)return"⏱ ORTA";
+  if(score>=60)return"🐌 YAVAŞ";
+  return"😴 ÇOK YAVAŞ";
+}
+// Calculate avg score from all completed tasks for a student
+function calcAvgScore(sp){
+  const scores=[];
+  TASKS.forEach(t=>{
+    const tp=sp[t.id];
+    if(tp?.status===TS.APPROVED&&tp.startedAt&&(tp.completedAt||tp.approvedAt)){
+      const actual=(tp.completedAt||tp.approvedAt)-tp.startedAt;
+      const s=calcTaskScore(actual,t.expectedMin);
+      if(s)scores.push(s);
+    }
+  });
+  if(scores.length===0)return null;
+  return Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+}
 
 // ─── ICONS ───
 const I = {
@@ -1435,9 +1485,26 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
   const[photo,setPhoto]=useState(null);
   const[photoPreview,setPhotoPreview]=useState(null);
   const[savedPhoto,setSavedPhoto]=useState(null);
+  const[now,setNow]=useState(Date.now()); // live tick
   const tp=prog[user.id]?.[t.id]||{};
   const imgSrc=`/tasks/gorev_${t.id}/gorsel.jpg`;
   const hasHelp=prog[user.id]?.helpRequest;
+
+  // Live timer ticking every second when IN_PROGRESS
+  useEffect(()=>{
+    if(tp.status===TS.IN_PROGRESS){
+      const iv=setInterval(()=>setNow(Date.now()),1000);
+      return ()=>clearInterval(iv);
+    }
+  },[tp.status]);
+
+  // Calculate elapsed/score
+  const elapsedMs=tp.startedAt?(now-tp.startedAt):0;
+  const elapsedMin=elapsedMs/60000;
+  const expectedMin=t.expectedMin||15;
+  const timeRatio=elapsedMin/expectedMin;
+  const timeColor=timeRatio<=0.8?"#22c55e":timeRatio<=1.0?"#3b82f6":timeRatio<=1.5?"#f59e0b":"#ef4444";
+  const finalScore=tp.completedAt&&tp.startedAt?calcTaskScore(tp.completedAt-tp.startedAt,expectedMin):null;
 
   // Category theme matching MissionBoard
   const catThemes={
@@ -1540,7 +1607,7 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
           <h2 style={{margin:0,fontSize:24,fontWeight:900,color:T.tp,letterSpacing:.3,lineHeight:1.2}}>{t.title}</h2>
         </div>
 
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
           <div style={{padding:"8px 14px",borderRadius:12,background:`linear-gradient(135deg,${T.warn}33,${T.warn}11)`,border:`2px solid ${T.warn}55`}}>
             <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ÖDÜL</div>
             <div style={{fontSize:18,fontWeight:900,color:T.warn,textAlign:"center"}}>⚡ {t.xp}</div>
@@ -1549,6 +1616,14 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
             <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1,textAlign:"center"}}>ZORLUK</div>
             <div style={{fontSize:14,textAlign:"center"}}><Stars n={t.diff}/></div>
           </div>
+          <div style={{padding:"8px 14px",borderRadius:12,background:`${T.cyan}22`,border:`2px solid ${T.cyan}55`}}>
+            <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1,textAlign:"center"}}>HEDEF SÜRE</div>
+            <div style={{fontSize:18,fontWeight:900,color:T.cyan,textAlign:"center"}}>⏱ {expectedMin}<span style={{fontSize:11,opacity:.7}}>dk</span></div>
+          </div>
+          {finalScore!==null&&<div style={{padding:"8px 14px",borderRadius:12,background:`${gradeColor(finalScore)}22`,border:`2px solid ${gradeColor(finalScore)}88`}}>
+            <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1,textAlign:"center"}}>PUAN</div>
+            <div style={{fontSize:18,fontWeight:900,color:gradeColor(finalScore),textAlign:"center"}}>🎯 {finalScore}</div>
+          </div>}
         </div>
       </div>
     </div>
@@ -1633,8 +1708,14 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
         }}>
           <div style={{fontSize:64,marginBottom:10,animation:"celebrate 2s infinite"}}>🚀</div>
           <div style={{fontSize:20,fontWeight:800,color:T.tp,marginBottom:4}}>Maceraya Hazır!</div>
-          <div style={{fontSize:14,color:T.ts,marginBottom:18}}>Bu görevi başlatmaya hazır mısın?</div>
-          <button onClick={onStart} style={{
+          <div style={{fontSize:14,color:T.ts,marginBottom:12}}>Bu görevi başlatmaya hazır mısın?</div>
+          <div style={{
+            display:"inline-flex",alignItems:"center",gap:6,
+            padding:"6px 14px",borderRadius:10,
+            background:`${T.cyan}22`,border:`1px solid ${T.cyan}55`,
+            marginBottom:18,fontSize:13,color:T.cyan,fontWeight:700,
+          }}>⏱ Hedef süre: <b>{expectedMin} dakika</b></div>
+          <div style={{display:"block"}}><button onClick={onStart} style={{
             padding:"16px 38px",borderRadius:14,border:"none",
             background:`linear-gradient(135deg,${theme.c},${theme.c}cc)`,
             color:"#fff",fontSize:18,fontWeight:900,cursor:"pointer",
@@ -1643,11 +1724,56 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
             transition:"transform .15s",
           }} onMouseDown={e=>e.currentTarget.style.transform="scale(.96)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>
             🎯 Göreve Başla
-          </button>
+          </button></div>
         </div>}
 
         {/* IN PROGRESS → Help + Submit */}
         {tp.status===TS.IN_PROGRESS&&<>
+          {/* ═══ LIVE TIMER ═══ */}
+          <div style={{
+            marginBottom:14,padding:"18px",borderRadius:18,
+            background:`linear-gradient(135deg,${timeColor}22,${T.card})`,
+            border:`3px solid ${timeColor}66`,
+            position:"relative",overflow:"hidden",
+          }}>
+            <div style={{position:"absolute",top:-10,right:-10,fontSize:80,opacity:.08,pointerEvents:"none"}}>⏱</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
+              <div>
+                <div style={{fontSize:11,color:T.tm,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:2}}>⏱ Geçen Süre</div>
+                <div style={{fontSize:32,fontWeight:900,color:timeColor,fontFamily:"monospace",lineHeight:1,letterSpacing:1,textShadow:`0 0 12px ${timeColor}66`}}>
+                  {String(Math.floor(elapsedMin)).padStart(2,"0")}:{String(Math.floor(elapsedMs/1000)%60).padStart(2,"0")}
+                </div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:11,color:T.tm,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:2}}>Hedef</div>
+                <div style={{fontSize:18,fontWeight:800,color:T.cyan}}>⏱ {expectedMin} dk</div>
+              </div>
+            </div>
+            {/* Progress bar */}
+            <div style={{position:"relative",width:"100%",height:10,borderRadius:5,background:"#0008",overflow:"hidden",marginTop:12,border:`1px solid ${T.border}`}}>
+              <div style={{
+                height:"100%",borderRadius:5,
+                background:`linear-gradient(90deg,${timeColor},${timeColor}cc)`,
+                width:`${Math.min(100,timeRatio*100)}%`,
+                transition:"width 1s linear",
+                boxShadow:`0 0 8px ${timeColor}`,
+              }}/>
+              {/* Target marker at 100% */}
+              <div style={{position:"absolute",top:-2,left:"calc(100% - 2px)",width:2,height:14,background:T.tp,opacity:.5}}/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:11,color:T.tm,fontWeight:600}}>
+              <span style={{color:timeColor}}>
+                {timeRatio<=0.5&&"⚡ Çok hızlı gidiyorsun!"}
+                {timeRatio>0.5&&timeRatio<=0.8&&"👍 Hızlısın, devam!"}
+                {timeRatio>0.8&&timeRatio<=1.0&&"✓ İyi gidiyorsun"}
+                {timeRatio>1.0&&timeRatio<=1.3&&"⏳ Hedefi geçtin"}
+                {timeRatio>1.3&&timeRatio<=1.6&&"⚠️ Yavaşladın"}
+                {timeRatio>1.6&&"🐌 Çok uzun sürdü"}
+              </span>
+              <span>{Math.round(timeRatio*100)}%</span>
+            </div>
+          </div>
+
           <div style={{
             marginBottom:14,padding:"20px",borderRadius:18,
             background:hasHelp?`linear-gradient(135deg,${T.err}33,${T.warn}22,#3a1520)`:`linear-gradient(135deg,${theme.c}22,${T.card})`,
@@ -1750,6 +1876,17 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
           <div style={{position:"relative",fontSize:28,color:T.ok,fontWeight:900,marginTop:4,textShadow:`0 0 20px ${T.ok}88`}}>+{t.xp} XP</div>
           <div style={{position:"relative",fontSize:18,color:T.tp,marginTop:4,fontWeight:700}}>Harika İş!</div>
           <div style={{position:"relative",fontSize:14,color:T.ts,marginTop:4}}>Bu görevi başarıyla tamamladın</div>
+          {/* Performance score */}
+          {finalScore!==null&&<div style={{position:"relative",marginTop:14,padding:"14px 20px",borderRadius:14,background:`linear-gradient(135deg,${gradeColor(finalScore)}33,${gradeColor(finalScore)}11)`,border:`2px solid ${gradeColor(finalScore)}88`,display:"inline-block"}}>
+            <div style={{fontSize:11,letterSpacing:2,fontWeight:800,color:gradeColor(finalScore),marginBottom:4}}>PERFORMANS PUANI</div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:14}}>
+              <div style={{fontSize:42,fontWeight:900,color:gradeColor(finalScore),lineHeight:1}}>{finalScore}<span style={{fontSize:18,opacity:.7}}>/100</span></div>
+              <div>
+                <div style={{fontSize:14,fontWeight:800,color:gradeColor(finalScore)}}>{gradeLabel(finalScore)}</div>
+                <div style={{fontSize:11,color:T.ts,marginTop:2}}>⏱ {fd((tp.completedAt||tp.approvedAt)-tp.startedAt)} (Hedef: {expectedMin}dk)</div>
+              </div>
+            </div>
+          </div>}
           {tp.instructorNote&&<div style={{position:"relative",fontSize:14,padding:"10px 18px",borderRadius:10,background:`${T.ok}22`,color:"#86efac",marginTop:14,border:`1px solid ${T.ok}55`,fontStyle:"italic"}}>
             💬 "{tp.instructorNote}"
           </div>}
@@ -1797,10 +1934,14 @@ function InstructorDash({user,users,prog,onClearHelp,onSel}){
         <button onClick={()=>{onClearHelp(s.id);onSel(s);}} style={{marginLeft:"auto",fontSize:13,padding:"6px 16px",borderRadius:8,border:"none",background:T.ok+"30",color:T.ok,cursor:"pointer",fontWeight:600}}>Git →</button>
       </div>)}
     </Card>}
-    <Card>{my.map(s=>{const cnt=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.APPROVED).length;const pd=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.PENDING).length;const pct=Math.round(cnt/36*100);const xp=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
+    <Card>{my.map(s=>{const cnt=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.APPROVED).length;const pd=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.PENDING).length;const pct=Math.round(cnt/36*100);const xp=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);const avgScore=calcAvgScore(prog[s.id]||{});
       return(<div key={s.id} onClick={()=>onSel(s)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",marginBottom:6,background:T.dark,border:`1px solid ${prog[s.id]?.helpRequest?T.err+"55":T.border}`}}>
         <div style={{width:40,height:40,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16,background:T.orange+"15",color:T.orange,border:`2px solid ${T.orange}44`}}>{s.name[0]}</div>
-        <div style={{flex:1}}><div style={{fontSize:15,fontWeight:600}}>{s.name}</div><div style={{fontSize:12,color:T.tm}}>{getLevel(xp).icon} Lv.{getLevel(xp).lv} • {xp}XP • {cnt}/36 görev</div></div>
+        <div style={{flex:1,minWidth:0}}><div style={{fontSize:15,fontWeight:600}}>{s.name}</div><div style={{fontSize:12,color:T.tm}}>{getLevel(xp).icon} Lv.{getLevel(xp).lv} • {xp}XP • {cnt}/36</div></div>
+        {avgScore!==null&&<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 10px",borderRadius:10,background:`${gradeColor(avgScore)}22`,border:`1px solid ${gradeColor(avgScore)}55`}}>
+          <div style={{fontSize:10,color:T.tm,letterSpacing:1,fontWeight:700}}>PUAN</div>
+          <div style={{fontSize:14,fontWeight:900,color:gradeColor(avgScore)}}>🎯 {avgScore}</div>
+        </div>}
         {pd>0&&<span style={{fontSize:12,padding:"4px 10px",borderRadius:12,background:T.warn+"20",color:T.warn,fontWeight:600}}>{pd} onay</span>}
         {prog[s.id]?.helpRequest&&<span style={{fontSize:12,padding:"4px 10px",borderRadius:12,background:T.err+"20",color:T.err}}>🖐</span>}
         <div style={{fontSize:16,fontWeight:800,color:T.orange}}>{pct}%</div>
@@ -2434,6 +2575,7 @@ function ParentLearningsView({child,sp}){
   completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
   const cats=[...new Set(TASKS.map(t=>t.cat))];
   const allLearnings=[...new Set(completed.flatMap(t=>t.learnings||[]))];
+  const avgScore=calcAvgScore(sp);
 
   return(<div>
     {/* HERO */}
@@ -2460,6 +2602,7 @@ function ParentLearningsView({child,sp}){
       <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.warn}}>{xp}</div><div style={{fontSize:12,color:T.ts}}>XP Puanı</div></Card>
       <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.pl}}>{allLearnings.length}</div><div style={{fontSize:12,color:T.ts}}>Yetkinlik</div></Card>
       <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.ok}}>{Math.round(completed.length/36*100)}%</div><div style={{fontSize:12,color:T.ts}}>İlerleme</div></Card>
+      {avgScore!==null&&<Card style={{textAlign:"center",padding:14,border:`2px solid ${gradeColor(avgScore)}66`,background:`${gradeColor(avgScore)}10`}}><div style={{fontSize:22,fontWeight:900,color:gradeColor(avgScore)}}>🎯 {avgScore}</div><div style={{fontSize:12,color:T.ts}}>{gradeLabel(avgScore)}</div></Card>}
     </div>
 
     {/* CATEGORY BREAKDOWN */}
@@ -2476,15 +2619,17 @@ function ParentLearningsView({child,sp}){
         {ct.map(t=>{
           const tp=sp[t.id];
           const dur=(tp.startedAt&&tp.completedAt)?fd(tp.completedAt-tp.startedAt):null;
+          const taskScore=tp.startedAt&&tp.completedAt?calcTaskScore(tp.completedAt-tp.startedAt,t.expectedMin):null;
           return(<Card key={t.id} style={{marginBottom:8,padding:12}}>
             <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
               <TaskImage taskId={t.id} type="gorsel" size={48} fallbackEmoji={t.img}/>
-              <div style={{flex:1}}>
+              <div style={{flex:1,minWidth:0}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
                   <span style={{fontSize:15,fontWeight:700}}>#{t.id} {t.title}</span>
-                  <span style={{fontSize:12,padding:"2px 8px",borderRadius:5,background:T.ok+"20",color:T.ok,fontWeight:600}}>✓ Tamamlandı</span>
-                  {dur&&<span style={{fontSize:12,color:T.cyan}}>⏱ {dur}</span>}
+                  <span style={{fontSize:12,padding:"2px 8px",borderRadius:5,background:T.ok+"20",color:T.ok,fontWeight:600}}>✓</span>
+                  {dur&&<span style={{fontSize:12,color:T.cyan}}>⏱ {dur} <span style={{opacity:.6}}>(hedef:{t.expectedMin}dk)</span></span>}
                   <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{t.xp} XP</span>
+                  {taskScore!==null&&<span style={{fontSize:12,padding:"2px 10px",borderRadius:5,background:`${gradeColor(taskScore)}22`,color:gradeColor(taskScore),border:`1px solid ${gradeColor(taskScore)}55`,fontWeight:800}}>🎯 {taskScore}</span>}
                 </div>
                 <div style={{fontSize:13,color:T.ts,marginBottom:6}}>{t.desc}</div>
                 {t.learnings&&t.learnings.length>0&&<div>
