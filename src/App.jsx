@@ -220,23 +220,61 @@ export default function App() {
 
   return(
     <div style={{background:T.bg,minHeight:"100vh",fontFamily:"'Segoe UI',system-ui,sans-serif",color:T.tp}}>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        
+        /* ═══ GLOBAL RESPONSIVE RULES ═══ */
+        * { box-sizing: border-box; }
+        html, body { overflow-x: hidden; max-width: 100vw; }
+        
+        /* Tablet & Below (≤900px) */
+        @media (max-width: 900px) {
+          main { padding: 12px !important; }
+          h1 { font-size: 20px !important; }
+          h2 { font-size: 18px !important; }
+          .resp-hide-mobile { display: none !important; }
+          .resp-grid-2 { grid-template-columns: 1fr !important; }
+          .resp-stack { flex-direction: column !important; align-items: stretch !important; }
+        }
+        
+        /* Phone (≤600px) */
+        @media (max-width: 600px) {
+          main { padding: 10px !important; }
+          nav { padding: 10px 12px !important; gap: 6px !important; }
+          nav b { font-size: 18px !important; }
+          h1 { font-size: 18px !important; }
+          h2 { font-size: 16px !important; }
+          button, input, select, textarea { font-size: 14px !important; }
+          .resp-hide-phone { display: none !important; }
+          .resp-cv-stack > div { width: 100% !important; }
+          /* Make all grids single-column on phone */
+          [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+          /* Smaller cards padding */
+          .Card-mobile, [style*="padding:18"], [style*="padding: 18"] { padding: 12px !important; }
+        }
+        
+        /* Very small (≤400px) */
+        @media (max-width: 400px) {
+          main { padding: 8px !important; }
+          nav { padding: 8px 10px !important; }
+        }
+      `}</style>
       <nav style={{background:T.card,borderBottom:`1px solid ${T.border}`,padding:"12px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{color:T.orange,display:"flex",alignItems:"center",gap:6}}><I.Bot/><b style={{fontSize:22}}>BerryBot</b></span><span style={{fontSize:12,background:T.purple,color:"#fff",padding:"3px 10px",borderRadius:6,fontWeight:700}}>LMS</span></div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{color:T.orange,display:"flex",alignItems:"center",gap:6}}><I.Bot/><b style={{fontSize:22}}>BerryBot</b></span><span className="resp-hide-phone" style={{fontSize:12,background:T.purple,color:"#fff",padding:"3px 10px",borderRadius:6,fontWeight:700}}>LMS</span></div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf Düzeni</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit Log</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
-          {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay Bekleyenler</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Günlük Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görev+Cevap</NBtn></>}
+          {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
+          {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.STUDENT&&<NBtn a={page==="dash"} o={()=>nav("dash")}>Görevlerim</NBtn>}
-          {user.role===ROLES.PARENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>👨‍👩‍👧 Çocuğum</NBtn><NBtn a={page==="cv"} o={()=>nav("cv")}>📜 CV Çıkar</NBtn></>}
+          {user.role===ROLES.PARENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>👨‍👩‍👧 Çocuğum</NBtn><NBtn a={page==="cv"} o={()=>nav("cv")}>📜 CV</NBtn></>}
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          {user.role===ROLES.STUDENT&&<span style={{fontSize:15,padding:"5px 14px",borderRadius:8,background:T.orange+"22",color:T.ol,fontWeight:700}}>{getLevel(getXP(user.id)).icon} Lv.{getLevel(getXP(user.id)).lv} • {getXP(user.id)} XP</span>}
-          <span style={{fontSize:15,color:T.ts,fontWeight:500}}>{user.name}</span>
+        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+          {user.role===ROLES.STUDENT&&<span style={{fontSize:14,padding:"5px 12px",borderRadius:8,background:T.orange+"22",color:T.ol,fontWeight:700,whiteSpace:"nowrap"}}>{getLevel(getXP(user.id)).icon} Lv.{getLevel(getXP(user.id)).lv} • {getXP(user.id)} XP</span>}
+          <span className="resp-hide-phone" style={{fontSize:14,color:T.ts,fontWeight:500}}>{user.name}</span>
           <button onClick={()=>{logout();nav("dash");}} style={{background:"none",border:`1px solid ${T.err}44`,borderRadius:8,cursor:"pointer",color:T.err,padding:"4px 12px",fontSize:13,fontWeight:600}}>Çıkış</button>
         </div>
       </nav>
       {notif&&<div style={{position:"fixed",top:16,right:16,zIndex:99,padding:"12px 20px",borderRadius:12,fontSize:16,fontWeight:600,background:notif.t==="err"?"#5c1a1a":"#1a4a2e",color:notif.t==="err"?"#fca5a5":"#86efac",boxShadow:"0 8px 30px #0006"}}>{notif.m}</div>}
-      <main style={{padding:16,maxWidth:1200,margin:"0 auto"}}>
+      <main style={{padding:16,maxWidth:1400,margin:"0 auto"}}>
 
         {/* ──── ADMIN ──── */}
         {user.role===ROLES.ADMIN&&page==="dash"&&<AdminClassroom users={users} prog={prog} classLayout={classLayout} saveLayout={handleSaveLayout} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sd");}}/>}
@@ -788,6 +826,10 @@ function MissionBoard({user,prog,onSel,onHelp}){
       @keyframes mb-ring-pulse { 0%{transform:scale(1);opacity:.8} 100%{transform:scale(1.7);opacity:0} }
       @keyframes mb-twinkle { 0%,100%{opacity:.2} 50%{opacity:.8} }
       @keyframes mb-bob { 0%,100%{transform:translate(0,0)} 50%{transform:translate(4px,-6px)} }
+      @keyframes mb-fly { 0%{transform:translate(0,0) rotate(-2deg)} 50%{transform:translate(20px,-15px) rotate(2deg)} 100%{transform:translate(0,0) rotate(-2deg)} }
+      @keyframes mb-walk { 0%,100%{transform:translate(0,0) scaleX(1)} 50%{transform:translate(8px,-3px) scaleX(1)} }
+      @keyframes mb-arm-wave { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg)} }
+      @keyframes mb-rocket-fly { 0%{transform:translate(-30px,10px) rotate(45deg)} 100%{transform:translate(30px,-20px) rotate(45deg)} }
       .map-node{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
       .map-node:hover:not(.map-locked){transform:scale(1.1) translateY(-4px)}
       .map-scroll::-webkit-scrollbar{height:14px}
@@ -920,6 +962,60 @@ function MissionBoard({user,prog,onSel,onHelp}){
             pointerEvents:"none",
           }}>{i%3===0?"✦":"·"}</div>
         ))}
+
+        {/* ROBOTIC WORLD DECORATIONS — drones, robot dogs, robot arms, satellites */}
+        {(()=>{
+          // Distribute decorations across the map width
+          const decos=[
+            {emoji:"🚁",size:50,anim:"mb-fly",dur:"5s",alt:"drone"},
+            {emoji:"🤖",size:55,anim:"mb-bob",dur:"4s"},
+            {emoji:"🦾",size:48,anim:"mb-arm-wave",dur:"3s",origin:"bottom"},
+            {emoji:"🛸",size:45,anim:"mb-fly",dur:"6s"},
+            {emoji:"🐕‍🦺",size:50,anim:"mb-walk",dur:"3.5s"},
+            {emoji:"📡",size:42,anim:"mb-bob",dur:"5s"},
+            {emoji:"🚀",size:46,anim:"mb-rocket-fly",dur:"4s"},
+            {emoji:"🤖",size:52,anim:"mb-bob",dur:"4.5s"},
+            {emoji:"🦿",size:44,anim:"mb-walk",dur:"3s"},
+            {emoji:"🎮",size:40,anim:"mb-bob",dur:"3s"},
+            {emoji:"🛰️",size:48,anim:"mb-fly",dur:"7s"},
+            {emoji:"⚙️",size:42,anim:"mb-spin",dur:"8s"},
+            {emoji:"🔋",size:38,anim:"mb-bob",dur:"4s"},
+            {emoji:"💻",size:44,anim:"mb-bob",dur:"5s"},
+            {emoji:"🦾",size:50,anim:"mb-arm-wave",dur:"4s"},
+            {emoji:"🤖",size:48,anim:"mb-bob",dur:"3.8s"},
+            {emoji:"🚁",size:46,anim:"mb-fly",dur:"5.5s"},
+            {emoji:"🐕‍🦺",size:52,anim:"mb-walk",dur:"4s"},
+            {emoji:"⚡",size:36,anim:"mb-bob",dur:"2s"},
+            {emoji:"🛸",size:50,anim:"mb-fly",dur:"6.5s"},
+          ];
+          // Spread across map: corners + middle, top + bottom
+          return decos.map((d,i)=>{
+            // Distribute X across full width with some randomness
+            const xPercent=(i*5.5+8)%95;
+            const x=(totalWidth*xPercent/100);
+            // Alternate top/bottom rows; avoid path centerline (around 200-280)
+            const yZone=i%4;
+            let y;
+            if(yZone===0)y=70+(i*7)%40;          // top row
+            else if(yZone===1)y=MAP_HEIGHT-100+(i*5)%30;  // bottom row
+            else if(yZone===2)y=40+(i*11)%30;     // very top
+            else y=MAP_HEIGHT-60+(i*3)%20;        // very bottom
+            return(
+              <div key={`deco${i}`} style={{
+                position:"absolute",
+                left:`${x}px`,top:`${y}px`,
+                fontSize:`${d.size}px`,
+                opacity:.18,
+                animation:`${d.anim} ${d.dur} infinite ease-in-out`,
+                animationDelay:`${(i*0.3)%3}s`,
+                pointerEvents:"none",
+                filter:"drop-shadow(0 2px 8px #000)",
+                transformOrigin:d.origin||"center",
+                zIndex:1,
+              }}>{d.emoji}</div>
+            );
+          });
+        })()}
 
         {/* CATEGORY ZONE BANDS — vertical color stripes */}
         {zones.map((z,i)=>(
