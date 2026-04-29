@@ -323,9 +323,9 @@ function LoginPage({onLogin}){
         </div>
 
         {/* BerryBot logo image */}
-        <div style={{textAlign:"center",marginTop:-30,width:"100%"}}>
-          <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",width:380,height:"auto",maxHeight:160,objectFit:"contain",filter:`drop-shadow(0 4px 16px ${T.orange}88)`}}/>
-          <div style={{fontSize:14,color:T.ts,marginTop:4,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
+        <div style={{textAlign:"center",marginTop:-100,width:"100%",position:"relative",zIndex:3}}>
+          <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",width:480,height:"auto",maxHeight:200,objectFit:"contain",filter:`drop-shadow(0 4px 16px ${T.orange}88)`}}/>
+          <div style={{fontSize:14,color:T.ts,marginTop:0,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
         </div>
       </div>
 
