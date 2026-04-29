@@ -156,10 +156,33 @@ export default function App() {
       let pageDesc="Görev Listesi (Mission Board)";
       let taskId=null;
       if(selT){pageDesc=`Görev #${selT.id}: ${selT.title}`;taskId=selT.id;}
-      setCurrentPage(pageDesc,taskId);
-      // Send heartbeat every 30s
-      const iv=setInterval(()=>setCurrentPage(pageDesc,taskId),30000);
-      return ()=>clearInterval(iv);
+
+      // Send page update with visibility status
+      const send=()=>{
+        const visible=document.visibilityState==="visible";
+        const focused=document.hasFocus();
+        const status=visible&&focused?"":" [⚠️ BAŞKA SEKMEDE]";
+        const fullDesc=pageDesc+status;
+        setCurrentPage(fullDesc,taskId);
+      };
+
+      send(); // Immediate
+      const iv=setInterval(send,15000); // Every 15s
+
+      // React to visibility changes immediately
+      const onVis=()=>send();
+      const onFocus=()=>send();
+      const onBlur=()=>send();
+      document.addEventListener("visibilitychange",onVis);
+      window.addEventListener("focus",onFocus);
+      window.addEventListener("blur",onBlur);
+
+      return ()=>{
+        clearInterval(iv);
+        document.removeEventListener("visibilitychange",onVis);
+        window.removeEventListener("focus",onFocus);
+        window.removeEventListener("blur",onBlur);
+      };
     }
   },[user,selT,setCurrentPage]);
 
@@ -233,18 +256,63 @@ export default function App() {
 // ═══════════════════════════════════════
 function LoginPage({onLogin}){
   const[e,setE]=useState("");const[p,setP]=useState("");const[err,setErr]=useState("");
-  return(<div style={{background:`linear-gradient(135deg,${T.bg},#2a1050)`,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
-    <div style={{width:420,maxWidth:"92vw"}}>
-      <div style={{textAlign:"center",marginBottom:32}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,color:T.orange,marginBottom:8}}><I.Bot/><span style={{fontWeight:800,fontSize:32}}>BerryBot</span></div>
-        <div style={{fontSize:16,color:T.ts}}>Robotik Eğitim Takip Sistemi</div>
+  return(<div style={{
+    background:`linear-gradient(135deg,#0f0828,#2a1050,#1a0a3a)`,
+    minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
+    position:"relative",overflow:"hidden",
+  }}>
+    <style>{`
+      @keyframes float-bg { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(5deg)} }
+      @keyframes star-blink { 0%,100%{opacity:.3} 50%{opacity:1} }
+      @keyframes login-glow { 0%,100%{box-shadow:0 0 30px ${T.orange}55,0 0 60px ${T.purple}33} 50%{box-shadow:0 0 50px ${T.orange}88,0 0 80px ${T.purple}66} }
+      @keyframes title-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
+    `}</style>
+
+    {/* Floating decorations */}
+    {[...Array(15)].map((_,i)=>(
+      <div key={i} style={{
+        position:"absolute",
+        left:`${(i*7+3)%95}%`,top:`${(i*11+5)%95}%`,
+        fontSize:`${12+(i%4)*8}px`,
+        animation:`star-blink ${2+(i%4)}s infinite, float-bg ${4+(i%3)}s infinite ease-in-out`,
+        animationDelay:`${i*0.3}s`,
+        opacity:.5,
+        color:i%4===0?T.orange:i%4===1?T.pl:i%4===2?T.cyan:T.warn,
+        pointerEvents:"none",
+      }}>{["✦","⚡","🤖","⭐","🚀","💫","🛸"][i%7]}</div>
+    ))}
+
+    <div style={{width:440,maxWidth:"92vw",position:"relative",zIndex:2}}>
+      <div style={{textAlign:"center",marginBottom:32,animation:"title-pulse 3s infinite ease-in-out"}}>
+        <div style={{fontSize:80,marginBottom:8,filter:`drop-shadow(0 0 20px ${T.orange}88)`}}>🤖</div>
+        <div style={{
+          fontSize:42,fontWeight:900,
+          background:`linear-gradient(135deg,${T.orange},${T.pl})`,
+          WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",
+          letterSpacing:1,
+        }}>BerryBot</div>
+        <div style={{fontSize:14,color:T.ts,marginTop:4,letterSpacing:3,textTransform:"uppercase",fontWeight:600}}>Robotik Macera Akademisi</div>
       </div>
-      <Card>
-        <input type="email" placeholder="E-posta" value={e} onChange={x=>setE(x.target.value)} style={{width:"100%",padding:"14px",borderRadius:10,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:16,outline:"none",marginBottom:10,boxSizing:"border-box"}}/>
-        <input type="password" placeholder="Şifre" value={p} onChange={x=>setP(x.target.value)} onKeyDown={x=>x.key==="Enter"&&(onLogin(e,p)||setErr("Hatalı!"))} style={{width:"100%",padding:"14px",borderRadius:10,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:16,outline:"none",boxSizing:"border-box"}}/>
-        {err&&<div style={{fontSize:14,marginTop:8,padding:"8px",borderRadius:8,background:"#5c1a1a",color:"#fca5a5"}}>{err}</div>}
-        <button onClick={()=>onLogin(e,p)||setErr("Hatalı giriş!")} style={{width:"100%",marginTop:14,padding:"14px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.orange},${T.od})`,color:"#fff",fontSize:18,fontWeight:700,cursor:"pointer"}}>Giriş Yap</button>
-      </Card>
+      <div style={{
+        background:`linear-gradient(135deg,${T.card},#1a0e3a)`,
+        borderRadius:20,padding:24,
+        border:`2px solid ${T.orange}55`,
+        animation:"login-glow 3s infinite ease-in-out",
+      }}>
+        <input type="email" placeholder="📧 E-posta" value={e} onChange={x=>setE(x.target.value)} style={{width:"100%",padding:"14px 18px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:16,outline:"none",marginBottom:12,boxSizing:"border-box",fontWeight:500}}/>
+        <input type="password" placeholder="🔑 Şifre" value={p} onChange={x=>setP(x.target.value)} onKeyDown={x=>x.key==="Enter"&&(onLogin(e,p)||setErr("Hatalı!"))} style={{width:"100%",padding:"14px 18px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:16,outline:"none",boxSizing:"border-box",fontWeight:500}}/>
+        {err&&<div style={{fontSize:14,marginTop:10,padding:"10px 14px",borderRadius:10,background:"#5c1a1a",color:"#fca5a5",fontWeight:600,textAlign:"center"}}>⚠️ {err}</div>}
+        <button onClick={()=>onLogin(e,p)||setErr("Hatalı giriş!")} style={{
+          width:"100%",marginTop:16,padding:"16px",borderRadius:12,border:"none",
+          background:`linear-gradient(135deg,${T.orange},${T.od})`,
+          color:"#fff",fontSize:18,fontWeight:800,cursor:"pointer",
+          letterSpacing:1,textTransform:"uppercase",
+          boxShadow:`0 6px 20px ${T.orange}66`,
+          transition:"transform .2s",
+        }} onMouseDown={e=>e.currentTarget.style.transform="scale(0.98)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>
+          🚀 Maceraya Başla
+        </button>
+      </div>
     </div>
   </div>);
 }
@@ -543,64 +611,418 @@ function MissionBoard({user,prog,onSel,onHelp}){
   const lv=getLevel(xp);const nlv=getNextLevel(xp);
   const cnt=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
   const cats=[...new Set(TASKS.map(t=>t.cat))];
+  const lvProgress=nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100;
+  const hasHelp=prog[user.id]?.helpRequest;
 
-  return(<div>
-    {/* LEVEL HEADER */}
-    <Card style={{marginBottom:18,background:`linear-gradient(135deg,${T.purple}40,${T.orange}20)`,border:`1px solid ${T.orange}44`}}>
-      <div style={{display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
-        <div style={{width:64,height:64,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,background:T.orange+"20",border:`3px solid ${T.orange}88`}}>{lv.icon}</div>
-        <div style={{flex:1}}>
-          <div style={{fontSize:22,fontWeight:800,color:T.orange}}>Level {lv.lv} <span style={{fontSize:16,color:T.pl}}>{lv.name}</span></div>
-          <div style={{fontSize:15,fontWeight:700,color:T.ol}}>{xp} XP {nlv&&<span style={{fontSize:13,color:T.tm}}>→ {nlv.icon} {nlv.name} ({nlv.min})</span>}</div>
-          <div style={{width:"100%",height:10,borderRadius:5,background:T.border,overflow:"hidden",marginTop:6}}>
-            <div style={{height:"100%",borderRadius:5,background:`linear-gradient(90deg,${T.orange},${T.pl})`,width:`${nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100}%`}}/>
+  // Category color palette
+  const catColors={
+    "RGB LED":"#ff6b9d","Motor":"#fbbf24","Sensör+LED+Buzzer":"#22d3ee",
+    "Işık Sensörü":"#fde047","IR Kumanda":"#a78bfa","Fonksiyon":"#f472b6",
+    "Mesafe/Navigasyon":"#34d399","Engel Algılama":"#fb7185","Çizgi Takip":"#60a5fa",
+    "Sumo Robot":"#f87171","Işık Takip":"#facc15"
+  };
+
+  return(<div style={{position:"relative"}}>
+    {/* Inject animations */}
+    <style>{`
+      @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+      @keyframes glow { 0%,100%{box-shadow:0 0 12px ${T.orange}99,0 0 24px ${T.orange}55} 50%{box-shadow:0 0 24px ${T.orange}cc,0 0 48px ${T.orange}88} }
+      @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+      @keyframes shine { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+      @keyframes bounce { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-4px) scale(1.05)} }
+      @keyframes confetti { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(-40px) rotate(360deg);opacity:0} }
+      @keyframes shimmer { 0%{background-position:-1000px 0} 100%{background-position:1000px 0} }
+      @keyframes popin { 0%{transform:scale(0);opacity:0} 60%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+      @keyframes path-draw { from{stroke-dashoffset:1000} to{stroke-dashoffset:0} }
+      @keyframes stars-twinkle { 0%,100%{opacity:.4} 50%{opacity:1} }
+      @keyframes ring-pulse { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.6);opacity:0} }
+      .mission-node:hover { transform: translateY(-4px) scale(1.04); transition: all .3s; }
+      .mission-locked:hover { transform: none; }
+      .star-bg { position:absolute; pointer-events:none; animation:stars-twinkle 3s infinite; }
+    `}</style>
+
+    {/* Decorative star background */}
+    <div style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none",zIndex:0}}>
+      {[...Array(20)].map((_,i)=>(
+        <div key={i} className="star-bg" style={{
+          left:`${(i*7)%100}%`,top:`${(i*13)%100}%`,
+          fontSize:`${8+(i%3)*4}px`,
+          animationDelay:`${(i*0.2)%3}s`,
+          color:i%3===0?T.orange:i%3===1?T.pl:T.cyan,
+        }}>✦</div>
+      ))}
+    </div>
+
+    {/* ═══ HERO LEVEL CARD — Premium ═══ */}
+    <div style={{
+      position:"relative",zIndex:1,
+      marginBottom:24,
+      borderRadius:20,
+      padding:24,
+      background:`linear-gradient(135deg,${T.purple}66,${T.orange}33,#1a0a3a)`,
+      border:`2px solid ${T.orange}66`,
+      boxShadow:`0 8px 40px ${T.purple}55,inset 0 1px 0 #ffffff22`,
+      overflow:"hidden",
+    }}>
+      {/* Shimmer overlay */}
+      <div style={{
+        position:"absolute",inset:0,pointerEvents:"none",
+        background:`linear-gradient(90deg,transparent 30%,${T.orange}22 50%,transparent 70%)`,
+        backgroundSize:"200% 100%",
+        animation:"shimmer 4s infinite linear",
+      }}/>
+
+      <div style={{position:"relative",display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
+        {/* Animated avatar */}
+        <div style={{position:"relative"}}>
+          <div style={{
+            position:"absolute",inset:-8,borderRadius:"50%",
+            border:`3px solid ${T.orange}88`,
+            animation:"ring-pulse 2s infinite",
+          }}/>
+          <div style={{
+            width:88,height:88,borderRadius:"50%",
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:44,
+            background:`radial-gradient(circle,${T.orange}55,${T.purple}77)`,
+            border:`4px solid ${T.orange}`,
+            boxShadow:`0 0 20px ${T.orange}88,inset 0 0 20px ${T.orange}33`,
+            animation:"float 3s ease-in-out infinite",
+          }}>{lv.icon}</div>
+        </div>
+
+        <div style={{flex:1,minWidth:240}}>
+          <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:2}}>
+            <span style={{fontSize:13,color:T.tm,letterSpacing:2,fontWeight:700,textTransform:"uppercase"}}>Level</span>
+            <span style={{fontSize:36,fontWeight:900,color:T.orange,textShadow:`0 0 20px ${T.orange}66`,letterSpacing:1}}>{lv.lv}</span>
+            <span style={{fontSize:18,fontWeight:700,color:T.pl,marginLeft:4}}>{lv.name}</span>
+          </div>
+          <div style={{fontSize:14,color:T.ol,fontWeight:600,marginBottom:8}}>
+            ⚡ <b style={{fontSize:18,color:T.warn}}>{xp}</b> XP {nlv&&<span style={{color:T.tm}}>→ {nlv.icon} {nlv.name} <b style={{color:T.ol}}>{nlv.min} XP</b></span>}
+          </div>
+          {/* XP Bar with shine */}
+          <div style={{position:"relative",width:"100%",height:14,borderRadius:7,background:"#0008",overflow:"hidden",border:`1px solid ${T.border}`}}>
+            <div style={{
+              height:"100%",borderRadius:7,
+              background:`linear-gradient(90deg,${T.warn},${T.orange},${T.pl})`,
+              backgroundSize:"200% 100%",
+              animation:"shine 2s infinite linear",
+              width:`${lvProgress}%`,
+              transition:"width .6s ease",
+              boxShadow:`0 0 10px ${T.orange}88`,
+            }}/>
+            {nlv&&<div style={{position:"absolute",top:0,right:0,bottom:0,width:1,background:T.tp,opacity:.3}}/>}
           </div>
         </div>
-        <div style={{textAlign:"center"}}><div style={{fontSize:28,fontWeight:800,color:T.orange}}>{cnt}<span style={{fontSize:16,color:T.tm}}>/36</span></div></div>
-        <button onClick={onHelp} style={{padding:"12px 22px",borderRadius:12,border:`3px solid ${T.err}66`,background:T.err+"15",color:T.err,cursor:"pointer",fontWeight:800,fontSize:16,display:"flex",alignItems:"center",gap:6}}><I.Hand/> Eğitmeni Çağır</button>
-      </div>
-    </Card>
 
-    {/* MISSION CARDS */}
-    {cats.map(cat=>{
-      const ct=TASKS.filter(t=>t.cat===cat);const cd=ct.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
-      return(<div key={cat} style={{marginBottom:22}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-          <span style={{fontSize:15,fontWeight:800,color:T.orange,padding:"4px 14px",background:T.orange+"15",borderRadius:8}}>{cat}</span>
-          <div style={{flex:1,height:2,background:T.border}}/><span style={{fontSize:13,color:cd===ct.length?T.ok:T.ts,fontWeight:600}}>{cd}/{ct.length}</span>
+        {/* Progress counter — trophy */}
+        <div style={{textAlign:"center",position:"relative"}}>
+          <div style={{
+            width:80,height:80,borderRadius:"50%",
+            background:`conic-gradient(${T.ok} ${(cnt/36)*360}deg,${T.border} 0deg)`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            position:"relative",
+          }}>
+            <div style={{
+              width:64,height:64,borderRadius:"50%",
+              background:T.bg,
+              display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            }}>
+              <div style={{fontSize:22,fontWeight:900,color:T.ok,lineHeight:1}}>{cnt}</div>
+              <div style={{fontSize:10,color:T.tm,fontWeight:600}}>/36</div>
+            </div>
+          </div>
+          <div style={{fontSize:10,color:T.tm,marginTop:4,fontWeight:600}}>GÖREV</div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))",gap:12}}>
-          {ct.map(t=>{
-            const s=sp[t.id]?.status||TS.LOCKED;const locked=s===TS.LOCKED;const approved=s===TS.APPROVED;const active=s===TS.ACTIVE||s===TS.IN_PROGRESS;
-            const glow=active?T.orange:s===TS.PENDING?T.pl:s===TS.REJECTED?T.err:approved?T.ok:"transparent";
-            const started=sp[t.id]?.startedAt;const completed=sp[t.id]?.completedAt||sp[t.id]?.approvedAt;
-            const dur=(started&&completed)?fd(completed-started):null;
-            return(
-              <div key={t.id} onClick={()=>!locked&&onSel(t)} style={{borderRadius:16,cursor:locked?"not-allowed":"pointer",opacity:locked?.35:1,background:T.card,border:`2px solid ${locked?T.border:glow}44`,boxShadow:active?`0 0 20px ${T.orange}22`:"none",overflow:"hidden",position:"relative"}}>
-                <div style={{height:90,position:"relative",overflow:"hidden"}}>
-                  <TaskImage taskId={t.id} type="gorsel" size={999} fallbackEmoji={t.img} style={{width:"100%",height:90,borderRadius:0}}/>
-                  {approved&&<div style={{position:"absolute",top:6,right:6,width:26,height:26,borderRadius:"50%",background:T.ok,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700}}>✓</div>}
-                  {active&&<div style={{position:"absolute",top:6,left:6,width:10,height:10,borderRadius:"50%",background:T.orange,boxShadow:`0 0 10px ${T.orange}`}}/>}
-                  <div style={{position:"absolute",top:6,left:active?20:6,fontSize:13,fontWeight:800,color:T.tp,background:"#000a",padding:"2px 8px",borderRadius:6}}>#{t.id}</div>
-                </div>
-                <div style={{padding:"10px 12px"}}>
-                  <div style={{fontSize:15,fontWeight:700,marginBottom:5,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.title}</div>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                    <Badge s={s}/>
-                    <div style={{display:"flex",alignItems:"center",gap:4}}>
-                      <span style={{fontSize:13,color:T.warn,fontWeight:600}}>+{t.xp}</span>
-                      <Stars n={t.diff}/>
+
+        {/* Help button — glowing */}
+        <button onClick={onHelp} disabled={hasHelp} style={{
+          padding:"14px 22px",borderRadius:14,
+          border:`3px solid ${hasHelp?T.warn:T.err}88`,
+          background:hasHelp?`linear-gradient(135deg,${T.warn}33,${T.warn}22)`:`linear-gradient(135deg,${T.err}22,${T.err}11)`,
+          color:hasHelp?T.warn:T.err,
+          cursor:hasHelp?"default":"pointer",
+          fontWeight:800,fontSize:15,
+          display:"flex",alignItems:"center",gap:8,
+          animation:hasHelp?"bounce 1s infinite":"none",
+          boxShadow:hasHelp?`0 0 20px ${T.warn}66`:`0 4px 12px ${T.err}33`,
+          transition:"all .2s",
+        }}>
+          {hasHelp?<>⏳ Bekleniyor</>:<><I.Hand/> Eğitmen Çağır</>}
+        </button>
+      </div>
+    </div>
+
+    {/* ═══ ROADMAP SECTIONS BY CATEGORY ═══ */}
+    {cats.map((cat,catIdx)=>{
+      const ct=TASKS.filter(t=>t.cat===cat);
+      const cd=ct.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
+      const catComplete=cd===ct.length;
+      const catColor=catColors[cat]||T.orange;
+      const catProgress=ct.length>0?(cd/ct.length)*100:0;
+
+      return(<div key={cat} style={{marginBottom:30,position:"relative",zIndex:1}}>
+        {/* Category Banner */}
+        <div style={{
+          position:"relative",
+          padding:"14px 20px",
+          borderRadius:16,
+          background:`linear-gradient(135deg,${catColor}33,${catColor}11)`,
+          border:`2px solid ${catColor}55`,
+          marginBottom:16,
+          overflow:"hidden",
+        }}>
+          {catComplete&&<div style={{
+            position:"absolute",top:-20,right:-20,
+            fontSize:80,opacity:.15,
+            transform:"rotate(15deg)",
+          }}>🏆</div>}
+          <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+            <div style={{
+              width:46,height:46,borderRadius:12,
+              background:`linear-gradient(135deg,${catColor},${catColor}88)`,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              fontSize:22,fontWeight:900,color:"#fff",
+              boxShadow:`0 4px 12px ${catColor}66`,
+              animation:catComplete?"bounce 2s infinite":"none",
+            }}>{catIdx+1}</div>
+            <div style={{flex:1,minWidth:160}}>
+              <div style={{fontSize:18,fontWeight:800,color:catColor}}>{cat} {catComplete&&"✨"}</div>
+              <div style={{fontSize:12,color:T.ts,marginTop:2}}>
+                {cd}/{ct.length} görev tamamlandı
+                {catComplete&&<span style={{marginLeft:8,color:T.ok,fontWeight:700}}>BÖLÜM TAMAMLANDI!</span>}
+              </div>
+            </div>
+            {/* Mini progress bar */}
+            <div style={{width:120,height:6,borderRadius:3,background:"#0006",overflow:"hidden"}}>
+              <div style={{
+                height:"100%",borderRadius:3,
+                background:`linear-gradient(90deg,${catColor},${catColor}cc)`,
+                width:`${catProgress}%`,
+                transition:"width .6s ease",
+                boxShadow:`0 0 8px ${catColor}`,
+              }}/>
+            </div>
+            <span style={{fontSize:14,fontWeight:800,color:catColor,minWidth:42,textAlign:"right"}}>{Math.round(catProgress)}%</span>
+          </div>
+        </div>
+
+        {/* Task Roadmap — zigzag layout */}
+        <div style={{position:"relative",padding:"16px 0"}}>
+          {/* SVG dotted path connecting nodes */}
+          <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none",opacity:.4}} preserveAspectRatio="none">
+            <defs>
+              <linearGradient id={`gradPath${catIdx}`} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor={catColor}/>
+                <stop offset="100%" stopColor={catColor} stopOpacity=".3"/>
+              </linearGradient>
+            </defs>
+          </svg>
+
+          <div style={{
+            display:"grid",
+            gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",
+            gap:16,
+            position:"relative",
+          }}>
+            {ct.map((t,idx)=>{
+              const s=sp[t.id]?.status||TS.LOCKED;
+              const locked=s===TS.LOCKED;
+              const approved=s===TS.APPROVED;
+              const active=s===TS.ACTIVE||s===TS.IN_PROGRESS;
+              const pending=s===TS.PENDING;
+              const rejected=s===TS.REJECTED;
+              const started=sp[t.id]?.startedAt;
+              const completed=sp[t.id]?.completedAt||sp[t.id]?.approvedAt;
+              const dur=(started&&completed)?fd(completed-started):null;
+
+              const nodeColor=approved?T.ok:active?T.orange:pending?T.pl:rejected?T.err:T.tm;
+              const offsetY=idx%2===0?0:8; // zigzag
+
+              return(
+                <div key={t.id}
+                  className={`mission-node ${locked?"mission-locked":""}`}
+                  onClick={()=>!locked&&onSel(t)}
+                  style={{
+                    cursor:locked?"not-allowed":"pointer",
+                    opacity:locked?.4:1,
+                    position:"relative",
+                    transform:`translateY(${offsetY}px)`,
+                    transition:"all .3s",
+                  }}>
+
+                  {/* Glowing ring for active task */}
+                  {active&&<div style={{
+                    position:"absolute",inset:-6,borderRadius:20,
+                    border:`2px solid ${T.orange}`,
+                    animation:"ring-pulse 1.8s infinite",
+                    pointerEvents:"none",
+                  }}/>}
+
+                  {/* Confetti for newly approved */}
+                  {approved&&[...Array(3)].map((_,ci)=>(
+                    <span key={ci} style={{
+                      position:"absolute",
+                      top:8,
+                      left:`${20+ci*30}%`,
+                      fontSize:14,
+                      animation:`confetti 2s ${ci*0.3}s infinite ease-out`,
+                      pointerEvents:"none",
+                      zIndex:3,
+                    }}>{["✨","⭐","🎉"][ci]}</span>
+                  ))}
+
+                  {/* Card body */}
+                  <div style={{
+                    borderRadius:18,
+                    background:approved
+                      ?`linear-gradient(160deg,${T.ok}33,${T.card})`
+                      :active
+                      ?`linear-gradient(160deg,${T.orange}33,${T.card})`
+                      :pending
+                      ?`linear-gradient(160deg,${T.pl}33,${T.card})`
+                      :rejected
+                      ?`linear-gradient(160deg,${T.err}33,${T.card})`
+                      :T.card,
+                    border:`2px solid ${nodeColor}66`,
+                    boxShadow:active
+                      ?`0 8px 24px ${T.orange}44,0 0 30px ${T.orange}33`
+                      :approved
+                      ?`0 6px 18px ${T.ok}33`
+                      :"0 4px 12px #0004",
+                    overflow:"hidden",
+                    position:"relative",
+                  }}>
+
+                    {/* Image area */}
+                    <div style={{height:100,position:"relative",overflow:"hidden",background:T.dark}}>
+                      <TaskImage taskId={t.id} type="gorsel" size={999} fallbackEmoji={t.img} style={{width:"100%",height:100,borderRadius:0}}/>
+
+                      {/* Top gradient overlay */}
+                      <div style={{
+                        position:"absolute",top:0,left:0,right:0,height:40,
+                        background:"linear-gradient(180deg,#000a,transparent)",
+                        pointerEvents:"none",
+                      }}/>
+
+                      {/* Task number badge — hexagon style */}
+                      <div style={{
+                        position:"absolute",top:8,left:8,
+                        width:36,height:36,
+                        background:`linear-gradient(135deg,${catColor},${catColor}88)`,
+                        clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        fontSize:13,fontWeight:900,color:"#fff",
+                        textShadow:"0 1px 2px #0008",
+                      }}>{t.id}</div>
+
+                      {/* Status badge top right */}
+                      {approved&&<div style={{
+                        position:"absolute",top:8,right:8,
+                        width:32,height:32,borderRadius:"50%",
+                        background:`radial-gradient(circle,${T.ok},#22a55a)`,
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        fontSize:18,fontWeight:900,color:"#fff",
+                        boxShadow:`0 0 12px ${T.ok}88`,
+                        animation:"popin .5s",
+                      }}>✓</div>}
+                      {active&&!pending&&<div style={{
+                        position:"absolute",top:8,right:8,
+                        padding:"3px 10px",borderRadius:10,
+                        background:`linear-gradient(135deg,${T.orange},${T.od})`,
+                        fontSize:10,fontWeight:800,color:"#fff",
+                        textTransform:"uppercase",letterSpacing:1,
+                        boxShadow:`0 2px 8px ${T.orange}88`,
+                        animation:"bounce 1.5s infinite",
+                      }}>▶ Şimdi</div>}
+                      {pending&&<div style={{
+                        position:"absolute",top:8,right:8,
+                        padding:"3px 10px",borderRadius:10,
+                        background:`linear-gradient(135deg,${T.pl},${T.purple})`,
+                        fontSize:10,fontWeight:800,color:"#fff",
+                        textTransform:"uppercase",letterSpacing:1,
+                        animation:"shimmer 2s infinite",
+                      }}>⏳ Onayda</div>}
+                      {rejected&&<div style={{
+                        position:"absolute",top:8,right:8,
+                        padding:"3px 10px",borderRadius:10,
+                        background:T.err,
+                        fontSize:10,fontWeight:800,color:"#fff",
+                      }}>↻ Tekrar</div>}
+                    </div>
+
+                    {/* Content */}
+                    <div style={{padding:"12px 14px"}}>
+                      <div style={{
+                        fontSize:14,fontWeight:800,marginBottom:8,
+                        overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",
+                        color:locked?T.tm:T.tp,
+                      }}>{t.title}</div>
+
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:6}}>
+                        {/* XP coin */}
+                        <div style={{
+                          display:"flex",alignItems:"center",gap:4,
+                          padding:"3px 9px",borderRadius:12,
+                          background:`linear-gradient(135deg,${T.warn}33,${T.warn}11)`,
+                          border:`1px solid ${T.warn}44`,
+                        }}>
+                          <span style={{fontSize:11}}>⚡</span>
+                          <span style={{fontSize:12,fontWeight:800,color:T.warn}}>{t.xp}</span>
+                        </div>
+                        {/* Stars */}
+                        <div style={{display:"flex",gap:1}}>
+                          {[1,2,3,4,5].map(i=>(
+                            <span key={i} style={{
+                              fontSize:11,
+                              color:i<=t.diff?T.warn:T.border,
+                              filter:i<=t.diff?`drop-shadow(0 0 2px ${T.warn}66)`:"none",
+                            }}>★</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {dur&&<div style={{
+                        marginTop:6,fontSize:11,color:T.ok,
+                        display:"flex",alignItems:"center",gap:4,
+                        padding:"2px 8px",
+                        background:T.ok+"15",borderRadius:8,
+                        width:"fit-content",
+                      }}><I.Clock/> {dur}</div>}
                     </div>
                   </div>
-                  {dur&&<div style={{marginTop:5,fontSize:12,color:T.ok,display:"flex",alignItems:"center",gap:4}}><I.Clock/> {dur}</div>}
+
+                  {/* LOCKED overlay */}
+                  {locked&&<div style={{
+                    position:"absolute",inset:0,
+                    display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                    background:"linear-gradient(180deg,#0a0518cc,#0a0518ee)",
+                    borderRadius:18,
+                    backdropFilter:"blur(2px)",
+                  }}>
+                    <div style={{fontSize:40,marginBottom:6,filter:"grayscale(.5)"}}>🔒</div>
+                    <div style={{fontSize:11,color:T.tm,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>Önce Görev #{t.id-1}</div>
+                  </div>}
                 </div>
-                {locked&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",background:"#1a103580"}}><span style={{fontSize:28}}>🔒</span></div>}
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>);
     })}
+
+    {/* End-of-roadmap trophy */}
+    {cnt===36&&<div style={{
+      textAlign:"center",padding:30,marginBottom:20,
+      borderRadius:20,
+      background:`linear-gradient(135deg,${T.warn}33,${T.orange}33)`,
+      border:`3px solid ${T.warn}88`,
+      animation:"glow 2s infinite",
+    }}>
+      <div style={{fontSize:80,animation:"float 3s ease-in-out infinite"}}>🏆</div>
+      <div style={{fontSize:28,fontWeight:900,color:T.warn,marginTop:10,letterSpacing:1}}>BERRYBOT MASTER!</div>
+      <div style={{fontSize:14,color:T.tp,marginTop:4}}>Tüm 36 görevi tamamladın! Sen bir efsanesin.</div>
+    </div>}
   </div>);
 }
 
@@ -1314,11 +1736,29 @@ function ParentClassroomView({child,sp,classLayout,logs,prog}){
     </div>
 
     {/* CURRENT WEB ACTIVITY */}
-    {isRecentlyActive&&currentPage&&<Card style={{marginBottom:14,background:`linear-gradient(135deg,${T.ok}20,${T.cyan}10)`,borderColor:T.ok+"55"}}>
-      <div style={{fontSize:12,fontWeight:700,color:T.ok,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>🌐 Şu An Web Sayfası</div>
-      <div style={{fontSize:18,fontWeight:700,color:T.tp}}>{currentPage}</div>
-      {currentTaskId&&<div style={{fontSize:13,color:T.tm,marginTop:4}}>Görev #{currentTaskId} açık • Son güncelleme {fd(Date.now()-pageUpdatedAt)} önce</div>}
-    </Card>}
+    {isRecentlyActive&&currentPage&&(()=>{
+      const inOtherTab=currentPage.includes("BAŞKA SEKMEDE");
+      const cleanPage=currentPage.replace(" [⚠️ BAŞKA SEKMEDE]","");
+      return(<Card style={{marginBottom:14,background:inOtherTab?`linear-gradient(135deg,${T.warn}25,${T.err}15)`:`linear-gradient(135deg,${T.ok}20,${T.cyan}10)`,borderColor:inOtherTab?T.warn+"77":T.ok+"55"}}>
+        <div style={{fontSize:12,fontWeight:700,color:inOtherTab?T.warn:T.ok,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>🌐 Şu An Tarayıcıda</div>
+        <div style={{fontSize:18,fontWeight:700,color:T.tp}}>{cleanPage}</div>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginTop:6,flexWrap:"wrap"}}>
+          {inOtherTab?
+            <span style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.warn+"33",color:T.warn,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5}}>
+              ⚠️ BerryBot sekmesi açık ama başka sekmede / pencerede
+            </span>:
+            <span style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.ok+"33",color:T.ok,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5}}>
+              ✓ BerryBot aktif sekmede — odaklanmış
+            </span>
+          }
+        </div>
+        {currentTaskId&&<div style={{fontSize:12,color:T.tm,marginTop:6}}>Görev #{currentTaskId} • Güncel: {fd(Date.now()-pageUpdatedAt)} önce</div>}
+        <div style={{fontSize:11,color:T.tm,marginTop:8,fontStyle:"italic",borderTop:`1px solid ${T.border}33`,paddingTop:6}}>
+          ℹ️ Tarayıcı güvenlik kuralları gereği başka sekmelerin (YouTube, oyun, vb.) içeriği görüntülenemez.
+          Sadece BerryBot uygulamasından çıkıp çıkmadığı izlenebilir.
+        </div>
+      </Card>);
+    })()}
 
     {/* CLASSROOM LAYOUT — read only */}
     {myClass&&mySeat&&<Card style={{marginBottom:14,padding:14}}>
