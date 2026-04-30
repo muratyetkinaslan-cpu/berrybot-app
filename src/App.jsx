@@ -446,7 +446,10 @@ export default function App() {
         }
       `}</style>
       <nav style={{background:T.card,borderBottom:`1px solid ${T.border}`,padding:"12px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{color:T.orange,display:"flex",alignItems:"center",gap:6}}><I.Bot/><b style={{fontSize:22}}>BerryBot</b></span><span className="resp-hide-phone" style={{fontSize:12,background:T.purple,color:"#fff",padding:"3px 10px",borderRadius:6,fontWeight:700}}>LMS</span></div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <img src="/logos/berrybot.png" alt="BerryBot" style={{height:36,width:"auto",maxWidth:140,objectFit:"contain",filter:`drop-shadow(0 2px 6px ${T.orange}55)`}}/>
+          <span style={{fontSize:13,background:`linear-gradient(135deg,${T.purple},${T.pd})`,color:"#fff",padding:"4px 12px",borderRadius:8,fontWeight:800,letterSpacing:1,boxShadow:`0 2px 8px ${T.purple}66`}}>LMS</span>
+        </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
           {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
@@ -562,8 +565,17 @@ function LoginPage({onLogin}){
 
         {/* BerryBot logo image */}
         <div style={{textAlign:"center",marginTop:-100,width:"100%",position:"relative",zIndex:3}}>
-          <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",width:480,height:"auto",maxHeight:200,objectFit:"contain",filter:`drop-shadow(0 4px 16px ${T.orange}88)`}}/>
-          <div style={{fontSize:14,color:T.ts,marginTop:-30,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
+          <div style={{display:"inline-flex",alignItems:"center",gap:14,flexWrap:"wrap",justifyContent:"center"}}>
+            <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",width:380,height:"auto",maxHeight:160,objectFit:"contain",filter:`drop-shadow(0 4px 16px ${T.orange}88)`}}/>
+            <span style={{
+              fontSize:22,padding:"8px 18px",borderRadius:12,
+              background:`linear-gradient(135deg,${T.purple},${T.pd})`,
+              color:"#fff",fontWeight:900,letterSpacing:2,
+              boxShadow:`0 4px 16px ${T.purple}88`,
+              border:`2px solid ${T.pl}66`,
+            }}>LMS</span>
+          </div>
+          <div style={{fontSize:14,color:T.ts,marginTop:-20,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
         </div>
       </div>
 
