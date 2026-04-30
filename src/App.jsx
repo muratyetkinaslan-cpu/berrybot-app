@@ -912,6 +912,11 @@ function MissionBoard({user,prog,onSel,onHelp}){
       @keyframes mb-rocket-fly { 0%{transform:translate(-30px,10px) rotate(45deg)} 100%{transform:translate(30px,-20px) rotate(45deg)} }
       .map-node{transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
       .map-node:hover:not(.map-locked){transform:scale(1.1) translateY(-4px)}
+      .map-node:active:not(.map-locked){transform:scale(.92) translateY(2px);transition:transform .1s}
+      @keyframes mb-click-burst {
+        0%{transform:scale(.5);opacity:1}
+        100%{transform:scale(2.5);opacity:0}
+      }
       .map-scroll::-webkit-scrollbar{height:14px}
       .map-scroll::-webkit-scrollbar-track{background:#0a0518;border-radius:7px}
       .map-scroll::-webkit-scrollbar-thumb{background:linear-gradient(90deg,#6B3FA0,#FF8800);border-radius:7px;border:2px solid #0a0518}
@@ -1539,7 +1544,7 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
     img.src=URL.createObjectURL(file);
   };
 
-  return(<div style={{position:"relative"}}>
+  return(<div className="stv-enter" style={{position:"relative"}}>
     <style>{`
       @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
       @keyframes glowBox { 0%,100%{box-shadow:0 0 20px var(--tc)55,0 0 40px var(--tc)33} 50%{box-shadow:0 0 35px var(--tc)88,0 0 60px var(--tc)55} }
@@ -1547,11 +1552,75 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
       @keyframes celebrate { 0%{transform:scale(0) rotate(0deg)} 50%{transform:scale(1.2) rotate(180deg)} 100%{transform:scale(1) rotate(360deg)} }
       @keyframes confettiFall { 0%{transform:translateY(-100px) rotate(0deg);opacity:1} 100%{transform:translateY(400px) rotate(720deg);opacity:0} }
       @keyframes shimmer-tv { 0%{background-position:-1000px 0} 100%{background-position:1000px 0} }
-      .stv-section{animation:fadeUp .4s ease-out backwards}
+
+      /* ═══ TASK ENTRANCE ANIMATIONS ═══ */
+      @keyframes stv-zoom-in {
+        0%   { opacity:0; transform: scale(.85) translateY(30px); filter: blur(8px); }
+        60%  { opacity:1; filter: blur(0px); }
+        100% { opacity:1; transform: scale(1) translateY(0); filter: blur(0px); }
+      }
+      @keyframes stv-warp-flash {
+        0%   { opacity:0; transform: scale(.5); }
+        30%  { opacity:1; transform: scale(1.1); }
+        100% { opacity:0; transform: scale(2); }
+      }
+      @keyframes stv-portal-rings {
+        0%   { transform: scale(.3); opacity:1; border-width:4px; }
+        100% { transform: scale(2.5); opacity:0; border-width:1px; }
+      }
+      @keyframes stv-back-slide {
+        0%   { opacity:0; transform: translateX(-30px); }
+        100% { opacity:1; transform: translateX(0); }
+      }
+      @keyframes stv-section-pop {
+        0%   { opacity:0; transform: translateY(40px) scale(.95); }
+        100% { opacity:1; transform: translateY(0) scale(1); }
+      }
+      @keyframes stv-flash-out {
+        0%   { opacity:1; }
+        100% { opacity:0; pointer-events:none; }
+      }
+
+      .stv-enter { animation: stv-zoom-in .55s cubic-bezier(.34,1.56,.64,1) backwards; }
+      .stv-section { animation: stv-section-pop .5s cubic-bezier(.34,1.56,.64,1) backwards; }
+      .stv-back-anim { animation: stv-back-slide .4s ease-out backwards; }
+
+      .stv-portal-overlay {
+        position: fixed; inset: 0; z-index: 999;
+        display: flex; align-items: center; justify-content: center;
+        background: radial-gradient(circle at center, var(--tc)44, transparent 70%);
+        pointer-events: none;
+        animation: stv-flash-out .8s ease-out forwards;
+      }
+      .stv-portal-ring {
+        position: absolute; width: 200px; height: 200px;
+        border-radius: 50%; border: 4px solid var(--tc);
+        animation: stv-portal-rings .8s ease-out forwards;
+      }
+      .stv-portal-flash {
+        position: absolute; width: 100px; height: 100px;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--tc)cc, var(--tc)33, transparent);
+        animation: stv-warp-flash .6s ease-out forwards;
+        filter: blur(4px);
+      }
     `}</style>
 
+    {/* ═══ PORTAL ENTRANCE OVERLAY ═══ */}
+    <div className="stv-portal-overlay" style={{"--tc":theme.c}}>
+      <div className="stv-portal-flash" style={{"--tc":theme.c}}/>
+      <div className="stv-portal-ring" style={{"--tc":theme.c,animationDelay:"0s"}}/>
+      <div className="stv-portal-ring" style={{"--tc":theme.c,animationDelay:".15s"}}/>
+      <div className="stv-portal-ring" style={{"--tc":theme.c,animationDelay:".3s"}}/>
+      <div style={{
+        position:"absolute",fontSize:80,
+        animation:"celebrate 0.7s ease-out forwards",
+        filter:`drop-shadow(0 0 20px ${theme.c})`,
+      }}>{theme.icon}</div>
+    </div>
+
     {/* Top back button */}
-    <button onClick={onBack} style={{
+    <button onClick={onBack} className="stv-back-anim" style={{
       fontSize:14,padding:"8px 18px",borderRadius:10,
       background:`${theme.c}22`,color:theme.c,
       border:`2px solid ${theme.c}44`,cursor:"pointer",
