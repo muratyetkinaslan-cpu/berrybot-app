@@ -110,16 +110,16 @@ const TASKS=[
 
 // ─── LEVELS ───
 const LEVELS=[
-  {lv:1,name:"Çaylak Mühendis",min:0,icon:"🔩",color:"#94a3b8"},
-  {lv:2,name:"Robot Çırağı",min:30,icon:"🤖",color:"#22d3ee"},
-  {lv:3,name:"Devre Kâşifi",min:80,icon:"⚡",color:"#facc15"},
-  {lv:4,name:"Sensör Ustası",min:150,icon:"📡",color:"#34d399"},
-  {lv:5,name:"Motor Mühendisi",min:250,icon:"⚙️",color:"#fb923c"},
-  {lv:6,name:"Otomasyon Uzmanı",min:370,icon:"🦾",color:"#a78bfa"},
-  {lv:7,name:"AI Pilotu",min:500,icon:"🚁",color:"#f472b6"},
-  {lv:8,name:"Robot Mimarı",min:640,icon:"🤖",color:"#60a5fa"},
-  {lv:9,name:"Robotik Efsanesi",min:770,icon:"🛸",color:"#fbbf24"},
-  {lv:10,name:"BerryBot Master",min:900,icon:"👑",color:"#ff6b9d"},
+  {lv:1,name:"Steve Wozniak",min:0,icon:"🔧",color:"#94a3b8",title:"Apple Kurucu Mühendisi",fact:"İlk kişisel bilgisayarı garajında yaptı"},
+  {lv:2,name:"Linus Torvalds",min:30,icon:"🐧",color:"#22d3ee",title:"Linux Yaratıcısı",fact:"22 yaşında dünyanın en büyük işletim sistemini yazdı"},
+  {lv:3,name:"Grace Hopper",min:80,icon:"💻",color:"#facc15",title:"Bilgisayar Bilimi Öncüsü",fact:"İlk derleyiciyi (compiler) icat etti"},
+  {lv:4,name:"Ada Lovelace",min:150,icon:"📜",color:"#34d399",title:"İlk Programcı",fact:"Tarihteki ilk bilgisayar programını yazdı"},
+  {lv:5,name:"Alan Turing",min:250,icon:"🧠",color:"#fb923c",title:"Yapay Zeka Babası",fact:"Modern bilgisayarın matematiksel temellerini kurdu"},
+  {lv:6,name:"Marie Curie",min:370,icon:"⚛️",color:"#a78bfa",title:"Fizikçi & Kimyager",fact:"İki farklı dalda Nobel kazanan tek kişi"},
+  {lv:7,name:"Nikola Tesla",min:500,icon:"⚡",color:"#f472b6",title:"Elektrik Dehası",fact:"Modern elektrik şebekesini icat etti"},
+  {lv:8,name:"Albert Einstein",min:640,icon:"🧬",color:"#60a5fa",title:"Teorik Fizikçi",fact:"E=mc² ile fiziği yeniden tanımladı"},
+  {lv:9,name:"Steve Jobs",min:770,icon:"🍎",color:"#fbbf24",title:"Apple Vizyoneri",fact:"Teknolojiyi sanatla buluşturdu"},
+  {lv:10,name:"Elon Musk",min:900,icon:"🚀",color:"#ff6b9d",title:"BerryBot Master Mühendisi",fact:"İnsanlığı Mars'a taşımak için çalışıyor"},
 ];
 const getLevel=(xp)=>{let l=LEVELS[0];for(const lv of LEVELS)if(xp>=lv.min)l=lv;return l;};
 const getNextLevel=(xp)=>{const cur=getLevel(xp);const idx=LEVELS.indexOf(cur);return idx<LEVELS.length-1?LEVELS[idx+1]:null;};
@@ -950,14 +950,15 @@ function MissionBoard({user,prog,onSel,onHelp}){
         </div>
 
         <div style={{flex:1,minWidth:200}}>
-          <div style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap",marginBottom:3}}>
+          <div style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap",marginBottom:2}}>
             <span style={{fontSize:11,color:T.tm,letterSpacing:2,fontWeight:800,textTransform:"uppercase"}}>Level</span>
             <span style={{fontSize:36,fontWeight:900,color:lv.color,textShadow:`0 0 20px ${lv.color}aa`,lineHeight:1}}>{lv.lv}</span>
-            <span style={{fontSize:16,fontWeight:800,color:T.tp}}>{lv.name}</span>
+            <span style={{fontSize:18,fontWeight:900,color:T.tp,letterSpacing:.3}}>{lv.name}</span>
           </div>
+          {lv.title&&<div style={{fontSize:11,color:lv.color,fontWeight:700,letterSpacing:1,marginBottom:6,textTransform:"uppercase"}}>★ {lv.title}</div>}
           <div style={{fontSize:13,color:T.ol,fontWeight:700,marginBottom:8,display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
             <span style={{padding:"2px 10px",borderRadius:12,background:`${T.warn}33`,border:`1px solid ${T.warn}55`}}>⚡ <b style={{color:T.warn}}>{xp}</b> XP</span>
-            {nlv&&<span style={{color:T.tm,fontSize:12}}>→ {nlv.icon} {nlv.name} <b style={{color:T.ol}}>({nlv.min-xp} XP daha)</b></span>}
+            {nlv&&<span style={{color:T.tm,fontSize:12}}>→ {nlv.icon} <b style={{color:nlv.color}}>{nlv.name}</b> <span style={{color:T.tm}}>({nlv.min-xp} XP)</span></span>}
           </div>
           <div style={{position:"relative",width:"100%",height:14,borderRadius:7,background:"#0008",overflow:"hidden",border:`1px solid ${T.border}`}}>
             <div style={{
@@ -969,6 +970,7 @@ function MissionBoard({user,prog,onSel,onHelp}){
               boxShadow:`0 0 10px ${lv.color}aa`,
             }}/>
           </div>
+          {lv.fact&&<div style={{fontSize:11,color:T.ts,marginTop:6,fontStyle:"italic",opacity:.85}}>💡 {lv.fact}</div>}
         </div>
 
         <div style={{textAlign:"center"}}>
