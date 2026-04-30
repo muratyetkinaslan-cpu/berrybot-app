@@ -2371,32 +2371,327 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
 //  INSTRUCTOR DASHBOARD
 // ═══════════════════════════════════════
 function InstructorDash({user,users,prog,onClearHelp,onSel}){
+  const[filter,setFilter]=useState("all"); // all | help | pending | online | stuck | top
+  const[sortBy,setSortBy]=useState("progress"); // progress | score | name | pending | activity
+  const[search,setSearch]=useState("");
+
   const my=users.filter(u=>u.role===ROLES.STUDENT);
-  const pend=my.reduce((a,s)=>a+TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.PENDING).length,0);
-  const helpReqs=my.filter(s=>prog[s.id]?.helpRequest);
+
+  // Build stats for each student
+  const now=Date.now();
+  const dayStart=new Date();dayStart.setHours(0,0,0,0);
+
+  const enriched=my.map(s=>{
+    const sp=prog[s.id]||{};
+    const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+    const cnt=completed.length;
+    const pd=TASKS.filter(t=>sp[t.id]?.status===TS.PENDING).length;
+    const xp=completed.reduce((a,t)=>a+t.xp,0);
+    const pct=Math.round(cnt/36*100);
+    const avgScore=calcAvgScore(sp);
+    const lv=getLevel(xp);
+    const helpRequest=sp.helpRequest||prog[s.id]?.helpRequest;
+    const online=sp.online||prog[s.id]?.online;
+    const lastSeen=sp.lastSeen||prog[s.id]?.lastSeen||0;
+
+    // Find current task (active or in_progress)
+    const currentTask=TASKS.find(t=>{
+      const ts=sp[t.id]?.status;
+      return ts===TS.IN_PROGRESS||ts===TS.ACTIVE;
+    });
+
+    // Today's completed tasks
+    const todayCount=completed.filter(t=>{
+      const ts=sp[t.id]?.approvedAt||sp[t.id]?.completedAt;
+      return ts&&ts>=dayStart.getTime();
+    }).length;
+
+    // Last activity
+    const lastActivity=Math.max(...TASKS.map(t=>{
+      const tp=sp[t.id]||{};
+      return Math.max(tp.startedAt||0,tp.completedAt||0,tp.approvedAt||0);
+    }),lastSeen);
+
+    // Stuck = ACTIVE status for >30min
+    const stuck=currentTask&&sp[currentTask.id]?.startedAt&&(now-sp[currentTask.id].startedAt)>30*60*1000;
+
+    return{...s,sp,cnt,pd,xp,pct,avgScore,lv,helpRequest,online,lastSeen,currentTask,todayCount,lastActivity,stuck};
+  });
+
+  // Class-level stats
+  const totalCompleted=enriched.reduce((a,s)=>a+s.cnt,0);
+  const totalPending=enriched.reduce((a,s)=>a+s.pd,0);
+  const helpCount=enriched.filter(s=>s.helpRequest).length;
+  const onlineCount=enriched.filter(s=>s.online).length;
+  const todayTotal=enriched.reduce((a,s)=>a+s.todayCount,0);
+  const classAvg=enriched.filter(s=>s.avgScore!==null).reduce((a,s)=>a+s.avgScore,0);
+  const classAvgScore=enriched.filter(s=>s.avgScore!==null).length>0?Math.round(classAvg/enriched.filter(s=>s.avgScore!==null).length):null;
+
+  // Apply filters
+  let filtered=enriched;
+  if(search)filtered=filtered.filter(s=>s.name.toLowerCase().includes(search.toLowerCase()));
+  if(filter==="help")filtered=filtered.filter(s=>s.helpRequest);
+  else if(filter==="pending")filtered=filtered.filter(s=>s.pd>0);
+  else if(filter==="online")filtered=filtered.filter(s=>s.online);
+  else if(filter==="stuck")filtered=filtered.filter(s=>s.stuck);
+  else if(filter==="top")filtered=filtered.filter(s=>s.avgScore&&s.avgScore>=85);
+
+  // Sort
+  if(sortBy==="progress")filtered=filtered.slice().sort((a,b)=>b.pct-a.pct);
+  else if(sortBy==="score")filtered=filtered.slice().sort((a,b)=>(b.avgScore||0)-(a.avgScore||0));
+  else if(sortBy==="name")filtered=filtered.slice().sort((a,b)=>a.name.localeCompare(b.name,"tr"));
+  else if(sortBy==="pending")filtered=filtered.slice().sort((a,b)=>b.pd-a.pd);
+  else if(sortBy==="activity")filtered=filtered.slice().sort((a,b)=>b.lastActivity-a.lastActivity);
+
   return(<div>
-    <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 16px"}}>Eğitmen Paneli</h1>
-    {helpReqs.length>0&&<Card style={{marginBottom:16,background:"#3a1520",borderColor:T.err+"44"}}>
-      <div style={{fontSize:16,fontWeight:700,color:T.err,marginBottom:10}}>🖐 Yardım İstekleri ({helpReqs.length})</div>
-      {helpReqs.map(s=><div key={s.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:10,background:T.dark,marginBottom:6}}>
-        <span style={{fontWeight:700,fontSize:15}}>{s.name}</span><span style={{fontSize:13,color:T.tm}}>{fd(Date.now()-prog[s.id].helpRequest)} önce</span>
-        <button onClick={()=>onClearHelp(s.id)} style={{marginLeft:"auto",fontSize:13,padding:"6px 16px",borderRadius:8,border:"none",background:T.ok+"30",color:T.ok,cursor:"pointer",fontWeight:600}}>✓ Tamamlandı</button>
-      </div>)}
-    </Card>}
-    <Card>{my.map(s=>{const cnt=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.APPROVED).length;const pd=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.PENDING).length;const pct=Math.round(cnt/36*100);const xp=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);const avgScore=calcAvgScore(prog[s.id]||{});
-      return(<div key={s.id} onClick={()=>onSel(s)} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderRadius:12,cursor:"pointer",marginBottom:6,background:T.dark,border:`1px solid ${prog[s.id]?.helpRequest?T.err+"55":T.border}`}}>
-        <div style={{width:40,height:40,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16,background:T.orange+"15",color:T.orange,border:`2px solid ${T.orange}44`}}>{s.name[0]}</div>
-        <div style={{flex:1,minWidth:0}}><div style={{fontSize:15,fontWeight:600}}>{s.name}</div><div style={{fontSize:12,color:T.tm}}>{getLevel(xp).icon} Lv.{getLevel(xp).lv} • {xp}XP • {cnt}/36</div></div>
-        {avgScore!==null&&<div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 10px",borderRadius:10,background:`${gradeColor(avgScore)}22`,border:`1px solid ${gradeColor(avgScore)}55`}}>
-          <div style={{fontSize:10,color:T.tm,letterSpacing:1,fontWeight:700}}>PUAN</div>
-          <div style={{fontSize:14,fontWeight:900,color:gradeColor(avgScore)}}>🎯 {avgScore}</div>
-        </div>}
-        {pd>0&&<span style={{fontSize:12,padding:"4px 10px",borderRadius:12,background:T.warn+"20",color:T.warn,fontWeight:600}}>{pd} onay</span>}
-        {prog[s.id]?.helpRequest&&<span style={{fontSize:12,padding:"4px 10px",borderRadius:12,background:T.err+"20",color:T.err}}>🖐</span>}
-        <div style={{fontSize:16,fontWeight:800,color:T.orange}}>{pct}%</div>
-      </div>);
-    })}</Card>
+    <style>{`
+      @keyframes ind-pulse-help { 0%,100%{box-shadow:0 0 0 0 ${T.err}} 50%{box-shadow:0 0 0 8px ${T.err}00} }
+      @keyframes ind-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+      @keyframes ind-fade-up { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+      .ind-card { animation: ind-fade-up .4s ease-out backwards; }
+      .ind-student-row { transition: all .2s; }
+      .ind-student-row:hover { transform: translateX(6px); border-color: ${T.orange}88 !important; }
+    `}</style>
+
+    {/* ═══ STATS BANNER — class overview ═══ */}
+    <div className="ind-card" style={{marginBottom:14}}>
+      <div style={{
+        padding:18,borderRadius:18,
+        background:`linear-gradient(135deg,${T.orange}22,${T.purple}33,#1a0a3a)`,
+        border:`2px solid ${T.orange}55`,
+        position:"relative",overflow:"hidden",
+      }}>
+        <div style={{position:"absolute",inset:0,pointerEvents:"none",
+          background:`linear-gradient(90deg,transparent 30%,${T.orange}22 50%,transparent 70%)`,
+          backgroundSize:"200% 100%",animation:"ind-shimmer 5s infinite linear",
+        }}/>
+        <div style={{position:"relative",display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+          <div style={{
+            width:64,height:64,borderRadius:18,
+            background:`linear-gradient(135deg,${T.orange},${T.od})`,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:30,boxShadow:`0 6px 20px ${T.orange}66`,
+          }}>👨‍🏫</div>
+          <div style={{flex:1,minWidth:200}}>
+            <h2 style={{margin:0,fontSize:24,color:T.tp,fontWeight:900}}>Hoş geldin, {user.name.split(" ")[0]}</h2>
+            <div style={{fontSize:13,color:T.ts,marginTop:3}}>{my.length} öğrenci • {totalCompleted} toplam görev tamamlandı</div>
+          </div>
+        </div>
+
+        {/* Quick stats grid */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8,marginTop:14,position:"relative"}}>
+          <StatPill icon="📅" label="Bugün" value={todayTotal} unit="görev" color={T.ok}/>
+          <StatPill icon="⏳" label="Onay" value={totalPending} color={T.warn} pulse={totalPending>0}/>
+          <StatPill icon="🖐" label="Yardım" value={helpCount} color={T.err} pulse={helpCount>0}/>
+          <StatPill icon="🟢" label="Online" value={onlineCount} unit={`/ ${my.length}`} color={T.cyan}/>
+          {classAvgScore!==null&&<StatPill icon="🎯" label="Sınıf Avg" value={classAvgScore} unit="/ 100" color={gradeColor(classAvgScore)}/>}
+        </div>
+      </div>
+    </div>
+
+    {/* ═══ HELP REQUESTS — priority alert ═══ */}
+    {helpCount>0&&<div className="ind-card" style={{
+      marginBottom:14,padding:14,borderRadius:14,
+      background:`linear-gradient(135deg,${T.err}22,#3a1520)`,
+      border:`2px solid ${T.err}66`,
+    }}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+        <div style={{
+          width:36,height:36,borderRadius:"50%",
+          background:T.err,
+          display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,
+          animation:"ind-pulse-help 1.5s infinite",
+        }}>🖐</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:15,fontWeight:900,color:T.err}}>Yardım İstekleri</div>
+          <div style={{fontSize:12,color:T.ts}}>{helpCount} öğrenci yardım bekliyor</div>
+        </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+        {enriched.filter(s=>s.helpRequest).map(s=>(
+          <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:10,background:"#0008",border:`1px solid ${T.err}33`}}>
+            <div style={{width:34,height:34,borderRadius:"50%",background:T.err+"33",color:T.err,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:15,border:`2px solid ${T.err}66`}}>{s.name[0]}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:14,fontWeight:700,color:T.tp}}>{s.name}</div>
+              <div style={{fontSize:11,color:T.tm}}>
+                {fd(now-s.helpRequest)} önce
+                {s.currentTask&&<span> • Görev #{s.currentTask.id}: {s.currentTask.title}</span>}
+              </div>
+            </div>
+            <button onClick={(e)=>{e.stopPropagation();onSel(s);}} style={{padding:"7px 14px",borderRadius:8,border:`1px solid ${T.cyan}55`,background:`${T.cyan}22`,color:T.cyan,cursor:"pointer",fontWeight:700,fontSize:12,whiteSpace:"nowrap"}}>👁 İncele</button>
+            <button onClick={(e)=>{e.stopPropagation();onClearHelp(s.id);}} style={{padding:"7px 14px",borderRadius:8,border:"none",background:T.ok+"33",color:T.ok,cursor:"pointer",fontWeight:700,fontSize:12,whiteSpace:"nowrap"}}>✓ Hallettim</button>
+          </div>
+        ))}
+      </div>
+    </div>}
+
+    {/* ═══ FILTERS BAR ═══ */}
+    <div className="ind-card" style={{marginBottom:14,padding:12,borderRadius:14,background:T.card,border:`1px solid ${T.border}`}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:10}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Öğrenci ara..." style={{flex:"1 1 200px",padding:"8px 14px",borderRadius:10,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,fontSize:14,outline:"none"}}/>
+        <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{padding:"8px 14px",borderRadius:10,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,fontSize:13,cursor:"pointer",fontWeight:600}}>
+          <option value="progress">↓ İlerleme</option>
+          <option value="score">↓ Puan</option>
+          <option value="pending">↓ Onay Bekleyen</option>
+          <option value="activity">↓ Son Aktivite</option>
+          <option value="name">A-Z İsim</option>
+        </select>
+      </div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+        <FilterPill active={filter==="all"} onClick={()=>setFilter("all")} label="Tümü" count={enriched.length} color={T.orange}/>
+        <FilterPill active={filter==="help"} onClick={()=>setFilter("help")} label="🖐 Yardım" count={helpCount} color={T.err} highlight={helpCount>0}/>
+        <FilterPill active={filter==="pending"} onClick={()=>setFilter("pending")} label="⏳ Onayda" count={enriched.filter(s=>s.pd>0).length} color={T.warn}/>
+        <FilterPill active={filter==="online"} onClick={()=>setFilter("online")} label="🟢 Online" count={onlineCount} color={T.ok}/>
+        <FilterPill active={filter==="stuck"} onClick={()=>setFilter("stuck")} label="⚠️ Takıldı" count={enriched.filter(s=>s.stuck).length} color={T.warn}/>
+        <FilterPill active={filter==="top"} onClick={()=>setFilter("top")} label="⭐ Üstün" count={enriched.filter(s=>s.avgScore&&s.avgScore>=85).length} color={T.cyan}/>
+      </div>
+    </div>
+
+    {/* ═══ STUDENT CARDS ═══ */}
+    {filtered.length===0?(
+      <div style={{padding:50,textAlign:"center",borderRadius:16,background:T.card,border:`1px solid ${T.border}`}}>
+        <div style={{fontSize:48,opacity:.4,marginBottom:8}}>🔍</div>
+        <div style={{fontSize:15,color:T.ts,fontWeight:600}}>Bu filtreye uygun öğrenci yok</div>
+      </div>
+    ):(
+      <div style={{display:"grid",gap:8}}>
+        {filtered.map((s,idx)=>{
+          const sg=s.avgScore?gradeColor(s.avgScore):null;
+          return(
+            <div key={s.id} className="ind-student-row ind-card" onClick={()=>onSel(s)}
+              style={{
+                padding:14,borderRadius:14,cursor:"pointer",
+                background:s.helpRequest?`linear-gradient(135deg,${T.err}11,${T.card})`:s.online?`linear-gradient(135deg,${T.ok}08,${T.card})`:T.card,
+                border:`2px solid ${s.helpRequest?T.err+"55":s.stuck?T.warn+"55":s.online?T.ok+"33":T.border}`,
+                animationDelay:`${idx*30}ms`,
+              }}>
+              <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+                {/* Avatar with progress ring */}
+                <div style={{position:"relative",flexShrink:0}}>
+                  <div style={{
+                    width:54,height:54,borderRadius:"50%",
+                    background:`conic-gradient(${T.orange} ${s.pct*3.6}deg,${T.border} 0deg)`,
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                  }}>
+                    <div style={{
+                      width:44,height:44,borderRadius:"50%",
+                      background:`linear-gradient(135deg,${T.orange},${T.od})`,
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      fontSize:18,fontWeight:900,color:"#fff",
+                    }}>{s.name[0]}</div>
+                  </div>
+                  {/* Online dot */}
+                  {s.online&&<div style={{position:"absolute",bottom:0,right:0,width:14,height:14,borderRadius:"50%",background:T.ok,border:`2px solid ${T.bg}`,boxShadow:`0 0 6px ${T.ok}`}}/>}
+                </div>
+
+                {/* Name + level */}
+                <div style={{flex:1,minWidth:140}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:3}}>
+                    <span style={{fontSize:15,fontWeight:800,color:T.tp}}>{s.name}</span>
+                    <span style={{fontSize:10,padding:"1px 7px",borderRadius:5,background:s.lv.color+"33",color:s.lv.color,fontWeight:700,letterSpacing:.5}}>{s.lv.icon} Lv.{s.lv.lv}</span>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,fontSize:11,color:T.tm,flexWrap:"wrap"}}>
+                    <span style={{color:T.warn,fontWeight:700}}>⚡ {s.xp} XP</span>
+                    <span>•</span>
+                    <span>{s.cnt}/36 görev</span>
+                    {s.todayCount>0&&<><span>•</span><span style={{color:T.ok,fontWeight:700}}>📅 Bugün +{s.todayCount}</span></>}
+                  </div>
+                </div>
+
+                {/* Current task chip */}
+                {s.currentTask&&<div className="resp-hide-phone" style={{
+                  padding:"6px 10px",borderRadius:10,
+                  background:s.stuck?`${T.warn}22`:`${T.cyan}22`,
+                  border:`1px solid ${s.stuck?T.warn:T.cyan}55`,
+                  fontSize:11,maxWidth:160,
+                }}>
+                  <div style={{fontSize:9,color:T.tm,fontWeight:700,letterSpacing:1}}>{s.stuck?"⚠️ TAKILDI":"▶ ŞU AN"}</div>
+                  <div style={{fontWeight:700,color:s.stuck?T.warn:T.cyan,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>#{s.currentTask.id} {s.currentTask.title}</div>
+                </div>}
+
+                {/* Score badge */}
+                {s.avgScore!==null&&<div style={{
+                  padding:"6px 10px",borderRadius:10,
+                  background:`${sg}22`,border:`1px solid ${sg}66`,
+                  textAlign:"center",minWidth:54,
+                }}>
+                  <div style={{fontSize:9,color:T.tm,fontWeight:700,letterSpacing:1}}>PUAN</div>
+                  <div style={{fontSize:16,fontWeight:900,color:sg,lineHeight:1}}>🎯 {s.avgScore}</div>
+                </div>}
+
+                {/* Pending badge */}
+                {s.pd>0&&<div style={{
+                  padding:"6px 10px",borderRadius:10,
+                  background:`${T.warn}22`,border:`1px solid ${T.warn}66`,
+                  textAlign:"center",minWidth:54,
+                  animation:"pulse 2s infinite",
+                }}>
+                  <div style={{fontSize:9,color:T.tm,fontWeight:700,letterSpacing:1}}>ONAY</div>
+                  <div style={{fontSize:16,fontWeight:900,color:T.warn,lineHeight:1}}>⏳ {s.pd}</div>
+                </div>}
+
+                {/* Help indicator */}
+                {s.helpRequest&&<div style={{
+                  width:42,height:42,borderRadius:"50%",
+                  background:T.err,color:"#fff",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:18,
+                  animation:"ind-pulse-help 1.5s infinite",
+                  flexShrink:0,
+                }}>🖐</div>}
+
+                {/* Big progress % */}
+                <div style={{
+                  textAlign:"center",minWidth:50,
+                  borderLeft:`1px solid ${T.border}`,
+                  paddingLeft:12,
+                }}>
+                  <div style={{fontSize:9,color:T.tm,fontWeight:700,letterSpacing:1}}>İLERLEME</div>
+                  <div style={{fontSize:22,fontWeight:900,color:T.orange,lineHeight:1}}>{s.pct}%</div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
   </div>);
+}
+
+// ─── Helper: stat pill ───
+function StatPill({icon,label,value,unit,color,pulse}){
+  return(<div style={{
+    padding:"10px 12px",borderRadius:12,
+    background:`${color}22`,border:`1px solid ${color}55`,
+    textAlign:"center",
+    animation:pulse?"pulse 2s infinite":"none",
+  }}>
+    <div style={{fontSize:18,marginBottom:2}}>{icon}</div>
+    <div style={{fontSize:9,color:T.tm,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>{label}</div>
+    <div style={{fontSize:18,fontWeight:900,color:color,lineHeight:1.2}}>{value}{unit&&<span style={{fontSize:11,opacity:.7,marginLeft:2}}>{unit}</span>}</div>
+  </div>);
+}
+
+// ─── Helper: filter pill ───
+function FilterPill({active,onClick,label,count,color,highlight}){
+  return(<button onClick={onClick} style={{
+    padding:"6px 12px",borderRadius:10,
+    border:`2px solid ${active?color:T.border}`,
+    background:active?`${color}22`:T.dark,
+    color:active?color:highlight?color:T.ts,
+    cursor:"pointer",fontWeight:700,fontSize:12,
+    display:"inline-flex",alignItems:"center",gap:6,
+    transition:"all .15s",
+    animation:highlight&&!active?"pulse 2s infinite":"none",
+  }}>
+    {label}
+    <span style={{
+      padding:"1px 7px",borderRadius:8,
+      background:active?color+"44":T.border,
+      color:active?color:T.tm,
+      fontSize:10,fontWeight:800,
+    }}>{count}</span>
+  </button>);
 }
 
 // ═══════════════════════════════════════
