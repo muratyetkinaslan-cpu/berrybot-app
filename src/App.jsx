@@ -3502,8 +3502,13 @@ function PVStat({icon,label,value,unit,color,highlight}){
   </div>);
 }
 
-// ─── TAB 1: SINIF (Layout + Aktif Görev Popup + Audit Log) ───
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 1: SINIF & AKTİVİTE — Yenilenmiş, ekran yerleşimi + aktivite üstte
+// ═══════════════════════════════════════════════════════════════
 function ParentClassroomView({child,sp,classLayout,logs,prog}){
+  const[showLayout,setShowLayout]=useState(true); // Veli isterse gizleyebilir
+
   // Find which class & seat
   let mySeat=null;
   let myClass=null;
@@ -3515,382 +3520,715 @@ function ParentClassroomView({child,sp,classLayout,logs,prog}){
     if(myClass)break;
   }
 
-  // Current task
   const current=TASKS.find(t=>sp[t.id]?.status===TS.ACTIVE||sp[t.id]?.status===TS.IN_PROGRESS||sp[t.id]?.status===TS.PENDING);
-  const isOnline=child.online||(prog[child.id]?.online);
-  const lastSeen=prog[child.id]?.lastSeen;
+  const childLogs=(logs||[]).filter(l=>l.userId===child.id||l.targetUser===child.id).slice(0,30);
   const currentPage=prog[child.id]?.currentPage;
   const currentTaskId=prog[child.id]?.currentTaskId;
   const pageUpdatedAt=prog[child.id]?.pageUpdatedAt;
-  const isRecentlyActive=pageUpdatedAt&&(Date.now()-pageUpdatedAt<2*60*1000); // 2 min
+  const isRecentlyActive=pageUpdatedAt&&(Date.now()-pageUpdatedAt<2*60*1000);
 
-  return(<div>
-    {/* HEADER */}
-    <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14,flexWrap:"wrap"}}>
-      <div style={{width:64,height:64,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,fontWeight:800,background:T.orange+"20",color:T.orange,border:`3px solid ${T.orange}66`}}>{child.name[0]}</div>
-      <div style={{flex:1}}>
-        <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:0}}>{child.name}</h1>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginTop:4,flexWrap:"wrap"}}>
-          {isRecentlyActive?
-            <span style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.ok+"22",color:T.ok,fontWeight:600,display:"inline-flex",alignItems:"center",gap:6}}>
-              <span style={{width:8,height:8,borderRadius:"50%",background:T.ok,animation:"pulse 1.5s infinite"}}/>
-              Online — Şu an aktif
-            </span>:
-            <span style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.tm+"22",color:T.tm,fontWeight:500}}>
-              Çevrimdışı {lastSeen?`• Son görülme: ${ft(lastSeen)}`:""}
-            </span>
-          }
-        </div>
-      </div>
-    </div>
-
-    {/* CURRENT WEB ACTIVITY */}
-    {isRecentlyActive&&currentPage&&(()=>{
-      const inOtherTab=currentPage.includes("BAŞKA SEKMEDE");
-      const cleanPage=currentPage.replace(" [⚠️ BAŞKA SEKMEDE]","");
-      return(<Card style={{marginBottom:14,background:inOtherTab?`linear-gradient(135deg,${T.warn}25,${T.err}15)`:`linear-gradient(135deg,${T.ok}20,${T.cyan}10)`,borderColor:inOtherTab?T.warn+"77":T.ok+"55"}}>
-        <div style={{fontSize:12,fontWeight:700,color:inOtherTab?T.warn:T.ok,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>🌐 Şu An Tarayıcıda</div>
-        <div style={{fontSize:18,fontWeight:700,color:T.tp}}>{cleanPage}</div>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginTop:6,flexWrap:"wrap"}}>
-          {inOtherTab?
-            <span style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.warn+"33",color:T.warn,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5}}>
-              ⚠️ BerryBot sekmesi açık ama başka sekmede / pencerede
-            </span>:
-            <span style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.ok+"33",color:T.ok,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5}}>
-              ✓ BerryBot aktif sekmede — odaklanmış
-            </span>
-          }
-        </div>
-        {currentTaskId&&<div style={{fontSize:12,color:T.tm,marginTop:6}}>Görev #{currentTaskId} • Güncel: {fd(Date.now()-pageUpdatedAt)} önce</div>}
-        <div style={{fontSize:11,color:T.tm,marginTop:8,fontStyle:"italic",borderTop:`1px solid ${T.border}33`,paddingTop:6}}>
-          ℹ️ Tarayıcı güvenlik kuralları gereği başka sekmelerin (YouTube, oyun, vb.) içeriği görüntülenemez.
-          Sadece BerryBot uygulamasından çıkıp çıkmadığı izlenebilir.
-        </div>
-      </Card>);
-    })()}
-
-    {/* CLASSROOM LAYOUT — read only */}
-    {myClass&&mySeat&&<Card style={{marginBottom:14,padding:14}}>
-      <div style={{fontSize:15,fontWeight:700,color:T.orange,marginBottom:8}}>🏫 Çocuğunuzun Yeri — {myClass.name}</div>
-      <ParentMiniClassroom myClass={myClass} childId={child.id}/>
-    </Card>}
-    {!myClass&&<Card style={{marginBottom:14}}><div style={{padding:14,textAlign:"center",color:T.tm,fontSize:13}}>Çocuk henüz bir sınıfa atanmamış</div></Card>}
-
-    {/* CURRENT TASK POPUP */}
-    {current&&<Card style={{marginBottom:14,borderColor:T.orange+"55",position:"relative"}}>
-      <div style={{fontSize:12,color:T.orange,fontWeight:700,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>🎯 Şu An Üzerinde Çalıştığı Görev</div>
-      <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
-        <TaskImage taskId={current.id} type="gorsel" size={80} fallbackEmoji={current.img}/>
-        <div style={{flex:1}}>
-          <div style={{fontSize:18,fontWeight:800,marginBottom:4}}>#{current.id} — {current.title}</div>
-          <div style={{fontSize:13,padding:"3px 10px",borderRadius:5,background:T.purple+"30",color:T.pl,display:"inline-block",marginBottom:6}}>{current.cat}</div>
-          <div style={{fontSize:14,color:T.ts,lineHeight:1.5}}>{current.desc}</div>
-          <div style={{marginTop:8,display:"flex",gap:8,alignItems:"center"}}>
-            <Badge s={sp[current.id]?.status}/>
-            <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{current.xp} XP</span>
-            {sp[current.id]?.startedAt&&<span style={{fontSize:12,color:T.cyan}}>⏱ {fd(Date.now()-sp[current.id].startedAt)} önce başladı</span>}
-          </div>
-        </div>
-      </div>
-    </Card>}
-
-    {/* AUDIT LOG — only for this child */}
-    <div style={{fontSize:16,fontWeight:700,color:T.pl,marginBottom:8}}>📋 Aktivite Geçmişi</div>
-    <Card>
-      {logs.length===0?<div style={{padding:14,textAlign:"center",color:T.tm,fontSize:13}}>Henüz aktivite yok</div>:
-      <div style={{maxHeight:500,overflowY:"auto"}}>
-        {logs.slice(0,80).map(lg=>{
-          const tc={login:T.tm,task_started:T.cyan,task_completed:T.pl,task_approved:T.ok,task_rejected:T.err,help_request:T.err}[lg.type]||T.tm;
-          const icon={login:"🔐",task_started:"🎯",task_completed:"📤",task_approved:"✓",task_rejected:"🔄",help_request:"🖐"}[lg.type]||"•";
-          return(<div key={lg.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:`1px solid ${T.border}33`}}>
-            <span style={{fontSize:18,width:24,textAlign:"center"}}>{icon}</span>
-            <span style={{fontSize:13,color:tc,fontWeight:600,minWidth:100}}>{ft(lg.ts)}</span>
-            <span style={{fontSize:14,color:T.tp,flex:1}}>{lg.detail}</span>
-            {lg.taskId&&<span style={{fontSize:11,padding:"2px 8px",borderRadius:5,background:T.purple+"22",color:T.pl}}>G.{lg.taskId}</span>}
-          </div>);
-        })}
-      </div>}
-    </Card>
-  </div>);
-}
-
-// Mini classroom — only show parent's child highlighted
-function ParentMiniClassroom({myClass,childId}){
-  const renderTable=(table)=>{
-    const isMyTable=table.seats?.includes(childId);
-    return(<div key={table.id} style={{
-      position:"absolute",left:table.x,top:table.y,
-      width:table.w,height:table.h,
-      background:"linear-gradient(160deg, #A07828, #8B6914 30%, #7A5C12 60%, #6B4F12)",
-      borderRadius:10,border:isMyTable?`3px solid ${T.orange}`:"3px solid #5C4010",
-      boxShadow:isMyTable?`0 0 24px ${T.orange}88`:"0 4px 12px #00000055",
-      display:"flex",flexDirection:"column",overflow:"hidden",
-    }}>
-      <div style={{padding:"3px 8px",background:"#5C401088",borderBottom:"1px solid #4a350e",fontSize:9,color:"#C4A868",fontWeight:700}}>
-        {TABLE_PRESETS[table.type]?.label||"Masa"}
-      </div>
-      <div style={{flex:1,display:"grid",gridTemplateColumns:`repeat(${table.horizontal?(TABLE_PRESETS[table.type]?.rows||1):(TABLE_PRESETS[table.type]?.cols||2)},1fr)`,gap:3,padding:4}}>
-        {table.seats.map((sid,i)=>{
-          const isMe=sid===childId;
-          return(<div key={i} style={{
-            background:isMe?T.orange+"33":sid?"#1a1408":"transparent",
-            border:isMe?`2px solid ${T.orange}`:sid?`1px solid #5C401044`:"1px dashed #5C401033",
-            borderRadius:6,minHeight:42,display:"flex",alignItems:"center",justifyContent:"center",
-            position:"relative",
-          }}>
-            {isMe&&<>
-              <div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",fontSize:14,zIndex:2}}>📍</div>
-              <div style={{fontSize:11,fontWeight:700,color:T.orange}}>BEN</div>
-            </>}
-            {!isMe&&sid&&<div style={{fontSize:14,color:WOOD.textDim,opacity:.4}}>•</div>}
-            {!sid&&<div style={{fontSize:11,color:T.tm,opacity:.5}}>boş</div>}
-          </div>);
-        })}
-      </div>
-    </div>);
+  const renderPageInfo=()=>{
+    if(!isRecentlyActive)return null;
+    const pageNames={
+      "login":"🔐 Giriş yapıyor",
+      "dash":"🗺️ Görev haritasında",
+      "task":currentTaskId?`📝 Görev #${currentTaskId} ekranında`:"📝 Görev ekranında",
+      "practice":"🧠 Practice yapıyor",
+      "hw":"📋 Ödev ekranında",
+    };
+    return pageNames[currentPage]||"💻 Aktif";
   };
 
-  return(<div style={{position:"relative",width:"100%",height:Math.min(myClass.canvasH||500,500),background:"linear-gradient(180deg,#13101e,#0f0c18)",border:`1px solid ${T.border}`,borderRadius:10,overflow:"auto"}}>
-    <div style={{position:"absolute",top:8,left:"50%",transform:"translateX(-50%)",padding:"4px 16px",borderRadius:6,background:"#1a4a2e88",border:"2px solid #2d8a5666",fontSize:11,fontWeight:700,color:"#86efac",zIndex:5}}>🖥️ AKILLI TAHTA</div>
-    {(myClass.objects||[]).filter(o=>o.type==="tv").map(o=>(
-      <div key={o.id} style={{position:"absolute",left:o.x,top:o.y,width:o.w,height:o.h,background:"linear-gradient(180deg,#1a1a2e,#0f0f1e)",borderRadius:6,border:"2px solid #333",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#67e8f9",fontWeight:700}}>🖥️ {o.label||"TV"}</div>
-    ))}
-    {(myClass.tables||[]).map(renderTable)}
+  return(<div>
+    {/* ═══ ŞU ANKİ DURUM — En üstte, en önemli ═══ */}
+    <div style={{
+      marginBottom:14,padding:18,borderRadius:18,
+      background:current?`linear-gradient(135deg,${T.cyan}22,${T.purple}22,${T.card})`:`linear-gradient(135deg,${T.tm}11,${T.card})`,
+      border:`2px solid ${current?T.cyan:T.border}55`,
+    }}>
+      <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+        <div style={{
+          width:54,height:54,borderRadius:14,
+          background:current?`linear-gradient(135deg,${T.cyan},${T.purple})`:T.dark,
+          display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,
+          flexShrink:0,
+        }}>{current?"▶":"💤"}</div>
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{fontSize:11,letterSpacing:2,color:T.tm,fontWeight:800,textTransform:"uppercase",marginBottom:3}}>
+            ⚡ ŞU AN
+          </div>
+          {current?(
+            <div>
+              <div style={{fontSize:18,fontWeight:900,color:T.cyan,letterSpacing:.3}}>
+                #{current.id} {current.title}
+              </div>
+              <div style={{fontSize:13,color:T.ts,marginTop:3}}>
+                {current.cat} • {current.expectedMin}dk hedef süre
+                {sp[current.id]?.status===TS.PENDING&&<span style={{marginLeft:8,padding:"2px 8px",borderRadius:6,background:T.pl+"33",color:T.pl,fontSize:11,fontWeight:700}}>⏳ ONAYDA</span>}
+                {sp[current.id]?.status===TS.IN_PROGRESS&&<span style={{marginLeft:8,padding:"2px 8px",borderRadius:6,background:T.cyan+"33",color:T.cyan,fontSize:11,fontWeight:700}}>🛠 YAPIYOR</span>}
+              </div>
+              {renderPageInfo()&&<div style={{marginTop:6,fontSize:12,color:T.ok,fontWeight:600}}>🌐 {renderPageInfo()}</div>}
+            </div>
+          ):(
+            <div>
+              <div style={{fontSize:16,fontWeight:700,color:T.tm}}>Şu an aktif görev yok</div>
+              <div style={{fontSize:12,color:T.tm,marginTop:3}}>Çocuğunuz tüm güncel görevlerini tamamlamış görünüyor 👏</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+
+    {/* ═══ AKTİVİTE GEÇMİŞİ — Yukarı taşındı (eski yer çok altdaydı) ═══ */}
+    <div style={{marginBottom:14}}>
+      <div style={{
+        padding:18,borderRadius:18,
+        background:T.card,border:`1px solid ${T.border}`,
+      }}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+          <div style={{fontSize:24}}>📜</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:16,fontWeight:900,color:T.tp,letterSpacing:.3}}>Aktivite Geçmişi</div>
+            <div style={{fontSize:12,color:T.ts}}>Son işlemler & başarılar</div>
+          </div>
+          {childLogs.length>0&&<span style={{fontSize:11,padding:"3px 10px",borderRadius:8,background:T.purple+"22",color:T.pl,fontWeight:700}}>{childLogs.length} kayıt</span>}
+        </div>
+
+        {childLogs.length===0?(
+          <div style={{padding:24,textAlign:"center",color:T.tm,fontSize:14}}>
+            Henüz kayıt yok 🌱
+          </div>
+        ):(
+          <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:400,overflowY:"auto"}}>
+            {childLogs.map((l,i)=>{
+              const icon=l.type==="task_approved"?"✅":l.type==="task_started"?"▶":l.type==="task_submitted"?"📤":l.type==="task_rejected"?"↻":l.type==="help_requested"?"🖐":l.type==="answer_unlocked"?"🔓":l.type==="practice_attempt"?"🧠":"📝";
+              const color=l.type==="task_approved"?T.ok:l.type==="task_rejected"?T.err:l.type==="help_requested"?T.err:l.type==="task_submitted"?T.pl:l.type==="answer_unlocked"?T.cyan:T.ts;
+              return(<div key={i} style={{
+                display:"flex",alignItems:"center",gap:10,
+                padding:"10px 12px",borderRadius:10,
+                background:T.dark,border:`1px solid ${color}22`,
+              }}>
+                <div style={{
+                  width:34,height:34,borderRadius:"50%",
+                  background:`${color}22`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:16,flexShrink:0,
+                }}>{icon}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:600,color:T.tp,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                    {l.detail||l.type}
+                  </div>
+                  <div style={{fontSize:11,color:T.tm,marginTop:1}}>{new Date(l.ts).toLocaleString("tr-TR")}</div>
+                </div>
+              </div>);
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* ═══ SINIF YERLEŞİMİ — Toggle ile gizlenebilir ═══ */}
+    <div style={{
+      borderRadius:18,
+      background:T.card,border:`1px solid ${T.border}`,
+      overflow:"hidden",
+    }}>
+      <div onClick={()=>setShowLayout(!showLayout)} style={{
+        padding:"14px 18px",cursor:"pointer",
+        background:showLayout?`linear-gradient(135deg,${T.orange}22,${T.card})`:T.card,
+        borderBottom:showLayout?`1px solid ${T.border}`:"none",
+        display:"flex",alignItems:"center",gap:10,
+        transition:"all .2s",
+      }}>
+        <div style={{fontSize:24}}>🏫</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:16,fontWeight:900,color:T.tp,letterSpacing:.3}}>Sınıfın Yerleşimi</div>
+          <div style={{fontSize:12,color:T.ts}}>{mySeat?`${myClass.name} sınıfında oturuyor`:"Henüz bir koltuğa atanmadı"}</div>
+        </div>
+        <button style={{
+          padding:"6px 14px",borderRadius:8,
+          border:`1px solid ${T.orange}55`,
+          background:T.orange+"22",color:T.orange,
+          fontWeight:700,fontSize:12,cursor:"pointer",
+          display:"flex",alignItems:"center",gap:6,
+        }}>
+          {showLayout?<>👁️ Gizle</>:<>👁️‍🗨️ Göster</>}
+        </button>
+      </div>
+
+      {showLayout&&(myClass?(
+        <div style={{padding:18}}>
+          <ParentMiniClassroom myClass={myClass} childId={child.id}/>
+          <div style={{marginTop:10,fontSize:11,color:T.tm,textAlign:"center",fontStyle:"italic"}}>
+            📍 Yıldızlı ışık çocuğunuzun oturduğu yer
+          </div>
+        </div>
+      ):(
+        <div style={{padding:30,textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:8,opacity:.4}}>🪑</div>
+          <div style={{fontSize:14,color:T.tm}}>Henüz sınıf yerleşim planı oluşturulmamış</div>
+        </div>
+      ))}
+    </div>
   </div>);
 }
 
-// ─── TAB 2: KAZANIMLAR ───
-function ParentLearningsView({child,sp}){
-  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
-  const xp=completed.reduce((a,t)=>a+t.xp,0);
-  const lv=getLevel(xp);
-  const nlv=getNextLevel(xp);
-  let totalMs=0;
-  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
-  const cats=[...new Set(TASKS.map(t=>t.cat))];
-  const allLearnings=[...new Set(completed.flatMap(t=>t.learnings||[]))];
-  const avgScore=calcAvgScore(sp);
+// ═══════════════════════════════════════════════════════════════
+// MINI CLASSROOM — Robotik laboratuvar teması (siyah zemin yerine)
+// ═══════════════════════════════════════════════════════════════
+function ParentMiniClassroom({myClass,childId}){
+  const w=myClass.canvasW||900;
+  const h=myClass.canvasH||500;
+  const scale=Math.min(700/w,420/h);
+  const sw=w*scale;
+  const sh=h*scale;
 
-  return(<div>
-    {/* HERO */}
-    <Card style={{marginBottom:14,background:`linear-gradient(135deg,${T.purple}40,${T.orange}20)`,border:`1px solid ${T.orange}44`}}>
-      <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
-        <div style={{width:64,height:64,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,background:T.orange+"20",border:`3px solid ${T.orange}88`}}>{lv.icon}</div>
-        <div style={{flex:1,minWidth:180}}>
-          <div style={{fontSize:22,fontWeight:800,color:T.orange}}>Level {lv.lv} — {lv.name}</div>
-          <div style={{fontSize:14,color:T.ol,fontWeight:700,marginTop:2}}>{xp} XP {nlv&&<span style={{fontSize:12,color:T.tm,fontWeight:400}}>• Sonraki: {nlv.icon} {nlv.name} ({nlv.min})</span>}</div>
-          <div style={{width:"100%",height:10,borderRadius:5,background:T.border,overflow:"hidden",marginTop:6}}>
-            <div style={{height:"100%",borderRadius:5,background:`linear-gradient(90deg,${T.orange},${T.pl})`,width:`${nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100}%`}}/>
-          </div>
-        </div>
-        <div style={{textAlign:"center",minWidth:90}}>
-          <div style={{fontSize:30,fontWeight:800,color:T.orange}}>{completed.length}<span style={{fontSize:18,color:T.tm}}>/36</span></div>
-          <div style={{fontSize:11,color:T.tm}}>Tamamlanan</div>
-        </div>
-      </div>
-    </Card>
+  return(<div style={{
+    position:"relative",
+    width:"100%",maxWidth:sw,height:sh,margin:"0 auto",
+    borderRadius:14,overflow:"hidden",
+    background:`
+      radial-gradient(circle at 20% 20%,${T.purple}33,transparent 40%),
+      radial-gradient(circle at 80% 80%,${T.cyan}22,transparent 40%),
+      linear-gradient(135deg,#1a1a2e,#16213e,#0f1729)
+    `,
+    border:`2px solid ${T.purple}55`,
+    boxShadow:`inset 0 0 60px ${T.purple}22`,
+  }}>
+    {/* Floor grid pattern (laboratuvar zemini) */}
+    <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:.15,pointerEvents:"none"}}>
+      <defs>
+        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+          <path d="M 30 0 L 0 0 0 30" fill="none" stroke={T.cyan} strokeWidth="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)"/>
+    </svg>
 
-    {/* STATS */}
-    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
-      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.cyan}}>{fd(totalMs)}</div><div style={{fontSize:12,color:T.ts}}>Toplam Süre</div></Card>
-      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.warn}}>{xp}</div><div style={{fontSize:12,color:T.ts}}>XP Puanı</div></Card>
-      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.pl}}>{allLearnings.length}</div><div style={{fontSize:12,color:T.ts}}>Yetkinlik</div></Card>
-      <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:22,fontWeight:800,color:T.ok}}>{Math.round(completed.length/36*100)}%</div><div style={{fontSize:12,color:T.ts}}>İlerleme</div></Card>
-      {avgScore!==null&&<Card style={{textAlign:"center",padding:14,border:`2px solid ${gradeColor(avgScore)}66`,background:`${gradeColor(avgScore)}10`}}><div style={{fontSize:22,fontWeight:900,color:gradeColor(avgScore)}}>🎯 {avgScore}</div><div style={{fontSize:12,color:T.ts}}>{gradeLabel(avgScore)}</div></Card>}
-    </div>
+    {/* Decorative robotik ögeler arka plan */}
+    <div style={{position:"absolute",top:8,left:8,fontSize:24,opacity:.25}}>🤖</div>
+    <div style={{position:"absolute",top:8,right:8,fontSize:24,opacity:.25}}>📡</div>
+    <div style={{position:"absolute",bottom:8,left:8,fontSize:24,opacity:.25}}>⚡</div>
+    <div style={{position:"absolute",bottom:8,right:8,fontSize:24,opacity:.25}}>🦾</div>
 
-    {/* CATEGORY BREAKDOWN */}
-    {completed.length===0?<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:14}}>Henüz tamamlanmış görev yok.</div></Card>:
-    cats.map(cat=>{
-      const ct=completed.filter(t=>t.cat===cat);
-      if(ct.length===0)return null;
-      const ctTotal=TASKS.filter(t=>t.cat===cat).length;
-      return(<div key={cat} style={{marginBottom:16}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-          <span style={{fontSize:15,fontWeight:700,color:T.orange,padding:"4px 14px",background:T.orange+"15",borderRadius:8}}>{cat}</span>
-          <span style={{fontSize:12,color:T.ts}}>{ct.length}/{ctTotal} tamamlandı</span>
-        </div>
-        {ct.map(t=>{
-          const tp=sp[t.id];
-          const dur=(tp.startedAt&&tp.completedAt)?fd(tp.completedAt-tp.startedAt):null;
-          const taskScore=tp.startedAt&&tp.completedAt?calcTaskScore(tp.completedAt-tp.startedAt,t.expectedMin):null;
-          return(<Card key={t.id} style={{marginBottom:8,padding:12}}>
-            <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
-              <TaskImage taskId={t.id} type="gorsel" size={48} fallbackEmoji={t.img}/>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
-                  <span style={{fontSize:15,fontWeight:700}}>#{t.id} {t.title}</span>
-                  <span style={{fontSize:12,padding:"2px 8px",borderRadius:5,background:T.ok+"20",color:T.ok,fontWeight:600}}>✓</span>
-                  {dur&&<span style={{fontSize:12,color:T.cyan}}>⏱ {dur} <span style={{opacity:.6}}>(hedef:{t.expectedMin}dk)</span></span>}
-                  <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{t.xp} XP</span>
-                  {taskScore!==null&&<span style={{fontSize:12,padding:"2px 10px",borderRadius:5,background:`${gradeColor(taskScore)}22`,color:gradeColor(taskScore),border:`1px solid ${gradeColor(taskScore)}55`,fontWeight:800}}>🎯 {taskScore}</span>}
-                </div>
-                <div style={{fontSize:13,color:T.ts,marginBottom:6}}>{t.desc}</div>
-                {t.learnings&&t.learnings.length>0&&<div>
-                  <div style={{fontSize:11,color:T.pl,fontWeight:700,marginBottom:4}}>📚 KAZANIMLAR</div>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                    {t.learnings.map((lr,i)=><span key={i} style={{fontSize:12,padding:"3px 10px",borderRadius:5,background:T.purple+"22",color:T.pl,border:`1px solid ${T.purple}33`}}>{lr}</span>)}
-                  </div>
-                </div>}
-              </div>
-            </div>
-          </Card>);
+    {/* "Kara tahta" üst kenar */}
+    <div style={{
+      position:"absolute",top:6,left:"50%",transform:"translateX(-50%)",
+      padding:"4px 14px",borderRadius:6,
+      background:`linear-gradient(180deg,#2a4a3a,#1a3a2a)`,
+      border:`1px solid ${T.ok}33`,
+      fontSize:10,color:T.ok,fontWeight:700,letterSpacing:1,
+      boxShadow:`0 2px 6px #000`,
+    }}>📚 BERRYBOT LABORATUVARI</div>
+
+    {/* Tables */}
+    {myClass.tables?.map(t=>(
+      <div key={t.id} style={{
+        position:"absolute",
+        left:t.x*scale,top:t.y*scale,
+        width:(t.w||120)*scale,height:(t.h||80)*scale,
+        background:`linear-gradient(135deg,#5a4a35,#3a2818)`,
+        border:`2px solid ${T.warn}66`,
+        borderRadius:6*scale,
+        boxShadow:`0 4px 12px #000a, inset 0 1px 0 #ffffff22`,
+      }}>
+        {/* Wood grain */}
+        <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(90deg,transparent 0,transparent 8px,#00000022 8px,#00000022 9px)",opacity:.5,borderRadius:6*scale,pointerEvents:"none"}}/>
+
+        {/* Seats around the table */}
+        {t.seats?.map((sid,si)=>{
+          if(!sid)return null;
+          const isMe=sid===childId;
+          // 4 seats — top, right, bottom, left
+          const positions=[
+            {top:-12*scale,left:"50%",transform:"translateX(-50%)"},
+            {right:-12*scale,top:"50%",transform:"translateY(-50%)"},
+            {bottom:-12*scale,left:"50%",transform:"translateX(-50%)"},
+            {left:-12*scale,top:"50%",transform:"translateY(-50%)"},
+          ];
+          const pos=positions[si]||positions[0];
+          return(<div key={si} style={{
+            position:"absolute",...pos,
+            width:18*scale,height:18*scale,
+            borderRadius:"50%",
+            background:isMe?`radial-gradient(circle,${T.warn},${T.orange})`:`radial-gradient(circle,#666,#333)`,
+            border:isMe?`2px solid ${T.warn}`:`1px solid #888`,
+            boxShadow:isMe?`0 0 12px ${T.warn},0 0 20px ${T.warn}88`:"0 1px 3px #000a",
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:10*scale,
+            zIndex:isMe?5:2,
+          }}>
+            {isMe&&<span style={{filter:"drop-shadow(0 0 4px #fff)"}}>⭐</span>}
+          </div>);
         })}
-      </div>);
+      </div>
+    ))}
+
+    {/* "BEN" indicator label for the child's seat */}
+    {myClass.tables?.map(t=>{
+      const idx=t.seats?.indexOf(childId);
+      if(idx<0||idx===undefined)return null;
+      const positions=[
+        {top:-30*scale,left:t.w*scale/2-15*scale},
+        {right:-50*scale,top:t.h*scale/2-8*scale},
+        {bottom:-30*scale,left:t.w*scale/2-15*scale},
+        {left:-50*scale,top:t.h*scale/2-8*scale},
+      ];
+      const lp=positions[idx]||positions[0];
+      return(<div key={t.id+"_lbl"} style={{
+        position:"absolute",
+        left:t.x*scale+(lp.left||0),
+        top:t.y*scale+(lp.top||0),
+        right:lp.right?t.x*scale+lp.right:undefined,
+        padding:"3px 8px",borderRadius:6,
+        background:`linear-gradient(135deg,${T.warn},${T.orange})`,
+        color:"#fff",fontSize:10,fontWeight:900,letterSpacing:1,
+        boxShadow:`0 2px 8px ${T.warn}88`,
+        whiteSpace:"nowrap",zIndex:6,
+      }}>📍 BEN</div>);
     })}
   </div>);
 }
 
-// ─── TAB 3: CV / SERTIFIKA ───
+// ═══════════════════════════════════════════════════════════════
+// TAB 2: KAZANIMLAR — Mekanik / Yazılım / Elektronik kategori
+// ═══════════════════════════════════════════════════════════════
+function ParentLearningsView({child,sp}){
+  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+  const xp=completed.reduce((a,t)=>a+t.xp,0);
+  let totalMs=0;
+  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+  const allLearnings=[...new Set(completed.flatMap(t=>t.learnings||[]))];
+  const avgScore=calcAvgScore(sp);
+
+  // ═══ 3 BECERI ALANI: Mekanik / Yazılım / Elektronik ═══
+  const skillCategories={
+    "🔧 Mekanik & Donanım":{
+      color:T.warn,
+      bg:`linear-gradient(135deg,${T.warn}22,${T.card})`,
+      border:T.warn,
+      keywords:["motor","tekerlek","servo","mekanik","montaj","yapı","robot","araç","gövde","hareket","yön","döner","sürüş"],
+      tasks:["Motor","Mesafe/Navigasyon","Sumo Robot","Engel Algılama"],
+      desc:"Robotun fiziksel parçalarını ve hareket sistemlerini öğrendi",
+    },
+    "💻 Yazılım & Algoritma":{
+      color:T.cyan,
+      bg:`linear-gradient(135deg,${T.cyan}22,${T.card})`,
+      border:T.cyan,
+      keywords:["fonksiyon","döngü","koşul","kod","program","algoritma","blok","mantık","değişken","if","while","for","komut"],
+      tasks:["Fonksiyon","Çizgi Takip","Sumo Robot","Işık Takip"],
+      desc:"Robotunu kontrol etmek için kod yazmayı öğrendi",
+    },
+    "⚡ Elektronik & Sensörler":{
+      color:T.pl,
+      bg:`linear-gradient(135deg,${T.purple}22,${T.card})`,
+      border:T.pl,
+      keywords:["sensör","led","buzzer","kızılötesi","ışık","mesafe","ultrasonik","ldr","ir","rgb","pin","analog","dijital","sinyal","devre","elektrik"],
+      tasks:["RGB LED","Sensör+LED+Buzzer","Işık Sensörü","IR Kumanda","Işık Takip"],
+      desc:"Sensörler ve elektronik bileşenlerle nasıl çalışılacağını öğrendi",
+    },
+  };
+
+  // Her kategori için kazanılan beceriler & görevleri hesapla
+  const categorized={};
+  Object.entries(skillCategories).forEach(([catName,catDef])=>{
+    const matchingTasks=completed.filter(t=>catDef.tasks.includes(t.cat));
+    const matchingLearnings=allLearnings.filter(lr=>{
+      const lower=lr.toLowerCase();
+      return catDef.keywords.some(kw=>lower.includes(kw));
+    });
+    categorized[catName]={
+      ...catDef,
+      tasks:matchingTasks,
+      learnings:[...new Set(matchingLearnings)],
+      taskCount:matchingTasks.length,
+      xpEarned:matchingTasks.reduce((a,t)=>a+t.xp,0),
+    };
+  });
+
+  return(<div>
+    <style>{`
+      @keyframes pl-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+    `}</style>
+
+    {/* ═══ ÖZET STATLAR ═══ */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
+      <div style={{padding:14,borderRadius:14,background:`linear-gradient(135deg,${T.cyan}22,${T.card})`,border:`1px solid ${T.cyan}44`,textAlign:"center"}}>
+        <div style={{fontSize:22,fontWeight:900,color:T.cyan,lineHeight:1}}>{fd(totalMs)}</div>
+        <div style={{fontSize:11,color:T.ts,fontWeight:600,marginTop:4}}>⏱ TOPLAM SÜRE</div>
+      </div>
+      <div style={{padding:14,borderRadius:14,background:`linear-gradient(135deg,${T.warn}22,${T.card})`,border:`1px solid ${T.warn}44`,textAlign:"center"}}>
+        <div style={{fontSize:22,fontWeight:900,color:T.warn,lineHeight:1}}>{xp}</div>
+        <div style={{fontSize:11,color:T.ts,fontWeight:600,marginTop:4}}>⚡ TOPLAM XP</div>
+      </div>
+      <div style={{padding:14,borderRadius:14,background:`linear-gradient(135deg,${T.pl}22,${T.card})`,border:`1px solid ${T.pl}44`,textAlign:"center"}}>
+        <div style={{fontSize:22,fontWeight:900,color:T.pl,lineHeight:1}}>{allLearnings.length}</div>
+        <div style={{fontSize:11,color:T.ts,fontWeight:600,marginTop:4}}>📚 KAZANIM</div>
+      </div>
+      <div style={{padding:14,borderRadius:14,background:`linear-gradient(135deg,${T.ok}22,${T.card})`,border:`1px solid ${T.ok}44`,textAlign:"center"}}>
+        <div style={{fontSize:22,fontWeight:900,color:T.ok,lineHeight:1}}>{Math.round(completed.length/36*100)}%</div>
+        <div style={{fontSize:11,color:T.ts,fontWeight:600,marginTop:4}}>📊 İLERLEME</div>
+      </div>
+      {avgScore!==null&&<div style={{padding:14,borderRadius:14,background:`${gradeColor(avgScore)}22`,border:`2px solid ${gradeColor(avgScore)}66`,textAlign:"center"}}>
+        <div style={{fontSize:22,fontWeight:900,color:gradeColor(avgScore),lineHeight:1}}>🎯 {avgScore}</div>
+        <div style={{fontSize:11,color:T.ts,fontWeight:600,marginTop:4}}>{gradeLabel(avgScore)}</div>
+      </div>}
+    </div>
+
+    {/* ═══ 3 BECERI ALANI ═══ */}
+    <div style={{marginBottom:14,padding:18,borderRadius:18,background:`linear-gradient(135deg,${T.purple}22,${T.card})`,border:`2px solid ${T.purple}55`}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+        <div style={{fontSize:28}}>🎓</div>
+        <div>
+          <div style={{fontSize:18,fontWeight:900,color:T.tp,letterSpacing:.3}}>Beceri Alanları</div>
+          <div style={{fontSize:12,color:T.ts}}>Robotik mühendisliğinin 3 temel alanında ne kadar ilerledi</div>
+        </div>
+      </div>
+    </div>
+
+    <div style={{display:"grid",gap:12,marginBottom:14}}>
+      {Object.entries(categorized).map(([catName,cat])=>{
+        const learnedPct=cat.taskCount>0?Math.round((cat.taskCount/cat.tasks.length||1)*100):0;
+        return(<div key={catName} style={{
+          padding:18,borderRadius:18,
+          background:cat.bg,
+          border:`2px solid ${cat.border}55`,
+          position:"relative",overflow:"hidden",
+        }}>
+          {/* Shimmer effect */}
+          <div style={{position:"absolute",inset:0,pointerEvents:"none",
+            background:`linear-gradient(90deg,transparent 30%,${cat.color}11 50%,transparent 70%)`,
+            backgroundSize:"200% 100%",animation:"pl-shimmer 6s infinite linear",
+          }}/>
+
+          <div style={{position:"relative",display:"flex",alignItems:"flex-start",gap:14,marginBottom:14,flexWrap:"wrap"}}>
+            <div style={{
+              fontSize:36,
+              filter:`drop-shadow(0 4px 12px ${cat.color}88)`,
+            }}>{catName.split(" ")[0]}</div>
+            <div style={{flex:1,minWidth:200}}>
+              <div style={{fontSize:18,fontWeight:900,color:cat.color,marginBottom:3,letterSpacing:.3}}>
+                {catName.replace(/^[\u{1F000}-\u{1FFFF}]\s*/u,"")}
+              </div>
+              <div style={{fontSize:13,color:T.ts,lineHeight:1.4}}>{cat.desc}</div>
+            </div>
+            {/* XP earned in this category */}
+            <div style={{textAlign:"center",padding:"10px 14px",borderRadius:12,background:"#0006",border:`1px solid ${cat.color}55`}}>
+              <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1}}>KAZANILAN</div>
+              <div style={{fontSize:18,fontWeight:900,color:cat.color}}>⚡ {cat.xpEarned}</div>
+            </div>
+          </div>
+
+          {/* Tasks completed in this category */}
+          {cat.tasks.length>0?(
+            <div style={{position:"relative"}}>
+              <div style={{fontSize:11,color:cat.color,fontWeight:800,letterSpacing:1.5,marginBottom:8,textTransform:"uppercase"}}>
+                ✓ Tamamladığı Görevler ({cat.tasks.length})
+              </div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+                {cat.tasks.map(t=>(
+                  <div key={t.id} style={{
+                    display:"inline-flex",alignItems:"center",gap:5,
+                    padding:"5px 10px",borderRadius:8,
+                    background:`${cat.color}22`,border:`1px solid ${cat.color}44`,
+                    fontSize:12,
+                  }}>
+                    <span style={{fontFamily:"monospace",color:T.tm,fontWeight:700,fontSize:10}}>#{t.id}</span>
+                    <span style={{color:T.tp,fontWeight:600}}>{t.title}</span>
+                    <span style={{color:T.warn,fontWeight:700,fontSize:10}}>+{t.xp}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Learnings in this category */}
+              {cat.learnings.length>0&&<>
+                <div style={{fontSize:11,color:cat.color,fontWeight:800,letterSpacing:1.5,marginBottom:8,textTransform:"uppercase"}}>
+                  📚 Bu Alanda Öğrendiği Yetkinlikler
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                  {cat.learnings.map((lr,i)=>(
+                    <div key={i} style={{
+                      display:"flex",alignItems:"center",gap:8,
+                      padding:"7px 11px",borderRadius:8,
+                      background:`${cat.color}11`,border:`1px solid ${cat.color}33`,
+                    }}>
+                      <span style={{
+                        width:22,height:22,borderRadius:"50%",
+                        background:cat.color,color:"#fff",
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        fontSize:11,fontWeight:900,flexShrink:0,
+                      }}>{i+1}</span>
+                      <span style={{fontSize:13,color:T.tp,fontWeight:600}}>{lr}</span>
+                    </div>
+                  ))}
+                </div>
+              </>}
+            </div>
+          ):(
+            <div style={{padding:14,textAlign:"center",borderRadius:10,background:T.dark,border:`1px dashed ${cat.color}33`}}>
+              <div style={{fontSize:32,opacity:.4,marginBottom:4}}>🌱</div>
+              <div style={{fontSize:13,color:T.tm,fontWeight:600}}>Bu alanda henüz görev tamamlanmadı</div>
+              <div style={{fontSize:11,color:T.tm,marginTop:2}}>İlk görevle birlikte beceriler burada listelenecek</div>
+            </div>
+          )}
+        </div>);
+      })}
+    </div>
+
+    {/* ═══ TÜM TAMAMLANAN GÖREVLER LİSTESİ — eski liste, accordion ═══ */}
+    <details style={{borderRadius:14,background:T.card,border:`1px solid ${T.border}`,overflow:"hidden"}}>
+      <summary style={{padding:14,cursor:"pointer",display:"flex",alignItems:"center",gap:10,fontSize:14,fontWeight:700,color:T.tp,listStyle:"none",userSelect:"none"}}>
+        <span style={{fontSize:20}}>📋</span>
+        <span style={{flex:1}}>Tüm Tamamlanan Görevler ({completed.length})</span>
+        <span style={{fontSize:11,color:T.tm}}>▼ tıkla aç</span>
+      </summary>
+      <div style={{padding:"0 14px 14px",borderTop:`1px solid ${T.border}`}}>
+        {completed.map(t=>{
+          const tp=sp[t.id];
+          const dur=(tp.startedAt&&tp.completedAt)?fd(tp.completedAt-tp.startedAt):null;
+          const taskScore=tp.startedAt&&tp.completedAt?calcTaskScore(tp.completedAt-tp.startedAt,t.expectedMin):null;
+          return(<div key={t.id} style={{
+            display:"flex",alignItems:"center",gap:8,
+            padding:"8px 10px",borderRadius:8,marginTop:6,
+            background:T.dark,border:`1px solid ${T.border}`,
+          }}>
+            <TaskImage taskId={t.id} type="gorsel" size={36} fallbackEmoji={t.img} style={{borderRadius:6}}/>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:700,color:T.tp,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>#{t.id} {t.title}</div>
+              <div style={{fontSize:11,color:T.ts}}>{t.cat} {dur&&`• ${dur}`}</div>
+            </div>
+            <span style={{fontSize:11,color:T.warn,fontWeight:700}}>+{t.xp}</span>
+            {taskScore!==null&&<span style={{fontSize:11,padding:"2px 8px",borderRadius:6,background:`${gradeColor(taskScore)}22`,color:gradeColor(taskScore),fontWeight:800}}>🎯 {taskScore}</span>}
+          </div>);
+        })}
+      </div>
+    </details>
+  </div>);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TAB 3: CV / SERTİFİKA — Mekanik / Yazılım / Elektronik vurgulu
+// ═══════════════════════════════════════════════════════════════
 function ParentCVView({child,sp}){
   const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
   const xp=completed.reduce((a,t)=>a+t.xp,0);
   const lv=getLevel(xp);
   let totalMs=0;
   completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
-  const allLearnings=[...new Set(completed.flatMap(t=>t.learnings||[]))];
-  const cats=[...new Set(completed.map(t=>t.cat))];
-  const today=new Date().toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"});
+  const avgScore=calcAvgScore(sp);
 
-  // Avg time per task
-  const avgMin=completed.length>0?Math.round((totalMs/completed.length)/60000):0;
-  // Difficulty stats
-  const easyDone=completed.filter(t=>t.diff<=2).length;
-  const medDone=completed.filter(t=>t.diff===3).length;
-  const hardDone=completed.filter(t=>t.diff>=4).length;
-  // Top categories
-  const catCounts={};
-  completed.forEach(t=>{catCounts[t.cat]=(catCounts[t.cat]||0)+1;});
-  const topCats=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  // 3 ana alan
+  const skillAreas={
+    "🔧 Mekanik & Donanım":{
+      color:"#c97f10",lightBg:"#fff8e8",
+      tasks:completed.filter(t=>["Motor","Mesafe/Navigasyon","Sumo Robot","Engel Algılama"].includes(t.cat)),
+    },
+    "💻 Yazılım & Algoritma":{
+      color:"#0e7490",lightBg:"#e6f7fc",
+      tasks:completed.filter(t=>["Fonksiyon","Çizgi Takip","Sumo Robot","Işık Takip"].includes(t.cat)),
+    },
+    "⚡ Elektronik & Sensörler":{
+      color:"#7c3aed",lightBg:"#f5edff",
+      tasks:completed.filter(t=>["RGB LED","Sensör+LED+Buzzer","Işık Sensörü","IR Kumanda","Işık Takip"].includes(t.cat)),
+    },
+  };
+
+  // Build categorized learnings
+  const buildCat=(taskCats)=>{
+    const ts=completed.filter(t=>taskCats.includes(t.cat));
+    const learnings=[...new Set(ts.flatMap(t=>t.learnings||[]))];
+    return{tasks:ts,learnings};
+  };
+
+  const summary=()=>{
+    const s=[];
+    if(completed.length>=30)s.push("BerryBot programını neredeyse tamamlayan üstün başarılı bir öğrenci");
+    else if(completed.length>=20)s.push("Robotik temellerini güçlü şekilde edinmiş ileri seviye öğrenci");
+    else if(completed.length>=10)s.push("Robotik dünyasında hızla ilerleyen istekli bir öğrenci");
+    else if(completed.length>=3)s.push("Robotik kariyerine güçlü bir başlangıç yapmış");
+    else s.push("Robotik yolculuğunun başlangıcında");
+
+    if(avgScore&&avgScore>=90)s.push("Görevleri hedef sürelerin çok altında tamamlayarak üstün performans gösteriyor");
+    else if(avgScore&&avgScore>=80)s.push("Görevlerini etkin ve verimli şekilde tamamlıyor");
+
+    const skillCount=Object.values(skillAreas).filter(a=>a.tasks.length>0).length;
+    if(skillCount===3)s.push("Mekanik, yazılım ve elektronik alanlarının üçünde de yetkinlik kazanmış");
+    else if(skillCount===2)s.push("İki ana mühendislik alanında deneyim sahibi");
+
+    return s.join(". ")+".";
+  };
+
+  const verifyCode=`BB-${child.id.toUpperCase()}-${completed.length.toString().padStart(2,"0")}`;
 
   const handlePrint=()=>{window.print();};
 
   return(<div>
+    {/* PRINT BUTTON */}
+    <div style={{marginBottom:14,display:"flex",gap:8,flexWrap:"wrap"}}>
+      <button onClick={handlePrint} style={{padding:"12px 20px",borderRadius:12,border:"none",background:`linear-gradient(135deg,${T.cyan},${T.purple})`,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 14px ${T.cyan}55`,display:"inline-flex",alignItems:"center",gap:6}}>
+        🖨️ PDF Olarak Yazdır
+      </button>
+      <div style={{padding:"10px 14px",borderRadius:10,background:T.card,border:`1px solid ${T.border}`,fontSize:12,color:T.ts,display:"flex",alignItems:"center",gap:6}}>
+        💡 Yazdırma penceresinden "PDF Olarak Kaydet" seçeneğini işaretleyebilirsiniz
+      </div>
+    </div>
+
+    {/* CV CARD — print-friendly */}
+    <div className="cv-print" style={{
+      background:"#fff",color:"#1a1a1a",
+      padding:"40px 36px",borderRadius:16,
+      maxWidth:840,margin:"0 auto",
+      boxShadow:"0 12px 40px #0008",
+      fontFamily:"'Segoe UI',system-ui,sans-serif",
+    }}>
+      {/* HEADER */}
+      <div style={{borderBottom:"3px solid #6B3FA0",paddingBottom:20,marginBottom:24,display:"flex",alignItems:"center",gap:18,flexWrap:"wrap"}}>
+        <div style={{
+          width:90,height:90,borderRadius:"50%",
+          background:"linear-gradient(135deg,#6B3FA0,#FF8800)",
+          color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",
+          fontSize:40,fontWeight:900,
+          boxShadow:"0 4px 16px #0004",
+        }}>{child.name[0]}</div>
+        <div style={{flex:1,minWidth:200}}>
+          <div style={{fontSize:14,color:"#666",fontWeight:600,letterSpacing:2,textTransform:"uppercase"}}>Robotik Eğitim Sertifikası</div>
+          <h1 style={{fontSize:34,fontWeight:900,color:"#1a1a1a",margin:"4px 0",letterSpacing:.5}}>{child.name}</h1>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:6}}>
+            <span style={{padding:"3px 12px",borderRadius:6,background:"#f3e8ff",color:"#6B3FA0",fontSize:13,fontWeight:700}}>{lv.icon} Level {lv.lv} — {lv.name}</span>
+            {avgScore!==null&&<span style={{padding:"3px 12px",borderRadius:6,background:"#ecfdf5",color:"#059669",fontSize:13,fontWeight:700}}>🎯 {avgScore}/100 Performans</span>}
+          </div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:11,color:"#888",letterSpacing:1}}>BerryBot LMS</div>
+          <div style={{fontSize:13,color:"#444",fontWeight:700,marginTop:2}}>{new Date().toLocaleDateString("tr-TR")}</div>
+        </div>
+      </div>
+
+      {/* SUMMARY */}
+      <div style={{marginBottom:22}}>
+        <h2 style={{fontSize:13,color:"#6B3FA0",letterSpacing:2,fontWeight:800,marginBottom:8,textTransform:"uppercase"}}>★ Özet</h2>
+        <p style={{fontSize:14,color:"#333",lineHeight:1.7,margin:0}}>{summary()}</p>
+      </div>
+
+      {/* GENERAL STATS */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:8,marginBottom:24}}>
+        <div style={{padding:14,borderRadius:10,background:"#fef3c7",textAlign:"center"}}>
+          <div style={{fontSize:22,fontWeight:900,color:"#c2410c"}}>{completed.length}</div>
+          <div style={{fontSize:11,color:"#92400e",fontWeight:700,letterSpacing:1}}>GÖREV</div>
+        </div>
+        <div style={{padding:14,borderRadius:10,background:"#fef3c7",textAlign:"center"}}>
+          <div style={{fontSize:22,fontWeight:900,color:"#c2410c"}}>{xp}</div>
+          <div style={{fontSize:11,color:"#92400e",fontWeight:700,letterSpacing:1}}>XP</div>
+        </div>
+        <div style={{padding:14,borderRadius:10,background:"#dbeafe",textAlign:"center"}}>
+          <div style={{fontSize:18,fontWeight:900,color:"#1e40af"}}>{fd(totalMs)}</div>
+          <div style={{fontSize:11,color:"#1e3a8a",fontWeight:700,letterSpacing:1}}>SÜRE</div>
+        </div>
+        <div style={{padding:14,borderRadius:10,background:"#dcfce7",textAlign:"center"}}>
+          <div style={{fontSize:22,fontWeight:900,color:"#166534"}}>{Math.round(completed.length/36*100)}%</div>
+          <div style={{fontSize:11,color:"#14532d",fontWeight:700,letterSpacing:1}}>İLERLEME</div>
+        </div>
+      </div>
+
+      {/* ═══ 3 BECERI ALANI — KAPSAMLI ═══ */}
+      <div style={{marginBottom:24}}>
+        <h2 style={{fontSize:13,color:"#6B3FA0",letterSpacing:2,fontWeight:800,marginBottom:12,textTransform:"uppercase"}}>★ Mühendislik Yetkinlikleri</h2>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {Object.entries(skillAreas).map(([name,area])=>{
+            const ts=area.tasks;
+            const learnings=[...new Set(ts.flatMap(t=>t.learnings||[]))];
+            const xpInArea=ts.reduce((a,t)=>a+t.xp,0);
+            const hasContent=ts.length>0;
+            return(<div key={name} style={{
+              padding:16,borderRadius:10,
+              background:hasContent?area.lightBg:"#f9fafb",
+              border:`2px solid ${hasContent?area.color:"#e5e7eb"}`,
+              opacity:hasContent?1:.55,
+            }}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:hasContent?10:0,flexWrap:"wrap"}}>
+                <div style={{fontSize:24}}>{name.split(" ")[0]}</div>
+                <div style={{flex:1,minWidth:180}}>
+                  <div style={{fontSize:15,fontWeight:900,color:hasContent?area.color:"#6b7280"}}>
+                    {name.replace(/^[\u{1F000}-\u{1FFFF}]\s*/u,"")}
+                  </div>
+                  <div style={{fontSize:11,color:"#666"}}>
+                    {hasContent?`${ts.length} görev tamamlandı • ${xpInArea} XP`:"Bu alanda henüz görev yok"}
+                  </div>
+                </div>
+              </div>
+
+              {hasContent&&<>
+                {/* Görevler etiket olarak */}
+                <div style={{marginBottom:10}}>
+                  <div style={{fontSize:10,color:"#666",fontWeight:700,letterSpacing:1.5,marginBottom:5}}>TAMAMLANAN GÖREVLER:</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                    {ts.map(t=>(
+                      <span key={t.id} style={{
+                        padding:"3px 9px",borderRadius:5,
+                        background:"#fff",border:`1px solid ${area.color}55`,
+                        fontSize:11,color:"#1a1a1a",fontWeight:600,
+                      }}>{t.title}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Kazanımlar listesi */}
+                {learnings.length>0&&<div>
+                  <div style={{fontSize:10,color:"#666",fontWeight:700,letterSpacing:1.5,marginBottom:5}}>EDİNDİĞİ YETKİNLİKLER:</div>
+                  <ul style={{margin:0,paddingLeft:18,fontSize:12,color:"#1a1a1a",lineHeight:1.7}}>
+                    {learnings.map((lr,i)=>(<li key={i} style={{fontWeight:500}}>{lr}</li>))}
+                  </ul>
+                </div>}
+              </>}
+            </div>);
+          })}
+        </div>
+      </div>
+
+      {/* DIFFICULTY ANALYSIS */}
+      <div style={{marginBottom:22}}>
+        <h2 style={{fontSize:13,color:"#6B3FA0",letterSpacing:2,fontWeight:800,marginBottom:8,textTransform:"uppercase"}}>★ Zorluk Analizi</h2>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:6}}>
+          {[1,2,3,4,5].map(d=>{
+            const tasksAtDiff=completed.filter(t=>t.diff===d);
+            const labels={1:"Kolay",2:"Orta",3:"Zor",4:"Çok Zor",5:"Usta"};
+            const colors={1:"#16a34a",2:"#2563eb",3:"#ea580c",4:"#dc2626",5:"#7c3aed"};
+            return(<div key={d} style={{
+              padding:10,borderRadius:8,
+              background:tasksAtDiff.length>0?`${colors[d]}15`:"#f9fafb",
+              border:`1px solid ${tasksAtDiff.length>0?colors[d]+"66":"#e5e7eb"}`,
+              textAlign:"center",
+              opacity:tasksAtDiff.length>0?1:.5,
+            }}>
+              <div style={{fontSize:11,color:"#666",fontWeight:700,letterSpacing:1}}>{labels[d]} {"★".repeat(d)}</div>
+              <div style={{fontSize:18,fontWeight:900,color:tasksAtDiff.length>0?colors[d]:"#9ca3af"}}>{tasksAtDiff.length}</div>
+            </div>);
+          })}
+        </div>
+      </div>
+
+      {/* FOOTER VERIFICATION */}
+      <div style={{borderTop:"1px solid #e5e7eb",paddingTop:14,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+        <div>
+          <div style={{fontSize:10,color:"#666",letterSpacing:1,fontWeight:700}}>DOĞRULAMA KODU</div>
+          <div style={{fontSize:14,fontFamily:"monospace",fontWeight:800,color:"#1a1a1a"}}>{verifyCode}</div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:11,color:"#666",marginBottom:2}}>Bu sertifika RoboGPT BerryBot Akademisi tarafından düzenlenmiştir.</div>
+          <div style={{fontSize:11,color:"#888"}}>🤖 BerryBot LMS — {new Date().getFullYear()}</div>
+        </div>
+      </div>
+    </div>
+
     <style>{`
       @media print {
-        nav, .no-print { display: none !important; }
-        body { background: #fff !important; }
-        .cv-container { box-shadow: none !important; padding: 24px !important; max-width: 100% !important; }
+        body { background: white !important; }
+        nav, .cv-print + *, header, button { display: none !important; }
+        .cv-print { box-shadow: none !important; max-width: 100% !important; }
       }
     `}</style>
-
-    <div className="no-print" style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
-      <button onClick={handlePrint} style={{padding:"12px 24px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.orange},${T.od})`,color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer"}}>🖨 Yazdır / PDF Olarak Kaydet</button>
-      <span style={{fontSize:12,color:T.tm}}>"Yazdır" → Hedef: "PDF olarak kaydet" seç</span>
-    </div>
-
-    <div className="cv-container" style={{background:"#fff",color:"#1a1035",borderRadius:14,padding:36,fontFamily:"'Segoe UI',sans-serif",boxShadow:"0 8px 30px #0006",maxWidth:840,margin:"0 auto"}}>
-      {/* HEADER */}
-      <div style={{borderBottom:"4px double #6B3FA0",paddingBottom:16,marginBottom:20,display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
-        <div>
-          <div style={{fontSize:11,color:"#888",letterSpacing:2,textTransform:"uppercase",marginBottom:4}}>Robotik Eğitim Sertifikası</div>
-          <h1 style={{margin:0,fontSize:34,fontWeight:800,color:"#6B3FA0",letterSpacing:.5}}>{child.name}</h1>
-          <div style={{fontSize:14,color:"#666",marginTop:6}}>📜 Tamamlanan Müfredat: BerryBot Robotik Programı</div>
-        </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:24,fontWeight:800,color:"#c96f10",letterSpacing:.5}}>🤖 RoboGPT</div>
-          <div style={{fontSize:11,color:"#666",fontWeight:600}}>BERRYBOT ROBOTİK AKADEMİSİ</div>
-          <div style={{fontSize:10,color:"#999",marginTop:4}}>{today}</div>
-        </div>
-      </div>
-
-      {/* SUMMARY PARAGRAPH */}
-      <div style={{padding:16,background:"linear-gradient(135deg,#f5f0ff,#fff5e6)",borderRadius:10,marginBottom:18,border:"1px solid #e0d0ff"}}>
-        <div style={{fontSize:11,letterSpacing:2,color:"#6B3FA0",fontWeight:700,marginBottom:6}}>ÖZET</div>
-        <div style={{fontSize:14,lineHeight:1.7,color:"#333"}}>
-          <b>{child.name}</b>, BerryBot Robotik Akademisi'nin <b>36 görevlik</b> kapsamlı müfredatında 
-          <b style={{color:"#c96f10"}}> {completed.length} görevi</b> başarıyla tamamlamıştır. 
-          Bu süreçte <b>{xp} XP</b> kazanmış, <b>Level {lv.lv} ({lv.name})</b> seviyesine ulaşmıştır.
-          {cats.length>0&&<> Eğitim boyunca <b>{cats.length} farklı disiplinde</b> deneyim kazanmış,
-          özellikle {topCats.map(([c])=>`"${c}"`).join(", ")} kategorilerinde yoğunlaşmıştır.</>}
-          {totalMs>0&&<> Toplamda <b>{fd(totalMs)}</b> aktif eğitim süresi tamamlamış,
-          görev başına ortalama <b>{avgMin} dakika</b> harcamıştır.</>}
-        </div>
-      </div>
-
-      {/* KEY METRICS */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:18}}>
-        <div style={{padding:12,background:"#fff5e6",borderRadius:8,textAlign:"center",border:"1px solid #f5d99a"}}>
-          <div style={{fontSize:26,fontWeight:800,color:"#c96f10"}}>{completed.length}<span style={{fontSize:14,color:"#888"}}>/36</span></div>
-          <div style={{fontSize:10,color:"#666",fontWeight:600,letterSpacing:1}}>GÖREV</div>
-        </div>
-        <div style={{padding:12,background:"#fff0e6",borderRadius:8,textAlign:"center",border:"1px solid #f5b88a"}}>
-          <div style={{fontSize:26,fontWeight:800,color:"#c96f10"}}>{xp}</div>
-          <div style={{fontSize:10,color:"#666",fontWeight:600,letterSpacing:1}}>XP PUANI</div>
-        </div>
-        <div style={{padding:12,background:"#f5f0ff",borderRadius:8,textAlign:"center",border:"1px solid #d0c0ff"}}>
-          <div style={{fontSize:26,fontWeight:800,color:"#6B3FA0"}}>Lv.{lv.lv}</div>
-          <div style={{fontSize:10,color:"#666",fontWeight:600,letterSpacing:1}}>{lv.name.toUpperCase()}</div>
-        </div>
-        <div style={{padding:12,background:"#f0f8f0",borderRadius:8,textAlign:"center",border:"1px solid #c0e0c0"}}>
-          <div style={{fontSize:26,fontWeight:800,color:"#22a55a"}}>{fd(totalMs)}</div>
-          <div style={{fontSize:10,color:"#666",fontWeight:600,letterSpacing:1}}>EĞİTİM SÜRESİ</div>
-        </div>
-      </div>
-
-      {/* DIFFICULTY BREAKDOWN */}
-      <div style={{marginBottom:18}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#6B3FA0",marginBottom:8,paddingBottom:4,borderBottom:"1px solid #e0d0ff",letterSpacing:1}}>📊 ZORLUK ANALİZİ</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,fontSize:12}}>
-          <div style={{padding:10,background:"#e6f7ed",borderRadius:6,textAlign:"center"}}>
-            <div style={{fontSize:18,fontWeight:800,color:"#22a55a"}}>{easyDone}</div>
-            <div style={{color:"#666"}}>Kolay (★★)</div>
-          </div>
-          <div style={{padding:10,background:"#fef3e6",borderRadius:6,textAlign:"center"}}>
-            <div style={{fontSize:18,fontWeight:800,color:"#c96f10"}}>{medDone}</div>
-            <div style={{color:"#666"}}>Orta (★★★)</div>
-          </div>
-          <div style={{padding:10,background:"#fde6e6",borderRadius:6,textAlign:"center"}}>
-            <div style={{fontSize:18,fontWeight:800,color:"#c93030"}}>{hardDone}</div>
-            <div style={{color:"#666"}}>Zor (★★★★+)</div>
-          </div>
-        </div>
-      </div>
-
-      {/* COMPETENCIES */}
-      <div style={{marginBottom:18}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#6B3FA0",marginBottom:8,paddingBottom:4,borderBottom:"1px solid #e0d0ff",letterSpacing:1}}>🎯 KAZANILAN YETKİNLİKLER ({allLearnings.length})</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-          {allLearnings.length===0?<span style={{fontSize:12,color:"#888",fontStyle:"italic"}}>Henüz yetkinlik kazanılmadı</span>:
-          allLearnings.map((lr,i)=><span key={i} style={{fontSize:11,padding:"4px 11px",borderRadius:5,background:"#f5f0ff",color:"#5a3580",border:"1px solid #d0c0ff",fontWeight:500}}>{lr}</span>)}
-        </div>
-      </div>
-
-      {/* COMPLETED TASKS BY CATEGORY */}
-      <div style={{marginBottom:18}}>
-        <div style={{fontSize:13,fontWeight:700,color:"#6B3FA0",marginBottom:8,paddingBottom:4,borderBottom:"1px solid #e0d0ff",letterSpacing:1}}>✓ TAMAMLANAN GÖREVLER</div>
-        {cats.length===0?<div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>Henüz tamamlanmış görev yok</div>:
-        cats.map(cat=>{
-          const ct=completed.filter(t=>t.cat===cat);
-          if(ct.length===0)return null;
-          const catXP=ct.reduce((a,t)=>a+t.xp,0);
-          return(<div key={cat} style={{marginBottom:10}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
-              <span style={{fontSize:13,fontWeight:700,color:"#c96f10"}}>{cat}</span>
-              <span style={{fontSize:11,color:"#888"}}>{ct.length} görev • {catXP} XP</span>
-            </div>
-            <div style={{paddingLeft:14,fontSize:12,color:"#444",lineHeight:1.6}}>
-              {ct.map(t=><span key={t.id}><b>#{t.id}</b> {t.title} <span style={{color:"#888",fontSize:10}}>(+{t.xp})</span>{t.id!==ct[ct.length-1].id?" • ":""}</span>)}
-            </div>
-          </div>);
-        })}
-      </div>
-
-      {/* FOOTER / SIGNATURE */}
-      <div style={{marginTop:30,paddingTop:14,borderTop:"4px double #6B3FA0",display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:10}}>
-        <div>
-          <div style={{fontSize:11,color:"#666",marginBottom:2}}>Bu sertifika RoboGPT BerryBot Akademisi tarafından düzenlenmiştir.</div>
-          <div style={{fontSize:10,color:"#999"}}>www.robogpt.com.tr</div>
-        </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:10,color:"#999"}}>Doğrulama Kodu</div>
-          <div style={{fontSize:11,fontFamily:"monospace",color:"#666",fontWeight:700}}>BB-{child.id.toUpperCase()}-{Date.now().toString(36).toUpperCase().slice(-6)}</div>
-        </div>
-      </div>
-    </div>
   </div>);
 }
-
 // ═══════════════════════════════════════════════════════════════
 // PRACTICE VIEW — Quiz + Code Challenges
 // ═══════════════════════════════════════════════════════════════
