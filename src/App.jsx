@@ -2005,42 +2005,90 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
           </div>
         ))}
 
-        {/* LOCKED ANSWER VIEW — eğitmen onayı bekleniyor */}
+        {/* LOCKED ANSWER VIEW — buğulu önizleme, eğitmen onayı bekleniyor */}
         {mediaTab==="answer"&&!answerUnlocked&&(
           <div style={{
-            padding:"50px 30px",textAlign:"center",
-            background:`linear-gradient(135deg,${T.purple}22,${T.dark})`,
-            position:"relative",overflow:"hidden",minHeight:360,
-            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            position:"relative",
+            width:"100%",maxHeight:520,minHeight:360,
+            background:T.dark,overflow:"hidden",
+            display:"flex",alignItems:"center",justifyContent:"center",
           }}>
-            {/* Decorative locked pattern */}
-            <div style={{position:"absolute",inset:0,opacity:.04,pointerEvents:"none",
-              background:"repeating-linear-gradient(45deg,transparent 0,transparent 14px,#fff 14px,#fff 16px)",
-            }}/>
+            {/* Buğulu cevap görseli arka planda */}
+            <img src={answerSrc}
+              onError={()=>{}}
+              alt=""
+              style={{
+                width:"100%",height:"auto",maxHeight:520,objectFit:"contain",
+                filter:"blur(20px) brightness(.5) saturate(1.2)",
+                transform:"scale(1.08)", // blur kenarlardaki şeffaflığı kapatmak için biraz büyüt
+                pointerEvents:"none",userSelect:"none",
+              }}/>
+
+            {/* Decorative repeating diagonal pattern overlay */}
             <div style={{
-              fontSize:80,marginBottom:14,
-              filter:`drop-shadow(0 6px 18px ${T.purple}aa)`,
-              animation:"celebrate 3s infinite ease-in-out",
-            }}>🔒</div>
-            <div style={{fontSize:22,fontWeight:900,color:T.tp,letterSpacing:.5,marginBottom:8}}>
-              Cevap Anahtarı Kilitli
-            </div>
-            <div style={{fontSize:14,color:T.ts,maxWidth:420,lineHeight:1.6,marginBottom:18}}>
-              Cevap anahtarını görebilmek için <b style={{color:theme.c}}>önce görevi tamamla</b> ve eğitmenin onayını bekle.
-              Görev onaylandığında bu sekme otomatik açılır.
-            </div>
-            {/* Status indicator */}
-            <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"8px 18px",borderRadius:12,
-              background:tp.status===TS.PENDING?`${T.pl}22`:tp.status===TS.IN_PROGRESS?`${theme.c}22`:tp.status===TS.REJECTED?`${T.err}22`:`${T.tm}22`,
-              border:`1px solid ${tp.status===TS.PENDING?T.pl:tp.status===TS.IN_PROGRESS?theme.c:tp.status===TS.REJECTED?T.err:T.tm}55`,
-              fontSize:13,fontWeight:700,
-              color:tp.status===TS.PENDING?T.pl:tp.status===TS.IN_PROGRESS?theme.c:tp.status===TS.REJECTED?T.err:T.tm,
+              position:"absolute",inset:0,
+              background:"repeating-linear-gradient(45deg,transparent 0,transparent 14px,#ffffff0a 14px,#ffffff0a 16px)",
+              pointerEvents:"none",
+            }}/>
+
+            {/* Dark gradient overlay for legibility */}
+            <div style={{
+              position:"absolute",inset:0,
+              background:`radial-gradient(ellipse at center,${T.purple}55 0%,#0a0518cc 70%)`,
+              pointerEvents:"none",
+            }}/>
+
+            {/* LOCK CONTENT (z-index above blur) */}
+            <div style={{
+              position:"relative",zIndex:2,
+              textAlign:"center",padding:"30px 20px",
+              maxWidth:480,
             }}>
-              {tp.status===TS.PENDING&&<>⏳ Eğitmen Onayı Bekleniyor</>}
-              {tp.status===TS.IN_PROGRESS&&<>🛠 Görev Devam Ediyor</>}
-              {tp.status===TS.REJECTED&&<>↻ Tekrar Göndermen Gerek</>}
-              {tp.status===TS.ACTIVE&&<>▶ Henüz Başlamadın</>}
-              {(!tp.status||tp.status===TS.LOCKED)&&<>🔒 Bu Görev Henüz Açık Değil</>}
+              <div style={{
+                fontSize:80,marginBottom:14,
+                filter:`drop-shadow(0 6px 18px ${T.purple})`,
+                animation:"celebrate 3s infinite ease-in-out",
+              }}>🔒</div>
+              <div style={{
+                fontSize:24,fontWeight:900,color:"#fff",
+                letterSpacing:.5,marginBottom:8,
+                textShadow:"0 2px 8px #000a",
+              }}>
+                Cevap Anahtarı Kilitli
+              </div>
+              <div style={{
+                fontSize:14,color:"#e5e7eb",
+                lineHeight:1.6,marginBottom:18,
+                textShadow:"0 1px 4px #000a",
+              }}>
+                Cevabı görebilmek için <b style={{color:theme.c}}>önce görevi tamamla</b> ve eğitmenin onayını bekle.
+                Görev onaylandığında bu sekme otomatik açılır.
+              </div>
+
+              {/* Status badge */}
+              <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"10px 22px",borderRadius:14,
+                background:"#000a",
+                backdropFilter:"blur(10px)",
+                border:`2px solid ${tp.status===TS.PENDING?T.pl:tp.status===TS.IN_PROGRESS?theme.c:tp.status===TS.REJECTED?T.err:T.tm}88`,
+                fontSize:14,fontWeight:800,
+                color:tp.status===TS.PENDING?T.pl:tp.status===TS.IN_PROGRESS?theme.c:tp.status===TS.REJECTED?T.err:"#fff",
+                boxShadow:"0 4px 16px #000a",
+              }}>
+                {tp.status===TS.PENDING&&<>⏳ Eğitmen Onayı Bekleniyor</>}
+                {tp.status===TS.IN_PROGRESS&&<>🛠 Görev Devam Ediyor</>}
+                {tp.status===TS.REJECTED&&<>↻ Tekrar Göndermen Gerek</>}
+                {tp.status===TS.ACTIVE&&<>▶ Henüz Başlamadın</>}
+                {(!tp.status||tp.status===TS.LOCKED)&&<>🔒 Bu Görev Henüz Açık Değil</>}
+              </div>
+
+              {/* Hint */}
+              <div style={{
+                marginTop:14,fontSize:11,color:"#cbd5e1",
+                fontStyle:"italic",letterSpacing:.5,
+                textShadow:"0 1px 2px #000a",
+              }}>
+                👆 Cevap arkaplanda — onayla beraber netleşir
+              </div>
             </div>
           </div>
         )}
