@@ -335,10 +335,11 @@ const NBtn=({a,o,children})=><button onClick={o} style={{fontSize:14,padding:"7p
 export default function App() {
   const data = useData();
   const { loading, currentUser: user, users, progress: prog, logs, classLayout,
-    practiceProg, homeworks, homeworkSubs,
+    practiceProg, homeworks, homeworkSubs, answerUnlocks,
     login: doLogin, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh,
-    recordPractice, addHomework, removeHomework, sendHomework, reviewHw } = data;
+    recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
+    toggleAnswerUnlock } = data;
 
   const [page,setPage]=useState("dash");
   const [selS,setSelS]=useState(null);
@@ -467,14 +468,14 @@ export default function App() {
 
         {/* ──── ADMIN ──── */}
         {user.role===ROLES.ADMIN&&page==="dash"&&<AdminClassroom users={users} prog={prog} classLayout={classLayout} saveLayout={handleSaveLayout} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sd");}}/>}
-        {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} onBack={()=>nav("dash")}/>}
+        {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} onBack={()=>nav("dash")}/>}
         {user.role===ROLES.ADMIN&&page==="users"&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo}/>}
         {user.role===ROLES.ADMIN&&page==="audit"&&<AuditLog logs={logs} users={users}/>}
         {user.role===ROLES.ADMIN&&page==="tasks"&&<TaskBrowser showAns={false}/>}
 
         {/* ──── INSTRUCTOR ──── */}
         {user.role===ROLES.INSTRUCTOR&&page==="dash"&&<InstructorDash user={user} users={users} prog={prog} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
-        {user.role===ROLES.INSTRUCTOR&&page==="sdi"&&selS&&<StudentDetail s={selS} prog={prog} users={users} canReview onApprove={handleApprove} onReject={handleReject} onBack={()=>nav("dash")}/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="sdi"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} canReview onApprove={handleApprove} onReject={handleReject} onBack={()=>nav("dash")}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="pend"&&<PendingReviews user={user} users={users} prog={prog} onApprove={handleApprove} onReject={handleReject}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="show"&&<DailyShow users={users} prog={prog} logs={logs} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="tasks"&&<TaskBrowser showAns/>}
@@ -482,7 +483,7 @@ export default function App() {
 
         {/* ──── STUDENT ──── */}
         {user.role===ROLES.STUDENT&&page==="dash"&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)}/>}
-        {user.role===ROLES.STUDENT&&page==="dash"&&selT&&<StudentTaskView user={user} task={selT} prog={prog} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
+        {user.role===ROLES.STUDENT&&page==="dash"&&selT&&<StudentTaskView user={user} task={selT} prog={prog} answerUnlocks={answerUnlocks} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
         {user.role===ROLES.STUDENT&&page==="practice"&&<PracticeView user={user} practiceProg={practiceProg} onAnswer={recordPractice}/>}
         {user.role===ROLES.STUDENT&&page==="hw"&&<StudentHomework user={user} homeworks={homeworks} subs={homeworkSubs} onSubmit={sendHomework}/>}
 
@@ -564,18 +565,18 @@ function LoginPage({onLogin}){
         </div>
 
         {/* BerryBot logo image */}
-        <div style={{textAlign:"center",marginTop:-100,width:"100%",position:"relative",zIndex:3}}>
-          <div style={{display:"inline-flex",alignItems:"center",gap:18,flexWrap:"wrap",justifyContent:"center"}}>
-            <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",width:520,height:"auto",maxHeight:220,objectFit:"contain",filter:`drop-shadow(0 4px 18px ${T.orange}99)`}}/>
+        <div style={{textAlign:"center",marginTop:-80,width:"100%",position:"relative",zIndex:3}}>
+          <div style={{display:"inline-flex",alignItems:"center",gap:14,flexWrap:"wrap",justifyContent:"center"}}>
+            <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",width:340,height:"auto",maxHeight:140,objectFit:"contain",filter:`drop-shadow(0 4px 14px ${T.orange}88)`}}/>
             <span style={{
-              fontSize:32,padding:"12px 26px",borderRadius:14,
+              fontSize:22,padding:"8px 18px",borderRadius:12,
               background:`linear-gradient(135deg,${T.purple},${T.pd})`,
-              color:"#fff",fontWeight:900,letterSpacing:3,
-              boxShadow:`0 6px 22px ${T.purple}99`,
-              border:`3px solid ${T.pl}88`,
+              color:"#fff",fontWeight:900,letterSpacing:2,
+              boxShadow:`0 4px 16px ${T.purple}88`,
+              border:`2px solid ${T.pl}66`,
             }}>LMS</span>
           </div>
-          <div style={{fontSize:15,color:T.ts,marginTop:-20,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
+          <div style={{fontSize:13,color:T.ts,marginTop:-12,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
         </div>
       </div>
 
@@ -1636,7 +1637,7 @@ function MissionBoard({user,prog,onSel,onHelp}){
   </div>);
 }
 
-function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBack}){
+function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onResub,onHelp,onBack}){
   const[imgZoom,setImgZoom]=useState(false);
   const[imgLoaded,setImgLoaded]=useState(false);
   const[imgError,setImgError]=useState(false);
@@ -1655,7 +1656,8 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
   const videoSrc=`/tasks/gorev_${t.id}/cozum.mp4`;
   const answerSrc=`/tasks/gorev_${t.id}/cevap.jpg`;
   const hasHelp=prog[user.id]?.helpRequest;
-  const answerUnlocked=tp.status===TS.APPROVED;
+  // Cevap anahtarı SADECE eğitmen kilidi açtığında erişilebilir (onay yetmiyor!)
+  const answerUnlocked=answerUnlocks.some(au=>au.student_id===user.id&&au.task_id===t.id);
 
   // Live timer ticking every second when IN_PROGRESS
   useEffect(()=>{
@@ -1990,7 +1992,7 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
             }}>
               <span style={{fontSize:18}}>🎉</span>
               <span style={{fontSize:14,color:T.tp,fontWeight:600,flex:1,minWidth:160}}>
-                Tebrikler! Görev onaylandı, cevap anahtarına erişimin açıldı.
+                Eğitmenin senin için bu görevin cevap anahtarını açtı. İncelemeden önce kendi çözümünü dene!
               </span>
               <span style={{fontSize:12,padding:"3px 10px",borderRadius:8,background:T.ok+"33",color:T.ok,fontWeight:800}}>🔓 KİLİT AÇIK</span>
             </div>
@@ -2061,24 +2063,19 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
                 lineHeight:1.6,marginBottom:18,
                 textShadow:"0 1px 4px #000a",
               }}>
-                Cevabı görebilmek için <b style={{color:theme.c}}>önce görevi tamamla</b> ve eğitmenin onayını bekle.
-                Görev onaylandığında bu sekme otomatik açılır.
+                Bu görevin cevap anahtarı şu anda <b style={{color:theme.c}}>eğitmenin kontrolünde</b>.
+                Eğitmenin uygun gördüğünde sana özel olarak açılır.
               </div>
 
               {/* Status badge */}
               <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"10px 22px",borderRadius:14,
                 background:"#000a",
                 backdropFilter:"blur(10px)",
-                border:`2px solid ${tp.status===TS.PENDING?T.pl:tp.status===TS.IN_PROGRESS?theme.c:tp.status===TS.REJECTED?T.err:T.tm}88`,
-                fontSize:14,fontWeight:800,
-                color:tp.status===TS.PENDING?T.pl:tp.status===TS.IN_PROGRESS?theme.c:tp.status===TS.REJECTED?T.err:"#fff",
+                border:`2px solid ${T.purple}88`,
+                fontSize:14,fontWeight:800,color:T.pl,
                 boxShadow:"0 4px 16px #000a",
               }}>
-                {tp.status===TS.PENDING&&<>⏳ Eğitmen Onayı Bekleniyor</>}
-                {tp.status===TS.IN_PROGRESS&&<>🛠 Görev Devam Ediyor</>}
-                {tp.status===TS.REJECTED&&<>↻ Tekrar Göndermen Gerek</>}
-                {tp.status===TS.ACTIVE&&<>▶ Henüz Başlamadın</>}
-                {(!tp.status||tp.status===TS.LOCKED)&&<>🔒 Bu Görev Henüz Açık Değil</>}
+                👨‍🏫 Eğitmen Onayı Gerekli
               </div>
 
               {/* Hint */}
@@ -2087,7 +2084,7 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
                 fontStyle:"italic",letterSpacing:.5,
                 textShadow:"0 1px 2px #000a",
               }}>
-                👆 Cevap arkaplanda — onayla beraber netleşir
+                👆 Cevap arkaplanda — eğitmen kilidi açtığında netleşir
               </div>
             </div>
           </div>
@@ -2385,7 +2382,7 @@ function InstructorDash({user,users,prog,onClearHelp,onSel}){
       <div style={{fontSize:16,fontWeight:700,color:T.err,marginBottom:10}}>🖐 Yardım İstekleri ({helpReqs.length})</div>
       {helpReqs.map(s=><div key={s.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:10,background:T.dark,marginBottom:6}}>
         <span style={{fontWeight:700,fontSize:15}}>{s.name}</span><span style={{fontSize:13,color:T.tm}}>{fd(Date.now()-prog[s.id].helpRequest)} önce</span>
-        <button onClick={()=>{onClearHelp(s.id);onSel(s);}} style={{marginLeft:"auto",fontSize:13,padding:"6px 16px",borderRadius:8,border:"none",background:T.ok+"30",color:T.ok,cursor:"pointer",fontWeight:600}}>Git →</button>
+        <button onClick={()=>onClearHelp(s.id)} style={{marginLeft:"auto",fontSize:13,padding:"6px 16px",borderRadius:8,border:"none",background:T.ok+"30",color:T.ok,cursor:"pointer",fontWeight:600}}>✓ Tamamlandı</button>
       </div>)}
     </Card>}
     <Card>{my.map(s=>{const cnt=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.APPROVED).length;const pd=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.PENDING).length;const pct=Math.round(cnt/36*100);const xp=TASKS.filter(t=>prog[s.id]?.[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);const avgScore=calcAvgScore(prog[s.id]||{});
@@ -2407,10 +2404,11 @@ function InstructorDash({user,users,prog,onClearHelp,onSel}){
 // ═══════════════════════════════════════
 //  STUDENT DETAIL
 // ═══════════════════════════════════════
-function StudentDetail({s,prog,users,canReview,onApprove,onReject,onBack}){
+function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,onApprove,onReject,onBack}){
   const[note,setNote]=useState("");
   const sp=prog[s.id]||{};const cnt=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
   const xp=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
+  const unlockedSet=new Set(answerUnlocks.filter(au=>au.student_id===s.id).map(au=>au.task_id));
   return(<div>
     <button onClick={onBack} style={{fontSize:14,padding:"6px 14px",borderRadius:8,background:T.border,color:T.ts,border:"none",cursor:"pointer",marginBottom:12}}>← Geri</button>
     <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
@@ -2418,10 +2416,18 @@ function StudentDetail({s,prog,users,canReview,onApprove,onReject,onBack}){
       <div><h2 style={{margin:0,fontSize:20}}>{s.name}</h2><div style={{fontSize:14,color:T.tm}}>{getLevel(xp).icon} Lv.{getLevel(xp).lv} • {xp} XP</div></div>
       <div style={{marginLeft:"auto",fontSize:28,fontWeight:800,color:T.orange}}>{cnt}/36</div>
     </div>
+
+    {canReview&&onToggleUnlock&&<div style={{marginBottom:12,padding:"10px 14px",borderRadius:10,background:`${T.purple}22`,border:`1px solid ${T.purple}55`,fontSize:13,color:T.ts,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+      <span style={{fontSize:18}}>🗝️</span>
+      <span style={{flex:1,minWidth:200}}>Cevap anahtarı kilitlerini buradan yönet. Öğrenci, kilidi açtığın görevin cevabını netleştirilmiş halde görür.</span>
+      <span style={{fontSize:12,fontWeight:700,color:T.pl,padding:"3px 10px",borderRadius:8,background:T.purple+"33"}}>{unlockedSet.size} açık</span>
+    </div>}
+
     <Card>{TASKS.map(t=>{const tp=sp[t.id]||{};const lk=tp.status===TS.LOCKED;const pn=tp.status===TS.PENDING;
       const started=tp.startedAt;const completed=tp.completedAt||tp.approvedAt;
       const dur=(started&&completed)?fd(completed-started):null;
-      return(<div key={t.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:8,marginBottom:4,opacity:lk?.3:1,background:pn?T.purple+"15":"transparent"}}>
+      const unlocked=unlockedSet.has(t.id);
+      return(<div key={t.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:8,marginBottom:4,opacity:lk?.4:1,background:pn?T.purple+"15":"transparent"}}>
         <span style={{width:26,fontSize:13,fontFamily:"monospace",color:T.tm,textAlign:"center"}}>#{t.id}</span>
         <TaskImage taskId={t.id} type="gorsel" size={30} fallbackEmoji={t.img} style={{borderRadius:5}}/>
         <div style={{flex:1,minWidth:0}}>
@@ -2431,6 +2437,15 @@ function StudentDetail({s,prog,users,canReview,onApprove,onReject,onBack}){
         <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{t.xp}</span>
         <Badge s={tp.status}/>
         {tp.photo&&<span style={{fontSize:12,color:T.ok}}>📸</span>}
+        {canReview&&onToggleUnlock&&!lk&&<button
+          onClick={()=>onToggleUnlock({studentId:s.id,taskId:t.id,unlock:!unlocked})}
+          title={unlocked?"Cevap anahtarını kilitle":"Cevap anahtarını aç"}
+          style={{
+            padding:"4px 10px",borderRadius:6,border:"none",
+            background:unlocked?`${T.ok}33`:`${T.tm}22`,
+            color:unlocked?T.ok:T.tm,
+            cursor:"pointer",fontSize:13,fontWeight:700,
+          }}>{unlocked?"🔓":"🔒"}</button>}
         {canReview&&pn&&<>
           <button onClick={()=>onApprove(s.id,t.id,note||"OK")} style={{padding:"4px 10px",borderRadius:6,border:"none",background:"#1a4a2e",color:T.ok,cursor:"pointer",fontSize:12,fontWeight:600}}>✓</button>
           <button onClick={()=>onReject(s.id,t.id,note||"Tekrar dene")} style={{padding:"4px 10px",borderRadius:6,border:"none",background:"#5c1a1a",color:T.err,cursor:"pointer",fontSize:12,fontWeight:600}}>✕</button>
@@ -3661,7 +3676,10 @@ function InstructorHomework({user,users,homeworks,subs,onAdd,onDel,onReview}){
   const[viewSub,setViewSub]=useState(null);
   const[form,setForm]=useState({title:"",description:"",xp:50,dueAt:"",targetType:"all",targetValue:""});
 
-  const myStudents=users.filter(u=>u.role==="student"&&u.instructorId===user.id);
+  // All students from this instructor — fallback to all students if none assigned
+  const allStudents=users.filter(u=>u.role==="student");
+  const assignedStudents=allStudents.filter(u=>u.instructorId===user.id);
+  const myStudents=assignedStudents.length>0?assignedStudents:allStudents;
 
   const submit=async()=>{
     if(!form.title.trim()||!form.description.trim()){alert("Başlık ve açıklama gerekli");return;}
@@ -3736,7 +3754,10 @@ function InstructorHomework({user,users,homeworks,subs,onAdd,onDel,onReview}){
           </select>
         </div>
       </div>
-      {form.targetType==="student"&&<select value={form.targetValue} onChange={e=>setForm({...form,targetValue:e.target.value})} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,marginBottom:10,boxSizing:"border-box"}}><option value="">Öğrenci seç</option>{myStudents.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select>}
+      {form.targetType==="student"&&<select value={form.targetValue} onChange={e=>setForm({...form,targetValue:e.target.value})} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,marginBottom:10,boxSizing:"border-box",fontSize:14}}>
+        <option value="">— Öğrenci seç ({myStudents.length} öğrenci) —</option>
+        {myStudents.slice().sort((a,b)=>a.name.localeCompare(b.name,"tr")).map(s=><option key={s.id} value={s.id}>{s.name}{s.grup?` (${s.grup})`:""}</option>)}
+      </select>}
       {form.targetType==="group"&&<input value={form.targetValue} onChange={e=>setForm({...form,targetValue:e.target.value})} placeholder="Grup adı (örn: A grubu)" style={{width:"100%",padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,marginBottom:10,boxSizing:"border-box"}}/>}
       <button onClick={submit} style={{padding:"12px 28px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.ok},#22a55a)`,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 14px ${T.ok}55`}}>✓ Ödev Oluştur</button>
     </Card>}

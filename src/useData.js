@@ -52,24 +52,27 @@ export function useData() {
   const [practiceProg, setPracticeProg] = useState([]);
   const [homeworks, setHomeworks] = useState([]);
   const [homeworkSubs, setHomeworkSubs] = useState([]);
+  const [answerUnlocks, setAnswerUnlocks] = useState([]);
 
   // SMART LOAD: students fetch only their 36 rows, admin/instructor fetch all (paginated)
   const loadAll = useCallback(async (user) => {
     const u = user || currentUser;
     try {
       if (u?.role === 'student') {
-        const [sp, m, pp, hw, hs] = await Promise.all([
+        const [sp, m, pp, hw, hs, au] = await Promise.all([
           db.getStudentProgress(u.id),
           db.getAllMeta(),
           db.fetchPracticeProgress(u.id),
           db.fetchHomework(),
           db.fetchHomeworkSubmissions(),
+          db.fetchAnswerUnlocks(u.id),
         ]);
         setProgress(prev => ({ ...prev, [u.id]: sp }));
         setMeta(m);
         setPracticeProg(pp);
         setHomeworks(hw);
         setHomeworkSubs(hs.filter(s => s.student_id === u.id));
+        setAnswerUnlocks(au);
       } else if (u?.role === 'parent' && u.childId) {
         const [sp, m, l, hw, hs] = await Promise.all([
           db.getStudentProgress(u.childId),
@@ -85,12 +88,14 @@ export function useData() {
         setHomeworkSubs(hs.filter(s => s.student_id === u.childId));
       } else {
         // Admin/instructor: fetch everything
-        const [us, p, m, l, cl, hw, hs] = await Promise.all([
+        const [us, p, m, l, cl, hw, hs, au] = await Promise.all([
           db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
           db.fetchHomework(), db.fetchHomeworkSubmissions(),
+          db.fetchAnswerUnlocks(),
         ]);
         setUsers(us); setProgress(p); setMeta(m); setLogs(l);
         setHomeworks(hw); setHomeworkSubs(hs);
+        setAnswerUnlocks(au);
         if (cl.length > 0) setClassLayout(cl);
       }
     } catch (e) { console.error('loadAll:', e); }
@@ -329,11 +334,23 @@ export function useData() {
     setHomeworkSubs(hs);
   }, [currentUser]);
 
+  const toggleAnswerUnlock = useCallback(async ({ studentId, taskId, unlock }) => {
+    if (!currentUser) return;
+    if (unlock) {
+      await db.unlockAnswer({ studentId, taskId, instructorId: currentUser.id });
+    } else {
+      await db.lockAnswer({ studentId, taskId, instructorId: currentUser.id });
+    }
+    const au = await db.fetchAnswerUnlocks();
+    setAnswerUnlocks(au);
+  }, [currentUser]);
+
   return {
     loading, currentUser, users, progress: merged, logs, classLayout,
-    practiceProg, homeworks, homeworkSubs,
+    practiceProg, homeworks, homeworkSubs, answerUnlocks,
     login, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh: loadAll,
     recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
+    toggleAnswerUnlock,
   };
 }

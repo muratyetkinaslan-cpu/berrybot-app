@@ -391,3 +391,34 @@ export async function reviewHomework({ submissionId, status, instructorNote, ins
   }).eq('id', submissionId);
   addLog({ type: 'homework_reviewed', userId: instructorId, detail: `${status}: #${submissionId}` });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// ANSWER UNLOCK
+// ═══════════════════════════════════════════════════════════════
+export async function fetchAnswerUnlocks(studentId) {
+  const q = studentId
+    ? supabase.from('bb_answer_unlock').select('*').eq('student_id', studentId)
+    : supabase.from('bb_answer_unlock').select('*');
+  const { data, error } = await q;
+  if (error) { console.error('fetchAnswerUnlocks', error); return []; }
+  return data || [];
+}
+
+export async function unlockAnswer({ studentId, taskId, instructorId }) {
+  const { data: existing } = await supabase.from('bb_answer_unlock')
+    .select('id').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+  if (existing) return; // already unlocked
+  await supabase.from('bb_answer_unlock').insert({
+    student_id: studentId,
+    task_id: taskId,
+    unlocked_by: instructorId,
+    unlocked_at: Date.now(),
+  });
+  addLog({ type: 'answer_unlocked', userId: instructorId, targetUser: studentId, taskId, detail: `Görev ${taskId} cevap anahtarı açıldı` });
+}
+
+export async function lockAnswer({ studentId, taskId, instructorId }) {
+  await supabase.from('bb_answer_unlock').delete()
+    .eq('student_id', studentId).eq('task_id', taskId);
+  addLog({ type: 'answer_locked', userId: instructorId, targetUser: studentId, taskId, detail: `Görev ${taskId} cevap anahtarı kilitlendi` });
+}
