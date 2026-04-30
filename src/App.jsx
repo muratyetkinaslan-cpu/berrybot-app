@@ -446,9 +446,9 @@ export default function App() {
         }
       `}</style>
       <nav style={{background:T.card,borderBottom:`1px solid ${T.border}`,padding:"12px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <img src="/logos/berrybot.png" alt="BerryBot" style={{height:36,width:"auto",maxWidth:140,objectFit:"contain",filter:`drop-shadow(0 2px 6px ${T.orange}55)`}}/>
-          <span style={{fontSize:13,background:`linear-gradient(135deg,${T.purple},${T.pd})`,color:"#fff",padding:"4px 12px",borderRadius:8,fontWeight:800,letterSpacing:1,boxShadow:`0 2px 8px ${T.purple}66`}}>LMS</span>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <img src="/logos/berrybot.png" alt="BerryBot" style={{height:54,width:"auto",maxWidth:200,objectFit:"contain",filter:`drop-shadow(0 2px 8px ${T.orange}66)`}}/>
+          <span style={{fontSize:16,background:`linear-gradient(135deg,${T.purple},${T.pd})`,color:"#fff",padding:"6px 16px",borderRadius:10,fontWeight:900,letterSpacing:2,boxShadow:`0 3px 12px ${T.purple}77`,border:`2px solid ${T.pl}66`}}>LMS</span>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
           {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
@@ -565,17 +565,17 @@ function LoginPage({onLogin}){
 
         {/* BerryBot logo image */}
         <div style={{textAlign:"center",marginTop:-100,width:"100%",position:"relative",zIndex:3}}>
-          <div style={{display:"inline-flex",alignItems:"center",gap:14,flexWrap:"wrap",justifyContent:"center"}}>
-            <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",width:380,height:"auto",maxHeight:160,objectFit:"contain",filter:`drop-shadow(0 4px 16px ${T.orange}88)`}}/>
+          <div style={{display:"inline-flex",alignItems:"center",gap:18,flexWrap:"wrap",justifyContent:"center"}}>
+            <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",width:520,height:"auto",maxHeight:220,objectFit:"contain",filter:`drop-shadow(0 4px 18px ${T.orange}99)`}}/>
             <span style={{
-              fontSize:22,padding:"8px 18px",borderRadius:12,
+              fontSize:32,padding:"12px 26px",borderRadius:14,
               background:`linear-gradient(135deg,${T.purple},${T.pd})`,
-              color:"#fff",fontWeight:900,letterSpacing:2,
-              boxShadow:`0 4px 16px ${T.purple}88`,
-              border:`2px solid ${T.pl}66`,
+              color:"#fff",fontWeight:900,letterSpacing:3,
+              boxShadow:`0 6px 22px ${T.purple}99`,
+              border:`3px solid ${T.pl}88`,
             }}>LMS</span>
           </div>
-          <div style={{fontSize:14,color:T.ts,marginTop:-20,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
+          <div style={{fontSize:15,color:T.ts,marginTop:-20,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
         </div>
       </div>
 
@@ -1644,13 +1644,18 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
   const[photoPreview,setPhotoPreview]=useState(null);
   const[savedPhoto,setSavedPhoto]=useState(null);
   const[now,setNow]=useState(Date.now()); // live tick
-  const[mediaTab,setMediaTab]=useState("image"); // image | video
+  const[mediaTab,setMediaTab]=useState("image"); // image | video | answer
   const[videoError,setVideoError]=useState(false);
   const[videoEnded,setVideoEnded]=useState(false);
+  const[answerLoaded,setAnswerLoaded]=useState(false);
+  const[answerError,setAnswerError]=useState(false);
+  const[answerZoom,setAnswerZoom]=useState(false);
   const tp=prog[user.id]?.[t.id]||{};
   const imgSrc=`/tasks/gorev_${t.id}/gorsel.jpg`;
   const videoSrc=`/tasks/gorev_${t.id}/cozum.mp4`;
+  const answerSrc=`/tasks/gorev_${t.id}/cevap.jpg`;
   const hasHelp=prog[user.id]?.helpRequest;
+  const answerUnlocked=tp.status===TS.APPROVED;
 
   // Live timer ticking every second when IN_PROGRESS
   useEffect(()=>{
@@ -1863,21 +1868,21 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
         boxShadow:`0 8px 30px ${theme.c}33`,
       }}>
         {/* TAB BAR */}
-        <div style={{display:"flex",borderBottom:`2px solid ${T.border}`,background:T.dark}}>
+        <div style={{display:"flex",borderBottom:`2px solid ${T.border}`,background:T.dark,flexWrap:"wrap"}}>
           <button onClick={()=>setMediaTab("image")} style={{
-            flex:1,padding:"12px 14px",border:"none",cursor:"pointer",
+            flex:"1 1 100px",padding:"12px 10px",border:"none",cursor:"pointer",
             background:mediaTab==="image"?theme.c+"22":"transparent",
             color:mediaTab==="image"?theme.c:T.ts,
-            fontWeight:800,fontSize:14,letterSpacing:1,
+            fontWeight:800,fontSize:13,letterSpacing:.5,
             borderBottom:mediaTab==="image"?`3px solid ${theme.c}`:"3px solid transparent",
             display:"flex",alignItems:"center",justifyContent:"center",gap:6,
             transition:"all .2s",
-          }}>📷 Görev Görseli</button>
+          }}>📷 Görev</button>
           <button onClick={()=>setMediaTab("video")} style={{
-            flex:1,padding:"12px 14px",border:"none",cursor:"pointer",
+            flex:"1 1 100px",padding:"12px 10px",border:"none",cursor:"pointer",
             background:mediaTab==="video"?T.err+"22":"transparent",
             color:mediaTab==="video"?T.err:T.ts,
-            fontWeight:800,fontSize:14,letterSpacing:1,
+            fontWeight:800,fontSize:13,letterSpacing:.5,
             borderBottom:mediaTab==="video"?`3px solid ${T.err}`:"3px solid transparent",
             display:"flex",alignItems:"center",justifyContent:"center",gap:6,position:"relative",
             transition:"all .2s",
@@ -1886,6 +1891,24 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
             {!videoEnded&&<span style={{
               position:"absolute",top:8,right:14,
               width:8,height:8,borderRadius:"50%",background:T.err,
+              animation:"pulse 1.5s infinite",
+            }}/>}
+          </button>
+          <button onClick={()=>answerUnlocked&&setMediaTab("answer")} style={{
+            flex:"1 1 100px",padding:"12px 10px",border:"none",
+            cursor:answerUnlocked?"pointer":"not-allowed",
+            background:mediaTab==="answer"?T.ok+"22":answerUnlocked?"transparent":T.dark,
+            color:mediaTab==="answer"?T.ok:answerUnlocked?T.ts:T.tm,
+            fontWeight:800,fontSize:13,letterSpacing:.5,
+            borderBottom:mediaTab==="answer"?`3px solid ${T.ok}`:"3px solid transparent",
+            display:"flex",alignItems:"center",justifyContent:"center",gap:6,position:"relative",
+            opacity:answerUnlocked?1:.7,
+            transition:"all .2s",
+          }}>
+            {answerUnlocked?<>🔓 Cevap Anahtarı</>:<>🔒 Cevap Anahtarı</>}
+            {answerUnlocked&&<span style={{
+              position:"absolute",top:8,right:14,
+              width:8,height:8,borderRadius:"50%",background:T.ok,
               animation:"pulse 1.5s infinite",
             }}/>}
           </button>
@@ -1946,8 +1969,94 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
             </div>
           </div>
         ))}
+
+        {/* ANSWER TAB — sadece APPROVED durumunda erişilebilir */}
+        {mediaTab==="answer"&&answerUnlocked&&(!answerError?(
+          <div style={{position:"relative"}}>
+            <div onClick={()=>answerLoaded&&setAnswerZoom(true)} style={{width:"100%",maxHeight:520,minHeight:360,background:T.dark,position:"relative",cursor:answerLoaded?"zoom-in":"default",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <img src={answerSrc} alt={`Cevap ${t.id}`} onLoad={()=>setAnswerLoaded(true)} onError={()=>setAnswerError(true)}
+                style={{width:"100%",height:"auto",maxHeight:520,objectFit:"contain",background:T.dark,opacity:answerLoaded?1:0,transition:"opacity .3s"}}/>
+              {!answerLoaded&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:8}}>
+                <span style={{fontSize:80}}>🗝️</span>
+                <span style={{fontSize:13,color:T.tm}}>Cevap anahtarı yükleniyor...</span>
+              </div>}
+              {answerLoaded&&<div style={{position:"absolute",bottom:14,right:14,fontSize:12,color:T.ts,background:"#000a",padding:"5px 14px",borderRadius:8,backdropFilter:"blur(4px)"}}>🔍 Büyütmek için tıkla</div>}
+            </div>
+            <div style={{
+              padding:"12px 16px",
+              background:`linear-gradient(135deg,${T.ok}22,${T.warn}22)`,
+              borderTop:`1px solid ${T.ok}33`,
+              display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",
+            }}>
+              <span style={{fontSize:18}}>🎉</span>
+              <span style={{fontSize:14,color:T.tp,fontWeight:600,flex:1,minWidth:160}}>
+                Tebrikler! Görev onaylandı, cevap anahtarına erişimin açıldı.
+              </span>
+              <span style={{fontSize:12,padding:"3px 10px",borderRadius:8,background:T.ok+"33",color:T.ok,fontWeight:800}}>🔓 KİLİT AÇIK</span>
+            </div>
+          </div>
+        ):(
+          <div style={{padding:60,textAlign:"center",background:T.dark}}>
+            <div style={{fontSize:64,opacity:.4,marginBottom:12}}>🗝️</div>
+            <div style={{fontSize:17,fontWeight:700,color:T.ts,marginBottom:8}}>Cevap anahtarı henüz yüklenmemiş</div>
+            <div style={{fontSize:13,color:T.tm,maxWidth:340,margin:"0 auto",lineHeight:1.5}}>
+              Bu görevin cevap anahtarı yakında eklenecek.
+            </div>
+          </div>
+        ))}
+
+        {/* LOCKED ANSWER VIEW — eğitmen onayı bekleniyor */}
+        {mediaTab==="answer"&&!answerUnlocked&&(
+          <div style={{
+            padding:"50px 30px",textAlign:"center",
+            background:`linear-gradient(135deg,${T.purple}22,${T.dark})`,
+            position:"relative",overflow:"hidden",minHeight:360,
+            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+          }}>
+            {/* Decorative locked pattern */}
+            <div style={{position:"absolute",inset:0,opacity:.04,pointerEvents:"none",
+              background:"repeating-linear-gradient(45deg,transparent 0,transparent 14px,#fff 14px,#fff 16px)",
+            }}/>
+            <div style={{
+              fontSize:80,marginBottom:14,
+              filter:`drop-shadow(0 6px 18px ${T.purple}aa)`,
+              animation:"celebrate 3s infinite ease-in-out",
+            }}>🔒</div>
+            <div style={{fontSize:22,fontWeight:900,color:T.tp,letterSpacing:.5,marginBottom:8}}>
+              Cevap Anahtarı Kilitli
+            </div>
+            <div style={{fontSize:14,color:T.ts,maxWidth:420,lineHeight:1.6,marginBottom:18}}>
+              Cevap anahtarını görebilmek için <b style={{color:theme.c}}>önce görevi tamamla</b> ve eğitmenin onayını bekle.
+              Görev onaylandığında bu sekme otomatik açılır.
+            </div>
+            {/* Status indicator */}
+            <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"8px 18px",borderRadius:12,
+              background:tp.status===TS.PENDING?`${T.pl}22`:tp.status===TS.IN_PROGRESS?`${theme.c}22`:tp.status===TS.REJECTED?`${T.err}22`:`${T.tm}22`,
+              border:`1px solid ${tp.status===TS.PENDING?T.pl:tp.status===TS.IN_PROGRESS?theme.c:tp.status===TS.REJECTED?T.err:T.tm}55`,
+              fontSize:13,fontWeight:700,
+              color:tp.status===TS.PENDING?T.pl:tp.status===TS.IN_PROGRESS?theme.c:tp.status===TS.REJECTED?T.err:T.tm,
+            }}>
+              {tp.status===TS.PENDING&&<>⏳ Eğitmen Onayı Bekleniyor</>}
+              {tp.status===TS.IN_PROGRESS&&<>🛠 Görev Devam Ediyor</>}
+              {tp.status===TS.REJECTED&&<>↻ Tekrar Göndermen Gerek</>}
+              {tp.status===TS.ACTIVE&&<>▶ Henüz Başlamadın</>}
+              {(!tp.status||tp.status===TS.LOCKED)&&<>🔒 Bu Görev Henüz Açık Değil</>}
+            </div>
+          </div>
+        )}
       </div>
     </div>
+
+    {/* ═══ ANSWER LIGHTBOX ═══ */}
+    {answerZoom&&<div onClick={()=>setAnswerZoom(false)} style={{position:"fixed",inset:0,zIndex:100,background:"#000e",display:"flex",alignItems:"center",justifyContent:"center",cursor:"zoom-out",padding:20}}>
+      <div style={{position:"relative",maxWidth:"90vw",maxHeight:"90vh"}}>
+        <img src={answerSrc} alt={`Cevap ${t.id}`} style={{maxWidth:"90vw",maxHeight:"85vh",objectFit:"contain",borderRadius:12,border:`2px solid ${T.ok}66`}}/>
+        <div style={{position:"absolute",top:-40,right:0,display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:14,color:T.ok}}>🗝️ Görev #{t.id} — Cevap Anahtarı</span>
+          <button onClick={()=>setAnswerZoom(false)} style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:8,color:T.tp,padding:"6px 14px",cursor:"pointer",fontSize:14}}>✕ Kapat</button>
+        </div>
+      </div>
+    </div>}
 
     {/* ═══ INFO + ACTION — 2 columns BELOW media ═══ */}
     <div style={{display:"grid",gridTemplateColumns:"minmax(0,1.4fr) minmax(0,1fr)",gap:14,alignItems:"start"}}>
