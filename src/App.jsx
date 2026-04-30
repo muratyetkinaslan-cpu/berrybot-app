@@ -1632,8 +1632,12 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
   const[photoPreview,setPhotoPreview]=useState(null);
   const[savedPhoto,setSavedPhoto]=useState(null);
   const[now,setNow]=useState(Date.now()); // live tick
+  const[mediaTab,setMediaTab]=useState("image"); // image | video
+  const[videoError,setVideoError]=useState(false);
+  const[videoEnded,setVideoEnded]=useState(false);
   const tp=prog[user.id]?.[t.id]||{};
   const imgSrc=`/tasks/gorev_${t.id}/gorsel.jpg`;
+  const videoSrc=`/tasks/gorev_${t.id}/cozum.mp4`;
   const hasHelp=prog[user.id]?.helpRequest;
 
   // Live timer ticking every second when IN_PROGRESS
@@ -1844,13 +1848,43 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
       {/* ─── LEFT: Image + Learnings ─── */}
       <div className="stv-section" style={{animationDelay:".1s"}}>
 
-        {/* TASK IMAGE */}
+        {/* TASK MEDIA — Image | Video tabs */}
         <div style={{
           marginBottom:14,borderRadius:18,overflow:"hidden",
           border:`2px solid ${theme.c}44`,
           background:T.card,
         }}>
-          {!imgError ? (
+          {/* TAB BAR */}
+          <div style={{display:"flex",borderBottom:`2px solid ${T.border}`,background:T.dark}}>
+            <button onClick={()=>setMediaTab("image")} style={{
+              flex:1,padding:"10px 14px",border:"none",cursor:"pointer",
+              background:mediaTab==="image"?theme.c+"22":"transparent",
+              color:mediaTab==="image"?theme.c:T.ts,
+              fontWeight:700,fontSize:13,letterSpacing:1,
+              borderBottom:mediaTab==="image"?`3px solid ${theme.c}`:"3px solid transparent",
+              display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+              transition:"all .2s",
+            }}>📷 Görev Görseli</button>
+            <button onClick={()=>setMediaTab("video")} style={{
+              flex:1,padding:"10px 14px",border:"none",cursor:"pointer",
+              background:mediaTab==="video"?T.err+"22":"transparent",
+              color:mediaTab==="video"?T.err:T.ts,
+              fontWeight:700,fontSize:13,letterSpacing:1,
+              borderBottom:mediaTab==="video"?`3px solid ${T.err}`:"3px solid transparent",
+              display:"flex",alignItems:"center",justifyContent:"center",gap:6,position:"relative",
+              transition:"all .2s",
+            }}>
+              ▶️ Çözüm Videosu
+              {!videoEnded&&<span style={{
+                position:"absolute",top:6,right:10,
+                width:8,height:8,borderRadius:"50%",background:T.err,
+                animation:"pulse 1.5s infinite",
+              }}/>}
+            </button>
+          </div>
+
+          {/* IMAGE TAB */}
+          {mediaTab==="image"&&(!imgError ? (
             <div onClick={()=>imgLoaded&&setImgZoom(true)} style={{width:"100%",height:300,background:T.dark,position:"relative",cursor:imgLoaded?"zoom-in":"default",overflow:"hidden"}}>
               <img src={imgSrc} alt={`Görev ${t.id}`} onLoad={()=>setImgLoaded(true)} onError={()=>setImgError(true)}
                 style={{width:"100%",height:"100%",objectFit:"contain",background:T.dark,opacity:imgLoaded?1:0,transition:"opacity .3s"}}/>
@@ -1865,7 +1899,45 @@ function StudentTaskView({user,task:t,prog,onStart,onSubmit,onResub,onHelp,onBac
               <span style={{fontSize:84}}>{t.img}</span>
               <span style={{fontSize:13,color:T.tm}}>Görev #{t.id}</span>
             </div>
-          )}
+          ))}
+
+          {/* VIDEO TAB */}
+          {mediaTab==="video"&&(!videoError?(
+            <div style={{position:"relative",background:"#000"}}>
+              <video
+                key={videoSrc}
+                src={videoSrc}
+                controls
+                playsInline
+                preload="metadata"
+                onError={()=>setVideoError(true)}
+                onEnded={()=>setVideoEnded(true)}
+                style={{width:"100%",maxHeight:400,display:"block",background:"#000"}}
+              >
+                Tarayıcınız video oynatmayı desteklemiyor.
+              </video>
+              <div style={{
+                padding:"10px 14px",
+                background:`linear-gradient(135deg,${T.err}22,${T.warn}22)`,
+                borderTop:`1px solid ${T.err}33`,
+                display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",
+              }}>
+                <span style={{fontSize:18}}>💡</span>
+                <span style={{fontSize:13,color:T.tp,fontWeight:600,flex:1,minWidth:160}}>
+                  Önce videoyu izle, sonra robotunu PicoBricks IDE'de programla.
+                </span>
+                {videoEnded&&<span style={{fontSize:12,padding:"3px 10px",borderRadius:8,background:T.ok+"33",color:T.ok,fontWeight:800}}>✓ İzlendi</span>}
+              </div>
+            </div>
+          ):(
+            <div style={{padding:40,textAlign:"center",background:T.dark}}>
+              <div style={{fontSize:54,opacity:.4,marginBottom:10}}>🎬</div>
+              <div style={{fontSize:16,fontWeight:700,color:T.ts,marginBottom:6}}>Çözüm videosu henüz yüklenmemiş</div>
+              <div style={{fontSize:13,color:T.tm,maxWidth:340,margin:"0 auto",lineHeight:1.5}}>
+                Bu görevin video çözümü yakında eklenecek. Şimdilik görseli ve açıklamayı kullanarak çözmeyi dene!
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* DESCRIPTION */}
