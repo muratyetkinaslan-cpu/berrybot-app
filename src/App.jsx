@@ -455,7 +455,7 @@ export default function App() {
           {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.STUDENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>🗺️ Görev</NBtn><NBtn a={page==="practice"} o={()=>nav("practice")}>🧠 Practice</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn></>}
-          {user.role===ROLES.PARENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>👨‍👩‍👧 Çocuğum</NBtn><NBtn a={page==="cv"} o={()=>nav("cv")}>📜 CV</NBtn></>}
+          {user.role===ROLES.PARENT&&null}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
           {user.role===ROLES.STUDENT&&<span style={{fontSize:14,padding:"5px 12px",borderRadius:8,background:T.orange+"22",color:T.ol,fontWeight:700,whiteSpace:"nowrap"}}>{getLevel(getXP(user.id)).icon} Lv.{getLevel(getXP(user.id)).lv} • {getXP(user.id)} XP</span>}
@@ -3278,6 +3278,9 @@ function DailyShow({users,prog,logs,onSel}){
   </div>);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PARENT VIEW — Tabs at top, hero card below with current task
+// ═══════════════════════════════════════════════════════════════
 function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
   const[tab,setTab]=useState(initialTab);
   const child=users.find(u=>u.id===parent.childId);
@@ -3321,6 +3324,36 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
       .pv-content { animation: pv-fadeup .5s ease-out backwards; }
     `}</style>
 
+    {/* ═══ TABS — EN ÜSTTE ═══ */}
+    <div style={{
+      display:"flex",gap:6,marginBottom:14,flexWrap:"wrap",
+      padding:6,borderRadius:14,
+      background:T.card,border:`1px solid ${T.border}`,
+    }}>
+      {[
+        {k:"class",d:"Çocuğun şu an ne yapıyor",c:T.orange,emoji:"🏫",l:"Sınıf & Aktivite"},
+        {k:"learnings",d:"Neler öğrendi",c:T.pl,emoji:"📚",l:"Kazanımlar"},
+        {k:"cv",d:"Profesyonel rapor",c:T.cyan,emoji:"📜",l:"Sertifika & CV"},
+      ].map(t=>(
+        <button key={t.k} onClick={()=>setTab(t.k)} style={{
+          flex:"1 1 200px",
+          fontSize:14,padding:"12px 16px",borderRadius:10,
+          border:tab===t.k?`2px solid ${t.c}`:"2px solid transparent",
+          background:tab===t.k?`linear-gradient(135deg,${t.c}33,${t.c}11)`:"transparent",
+          color:tab===t.k?t.c:T.ts,
+          cursor:"pointer",fontWeight:tab===t.k?800:600,
+          textAlign:"left",transition:"all .2s",
+          display:"flex",alignItems:"center",gap:10,
+        }}>
+          <span style={{fontSize:24,filter:tab===t.k?`drop-shadow(0 2px 6px ${t.c}88)`:"none"}}>{t.emoji}</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:14,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.l}</div>
+            <div style={{fontSize:11,opacity:.75,fontWeight:500,marginTop:1}}>{t.d}</div>
+          </div>
+        </button>
+      ))}
+    </div>
+
     {/* ═══ HERO PROFILE CARD ═══ */}
     <div style={{
       position:"relative",marginBottom:18,
@@ -3332,20 +3365,17 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
       {/* Decorative big icon backdrop */}
       <div style={{position:"absolute",top:-20,right:-20,fontSize:200,opacity:.06,transform:"rotate(-12deg)",pointerEvents:"none"}}>{lv.icon}</div>
       <div style={{position:"absolute",bottom:-30,left:-30,fontSize:150,opacity:.05,transform:"rotate(15deg)",pointerEvents:"none"}}>🤖</div>
-      {/* Shimmer overlay */}
-      <div style={{
-        position:"absolute",inset:0,pointerEvents:"none",
+      <div style={{position:"absolute",inset:0,pointerEvents:"none",
         background:`linear-gradient(90deg,transparent 30%,${lv.color}22 50%,transparent 70%)`,
         backgroundSize:"200% 100%",animation:"pv-shimmer 5s infinite linear",
       }}/>
 
       <div style={{position:"relative"}}>
-        {/* Top row: parent greeting */}
-        <div style={{fontSize:13,color:T.ts,fontWeight:600,marginBottom:6,letterSpacing:.5}}>
+        <div style={{fontSize:13,color:T.ts,fontWeight:600,marginBottom:14,letterSpacing:.5}}>
           👋 Merhaba <b style={{color:T.tp}}>{parent.name.split(" ")[0]}</b>, çocuğunuzun robotik yolculuğu:
         </div>
 
-        {/* Child profile row */}
+        {/* Profile row: Avatar + Name+CurrentTask + Progress ring */}
         <div style={{display:"flex",alignItems:"center",gap:18,flexWrap:"wrap",marginBottom:18}}>
           {/* Avatar with online ring */}
           <div style={{position:"relative",flexShrink:0}}>
@@ -3368,8 +3398,11 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
             }}/>}
           </div>
 
+          {/* CENTER: Name + Current Task INFO */}
           <div style={{flex:1,minWidth:200}}>
             <h1 style={{margin:0,fontSize:30,fontWeight:900,color:T.tp,letterSpacing:.3,lineHeight:1.1}}>{child.name}</h1>
+
+            {/* Level badge + online */}
             <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6,flexWrap:"wrap"}}>
               <span style={{fontSize:13,padding:"4px 12px",borderRadius:8,background:`${lv.color}33`,color:lv.color,fontWeight:800,border:`1px solid ${lv.color}55`}}>
                 {lv.icon} Lv.{lv.lv} • {lv.name}
@@ -3383,18 +3416,46 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
                 <span style={{fontSize:12,padding:"4px 10px",borderRadius:8,background:`${T.tm}22`,color:T.tm,fontWeight:600}}>○ Çevrimdışı</span>
               )}
             </div>
-            {currentTask&&isOnline&&<div style={{
-              marginTop:10,padding:"8px 12px",borderRadius:10,
-              background:`${T.cyan}15`,border:`1px solid ${T.cyan}44`,
-              fontSize:13,color:T.cyan,
-              display:"inline-flex",alignItems:"center",gap:6,
-            }}>
-              <span style={{fontSize:14}}>▶</span>
-              <span>Şu an çalışıyor: <b>#{currentTask.id} {currentTask.title}</b></span>
-            </div>}
+
+            {/* CURRENT TASK BANNER — between name and progress */}
+            {currentTask?(
+              <div style={{
+                marginTop:12,padding:"12px 14px",borderRadius:12,
+                background:`linear-gradient(135deg,${T.cyan}22,${T.purple}11)`,
+                border:`2px solid ${T.cyan}55`,
+                display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",
+              }}>
+                <div style={{
+                  width:38,height:38,borderRadius:10,
+                  background:`linear-gradient(135deg,${T.cyan},${T.purple})`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:18,flexShrink:0,
+                }}>▶</div>
+                <div style={{flex:1,minWidth:160}}>
+                  <div style={{fontSize:10,color:T.tm,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase"}}>
+                    {sp[currentTask.id]?.status===TS.PENDING?"⏳ Onayda":sp[currentTask.id]?.status===TS.IN_PROGRESS?"🛠 Şu an çalışıyor":"▶ Aktif görev"}
+                  </div>
+                  <div style={{fontSize:15,fontWeight:800,color:T.cyan,marginTop:1}}>
+                    Görev #{currentTask.id} · {currentTask.title}
+                  </div>
+                  <div style={{fontSize:11,color:T.ts,marginTop:2}}>
+                    📂 <b>{currentTask.cat}</b> projesi · ⏱ {currentTask.expectedMin}dk hedef
+                  </div>
+                </div>
+              </div>
+            ):(
+              <div style={{
+                marginTop:12,padding:"10px 12px",borderRadius:12,
+                background:`${T.tm}11`,border:`1px solid ${T.border}`,
+                fontSize:13,color:T.tm,
+                display:"inline-flex",alignItems:"center",gap:6,
+              }}>
+                💤 Şu anda aktif görev yok
+              </div>
+            )}
           </div>
 
-          {/* Big circular progress */}
+          {/* RIGHT: Big circular progress */}
           <div style={{textAlign:"center",flexShrink:0}}>
             <div style={{
               width:110,height:110,borderRadius:"50%",
@@ -3449,36 +3510,6 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
       </div>
     </div>
 
-    {/* ═══ TABS ═══ */}
-    <div style={{
-      display:"flex",gap:6,marginBottom:14,flexWrap:"wrap",
-      padding:6,borderRadius:14,
-      background:T.card,border:`1px solid ${T.border}`,
-    }}>
-      {[
-        {k:"class",l:"🏫 Sınıf & Aktivite",d:"Çocuğun şu an ne yapıyor",c:T.orange,emoji:"🏫"},
-        {k:"learnings",l:"📚 Kazanımlar",d:"Neler öğrendi",c:T.pl,emoji:"📚"},
-        {k:"cv",l:"📜 Sertifika & CV",d:"Profesyonel rapor",c:T.cyan,emoji:"📜"},
-      ].map(t=>(
-        <button key={t.k} onClick={()=>setTab(t.k)} style={{
-          flex:"1 1 200px",
-          fontSize:14,padding:"12px 16px",borderRadius:10,
-          border:tab===t.k?`2px solid ${t.c}`:"2px solid transparent",
-          background:tab===t.k?`linear-gradient(135deg,${t.c}33,${t.c}11)`:"transparent",
-          color:tab===t.k?t.c:T.ts,
-          cursor:"pointer",fontWeight:tab===t.k?800:600,
-          textAlign:"left",transition:"all .2s",
-          display:"flex",alignItems:"center",gap:10,
-        }}>
-          <span style={{fontSize:24,filter:tab===t.k?`drop-shadow(0 2px 6px ${t.c}88)`:"none"}}>{t.emoji}</span>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:14,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.l.replace(t.emoji,"").trim()}</div>
-            <div style={{fontSize:11,opacity:.75,fontWeight:500,marginTop:1}}>{t.d}</div>
-          </div>
-        </button>
-      ))}
-    </div>
-
     {/* ═══ CONTENT ═══ */}
     <div className="pv-content" key={tab}>
       {tab==="class"&&<ParentClassroomView child={child} sp={sp} classLayout={classLayout} logs={logs} prog={prog}/>}
@@ -3488,7 +3519,6 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
   </div>);
 }
 
-// ─── Helper: parent stat pill ───
 function PVStat({icon,label,value,unit,color,highlight}){
   return(<div style={{
     padding:"10px 12px",borderRadius:12,
@@ -3676,12 +3706,27 @@ function ParentClassroomView({child,sp,classLayout,logs,prog}){
 // ═══════════════════════════════════════════════════════════════
 // MINI CLASSROOM — Robotik laboratuvar teması (siyah zemin yerine)
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// MINI CLASSROOM — Robotik laboratuvar teması, AdminClassroom ile aynı render
+// ═══════════════════════════════════════════════════════════════
 function ParentMiniClassroom({myClass,childId}){
-  const w=myClass.canvasW||900;
-  const h=myClass.canvasH||500;
-  const scale=Math.min(700/w,420/h);
-  const sw=w*scale;
-  const sh=h*scale;
+  const tables=myClass.tables||[];
+  const objects=myClass.objects||[];
+
+  // Calculate actual content bounds (not relying on canvasW/H which may be wrong)
+  const allItems=[...tables,...objects];
+  const minX=Math.min(0,...allItems.map(t=>t.x||0));
+  const minY=Math.min(0,...allItems.map(t=>t.y||0));
+  const maxX=Math.max(...allItems.map(t=>(t.x||0)+(t.w||120)),myClass.canvasW||900);
+  const maxY=Math.max(...allItems.map(t=>(t.y||0)+(t.h||80)),myClass.canvasH||500);
+  const contentW=maxX-minX+40; // padding
+  const contentH=maxY-minY+40;
+
+  // Available rendering width — responsive
+  const containerW=Math.min(800,contentW);
+  const scale=Math.min(containerW/contentW,500/contentH,1);
+  const sw=contentW*scale;
+  const sh=contentH*scale;
 
   return(<div style={{
     position:"relative",
@@ -3695,23 +3740,23 @@ function ParentMiniClassroom({myClass,childId}){
     border:`2px solid ${T.purple}55`,
     boxShadow:`inset 0 0 60px ${T.purple}22`,
   }}>
-    {/* Floor grid pattern (laboratuvar zemini) */}
-    <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:.15,pointerEvents:"none"}}>
+    {/* Floor grid */}
+    <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",opacity:.12,pointerEvents:"none"}}>
       <defs>
-        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-          <path d="M 30 0 L 0 0 0 30" fill="none" stroke={T.cyan} strokeWidth="0.5"/>
+        <pattern id={`grid-${myClass.id}`} width="24" height="24" patternUnits="userSpaceOnUse">
+          <path d="M 24 0 L 0 0 0 24" fill="none" stroke={T.cyan} strokeWidth="0.5"/>
         </pattern>
       </defs>
-      <rect width="100%" height="100%" fill="url(#grid)"/>
+      <rect width="100%" height="100%" fill={`url(#grid-${myClass.id})`}/>
     </svg>
 
-    {/* Decorative robotik ögeler arka plan */}
-    <div style={{position:"absolute",top:8,left:8,fontSize:24,opacity:.25}}>🤖</div>
-    <div style={{position:"absolute",top:8,right:8,fontSize:24,opacity:.25}}>📡</div>
-    <div style={{position:"absolute",bottom:8,left:8,fontSize:24,opacity:.25}}>⚡</div>
-    <div style={{position:"absolute",bottom:8,right:8,fontSize:24,opacity:.25}}>🦾</div>
+    {/* Decorative robotic icons in corners */}
+    <div style={{position:"absolute",top:8,left:8,fontSize:20,opacity:.25,pointerEvents:"none"}}>🤖</div>
+    <div style={{position:"absolute",top:8,right:8,fontSize:20,opacity:.25,pointerEvents:"none"}}>📡</div>
+    <div style={{position:"absolute",bottom:8,left:8,fontSize:20,opacity:.25,pointerEvents:"none"}}>⚡</div>
+    <div style={{position:"absolute",bottom:8,right:8,fontSize:20,opacity:.25,pointerEvents:"none"}}>🦾</div>
 
-    {/* "Kara tahta" üst kenar */}
+    {/* Class name banner */}
     <div style={{
       position:"absolute",top:6,left:"50%",transform:"translateX(-50%)",
       padding:"4px 14px",borderRadius:6,
@@ -3719,80 +3764,102 @@ function ParentMiniClassroom({myClass,childId}){
       border:`1px solid ${T.ok}33`,
       fontSize:10,color:T.ok,fontWeight:700,letterSpacing:1,
       boxShadow:`0 2px 6px #000`,
-    }}>📚 BERRYBOT LABORATUVARI</div>
+      zIndex:10,
+    }}>📚 {(myClass.name||"BERRYBOT LABORATUVARI").toUpperCase()}</div>
 
-    {/* Tables */}
-    {myClass.tables?.map(t=>(
-      <div key={t.id} style={{
-        position:"absolute",
-        left:t.x*scale,top:t.y*scale,
-        width:(t.w||120)*scale,height:(t.h||80)*scale,
-        background:`linear-gradient(135deg,#5a4a35,#3a2818)`,
-        border:`2px solid ${T.warn}66`,
-        borderRadius:6*scale,
-        boxShadow:`0 4px 12px #000a, inset 0 1px 0 #ffffff22`,
-      }}>
-        {/* Wood grain */}
-        <div style={{position:"absolute",inset:0,background:"repeating-linear-gradient(90deg,transparent 0,transparent 8px,#00000022 8px,#00000022 9px)",opacity:.5,borderRadius:6*scale,pointerEvents:"none"}}/>
-
-        {/* Seats around the table */}
-        {t.seats?.map((sid,si)=>{
-          if(!sid)return null;
-          const isMe=sid===childId;
-          // 4 seats — top, right, bottom, left
-          const positions=[
-            {top:-12*scale,left:"50%",transform:"translateX(-50%)"},
-            {right:-12*scale,top:"50%",transform:"translateY(-50%)"},
-            {bottom:-12*scale,left:"50%",transform:"translateX(-50%)"},
-            {left:-12*scale,top:"50%",transform:"translateY(-50%)"},
-          ];
-          const pos=positions[si]||positions[0];
-          return(<div key={si} style={{
-            position:"absolute",...pos,
-            width:18*scale,height:18*scale,
-            borderRadius:"50%",
-            background:isMe?`radial-gradient(circle,${T.warn},${T.orange})`:`radial-gradient(circle,#666,#333)`,
-            border:isMe?`2px solid ${T.warn}`:`1px solid #888`,
-            boxShadow:isMe?`0 0 12px ${T.warn},0 0 20px ${T.warn}88`:"0 1px 3px #000a",
-            display:"flex",alignItems:"center",justifyContent:"center",
-            fontSize:10*scale,
-            zIndex:isMe?5:2,
+    {/* Inner scaled wrapper — all positioning happens here */}
+    <div style={{
+      position:"absolute",
+      left:20*scale,top:20*scale,
+      width:contentW-40,height:contentH-40,
+      transform:`translate(${-minX*scale}px,${-minY*scale}px) scale(${scale})`,
+      transformOrigin:"top left",
+    }}>
+      {/* TABLES — render with CSS Grid for seats (same as AdminClassroom) */}
+      {tables.map(table=>{
+        const pr=TABLE_PRESETS[table.type]||TABLE_PRESETS["2li"];
+        const gCols=table.horizontal?pr.rows:pr.cols;
+        const gRows=table.horizontal?pr.cols:pr.rows;
+        return(<div key={table.id} style={{
+          position:"absolute",
+          left:table.x,top:table.y,
+          width:table.w,height:table.h,
+          background:"linear-gradient(160deg, #A07828, #8B6914 30%, #7A5C12 60%, #6B4F12)",
+          borderRadius:10,
+          border:"3px solid #5C4010",
+          boxShadow:"0 4px 16px #00000055, inset 0 1px 0 #C4A86833",
+          display:"flex",flexDirection:"column",overflow:"hidden",
+        }}>
+          {/* Table header */}
+          <div style={{
+            padding:"2px 5px",background:"#5C401088",
+            borderBottom:"1px solid #4a350e",flexShrink:0,
           }}>
-            {isMe&&<span style={{filter:"drop-shadow(0 0 4px #fff)"}}>⭐</span>}
-          </div>);
-        })}
-      </div>
-    ))}
+            <span style={{fontSize:7,color:"#C4A868",fontWeight:700}}>{pr.label}</span>
+          </div>
+          {/* Seats grid */}
+          <div style={{
+            flex:1,display:"grid",
+            gridTemplateColumns:`repeat(${gCols},1fr)`,
+            gridTemplateRows:`repeat(${gRows},1fr)`,
+            gap:3,padding:3,
+          }}>
+            {table.seats.map((sid,si)=>{
+              const isMe=sid===childId;
+              return(<div key={si} style={{
+                borderRadius:5,
+                background:isMe?`radial-gradient(circle,${T.warn}cc,${T.orange}aa)`:sid?"#3a2a18":"#2a1f10",
+                border:isMe?`2px solid ${T.warn}`:"1px solid #4a350e",
+                boxShadow:isMe?`0 0 16px ${T.warn},inset 0 0 8px ${T.warn}88`:"inset 0 0 4px #00000088",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:14,
+                position:"relative",
+                animation:isMe?"pulse 2s infinite":"none",
+              }}>
+                {isMe&&<>
+                  <span style={{filter:"drop-shadow(0 0 4px #fff)",fontSize:16}}>⭐</span>
+                  <div style={{
+                    position:"absolute",top:-18,left:"50%",transform:"translateX(-50%)",
+                    padding:"2px 6px",borderRadius:4,
+                    background:`linear-gradient(135deg,${T.warn},${T.orange})`,
+                    color:"#fff",fontSize:9,fontWeight:900,letterSpacing:1,
+                    boxShadow:`0 2px 6px ${T.warn}aa`,
+                    whiteSpace:"nowrap",zIndex:20,
+                  }}>📍 BEN</div>
+                </>}
+                {!isMe&&sid&&<span style={{fontSize:9,color:"#C4A868",fontWeight:700,opacity:.5}}>•</span>}
+              </div>);
+            })}
+          </div>
+        </div>);
+      })}
 
-    {/* "BEN" indicator label for the child's seat */}
-    {myClass.tables?.map(t=>{
-      const idx=t.seats?.indexOf(childId);
-      if(idx<0||idx===undefined)return null;
-      const positions=[
-        {top:-30*scale,left:t.w*scale/2-15*scale},
-        {right:-50*scale,top:t.h*scale/2-8*scale},
-        {bottom:-30*scale,left:t.w*scale/2-15*scale},
-        {left:-50*scale,top:t.h*scale/2-8*scale},
-      ];
-      const lp=positions[idx]||positions[0];
-      return(<div key={t.id+"_lbl"} style={{
-        position:"absolute",
-        left:t.x*scale+(lp.left||0),
-        top:t.y*scale+(lp.top||0),
-        right:lp.right?t.x*scale+lp.right:undefined,
-        padding:"3px 8px",borderRadius:6,
-        background:`linear-gradient(135deg,${T.warn},${T.orange})`,
-        color:"#fff",fontSize:10,fontWeight:900,letterSpacing:1,
-        boxShadow:`0 2px 8px ${T.warn}88`,
-        whiteSpace:"nowrap",zIndex:6,
-      }}>📍 BEN</div>);
-    })}
+      {/* OBJECTS — TVs etc */}
+      {objects.map(obj=>{
+        if(obj.type==="tv"){
+          const isVertical=(obj.h||0)>(obj.w||0);
+          return(<div key={obj.id} style={{
+            position:"absolute",
+            left:obj.x,top:obj.y,
+            width:obj.w,height:obj.h,
+            background:"linear-gradient(180deg,#1a1a2e,#0f0f1e)",
+            borderRadius:8,border:"2px solid #333",
+            boxShadow:"0 2px 8px #0004, inset 0 0 20px #0ea5e908",
+            display:"flex",alignItems:"center",justifyContent:"center",
+            gap:isVertical?3:6,
+            flexDirection:isVertical?"column":"row",
+            overflow:"hidden",
+          }}>
+            <span style={{fontSize:isVertical?12:14}}>🖥️</span>
+            <span style={{fontSize:isVertical?7:9,fontWeight:700,color:"#67e8f9",letterSpacing:.5,writingMode:isVertical?"vertical-rl":"horizontal-tb"}}>{obj.label||"TV"}</span>
+          </div>);
+        }
+        return null;
+      })}
+    </div>
   </div>);
 }
 
-// ═══════════════════════════════════════════════════════════════
-// TAB 2: KAZANIMLAR — Mekanik / Yazılım / Elektronik kategori
-// ═══════════════════════════════════════════════════════════════
 function ParentLearningsView({child,sp}){
   const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
   const xp=completed.reduce((a,t)=>a+t.xp,0);
