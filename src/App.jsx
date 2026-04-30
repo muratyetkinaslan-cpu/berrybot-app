@@ -1896,15 +1896,13 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
               animation:"pulse 1.5s infinite",
             }}/>}
           </button>
-          <button onClick={()=>answerUnlocked&&setMediaTab("answer")} style={{
-            flex:"1 1 100px",padding:"12px 10px",border:"none",
-            cursor:answerUnlocked?"pointer":"not-allowed",
-            background:mediaTab==="answer"?T.ok+"22":answerUnlocked?"transparent":T.dark,
-            color:mediaTab==="answer"?T.ok:answerUnlocked?T.ts:T.tm,
+          <button onClick={()=>setMediaTab("answer")} style={{
+            flex:"1 1 100px",padding:"12px 10px",border:"none",cursor:"pointer",
+            background:mediaTab==="answer"?(answerUnlocked?T.ok+"22":T.purple+"22"):"transparent",
+            color:mediaTab==="answer"?(answerUnlocked?T.ok:T.pl):T.ts,
             fontWeight:800,fontSize:13,letterSpacing:.5,
-            borderBottom:mediaTab==="answer"?`3px solid ${T.ok}`:"3px solid transparent",
+            borderBottom:mediaTab==="answer"?`3px solid ${answerUnlocked?T.ok:T.purple}`:"3px solid transparent",
             display:"flex",alignItems:"center",justifyContent:"center",gap:6,position:"relative",
-            opacity:answerUnlocked?1:.7,
             transition:"all .2s",
           }}>
             {answerUnlocked?<>🔓 Cevap Anahtarı</>:<>🔒 Cevap Anahtarı</>}
