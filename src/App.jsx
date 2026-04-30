@@ -3282,25 +3282,223 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
   const[tab,setTab]=useState(initialTab);
   const child=users.find(u=>u.id===parent.childId);
 
-  if(!child)return<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:16}}>Çocuk bilgisi bulunamadı. Admin'e başvurun.</div></Card>;
+  if(!child)return(<div style={{padding:50,textAlign:"center",borderRadius:20,background:`linear-gradient(135deg,${T.err}22,${T.card})`,border:`2px solid ${T.err}55`,maxWidth:500,margin:"40px auto"}}>
+    <div style={{fontSize:64,marginBottom:12,opacity:.6}}>👨‍👩‍👧</div>
+    <h2 style={{fontSize:20,color:T.err,margin:"0 0 8px 0"}}>Çocuk Bilgisi Bulunamadı</h2>
+    <div style={{fontSize:14,color:T.ts,lineHeight:1.6}}>Henüz hesabınıza bir öğrenci atanmamış görünüyor. Lütfen okul yönetimi veya BerryBot ekibiyle iletişime geçin.</div>
+  </div>);
 
   const sp=prog[child.id]||{};
+  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+  const xp=completed.reduce((a,t)=>a+t.xp,0);
+  const lv=getLevel(xp);
+  const nlv=getNextLevel(xp);
+  const lvProgress=nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100;
+  const cnt=completed.length;
+  const pct=Math.round(cnt/36*100);
+  const avgScore=calcAvgScore(sp);
+  const isOnline=child.online||(prog[child.id]?.online);
+  const currentTask=TASKS.find(t=>sp[t.id]?.status===TS.ACTIVE||sp[t.id]?.status===TS.IN_PROGRESS||sp[t.id]?.status===TS.PENDING);
+
+  // Today's progress
+  const dayStart=new Date();dayStart.setHours(0,0,0,0);
+  const todayCount=completed.filter(t=>{
+    const ts=sp[t.id]?.approvedAt||sp[t.id]?.completedAt;
+    return ts&&ts>=dayStart.getTime();
+  }).length;
+
+  // Total time spent
+  let totalMs=0;
+  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
 
   return(<div>
-    {/* TABS */}
-    <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
-      {[
-        {k:"class",l:"🏫 Sınıf & Aktivite",c:T.orange},
-        {k:"learnings",l:"📚 Kazanımlar",c:T.pl},
-        {k:"cv",l:"📜 CV / Sertifika",c:T.cyan},
-      ].map(t=>
-        <button key={t.k} onClick={()=>setTab(t.k)} style={{fontSize:14,padding:"10px 18px",borderRadius:10,border:tab===t.k?`2px solid ${t.c}`:`1px solid ${T.border}`,background:tab===t.k?t.c+"20":T.card,color:tab===t.k?t.c:T.ts,cursor:"pointer",fontWeight:tab===t.k?700:500}}>{t.l}</button>
-      )}
+    <style>{`
+      @keyframes pv-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+      @keyframes pv-fadeup { from{opacity:0;transform:translateY(15px)} to{opacity:1;transform:translateY(0)} }
+      @keyframes pv-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+      @keyframes pv-ring { 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.6);opacity:0} }
+      @keyframes pv-pulse-soft { 0%,100%{box-shadow:0 0 0 0 ${T.ok}66} 70%{box-shadow:0 0 0 14px ${T.ok}00} }
+      .pv-content { animation: pv-fadeup .5s ease-out backwards; }
+    `}</style>
+
+    {/* ═══ HERO PROFILE CARD ═══ */}
+    <div style={{
+      position:"relative",marginBottom:18,
+      borderRadius:24,padding:24,overflow:"hidden",
+      background:`linear-gradient(135deg,${lv.color}22,${T.purple}33,${T.orange}22,#1a0a3a)`,
+      border:`3px solid ${lv.color}66`,
+      boxShadow:`0 12px 40px ${lv.color}33`,
+    }}>
+      {/* Decorative big icon backdrop */}
+      <div style={{position:"absolute",top:-20,right:-20,fontSize:200,opacity:.06,transform:"rotate(-12deg)",pointerEvents:"none"}}>{lv.icon}</div>
+      <div style={{position:"absolute",bottom:-30,left:-30,fontSize:150,opacity:.05,transform:"rotate(15deg)",pointerEvents:"none"}}>🤖</div>
+      {/* Shimmer overlay */}
+      <div style={{
+        position:"absolute",inset:0,pointerEvents:"none",
+        background:`linear-gradient(90deg,transparent 30%,${lv.color}22 50%,transparent 70%)`,
+        backgroundSize:"200% 100%",animation:"pv-shimmer 5s infinite linear",
+      }}/>
+
+      <div style={{position:"relative"}}>
+        {/* Top row: parent greeting */}
+        <div style={{fontSize:13,color:T.ts,fontWeight:600,marginBottom:6,letterSpacing:.5}}>
+          👋 Merhaba <b style={{color:T.tp}}>{parent.name.split(" ")[0]}</b>, çocuğunuzun robotik yolculuğu:
+        </div>
+
+        {/* Child profile row */}
+        <div style={{display:"flex",alignItems:"center",gap:18,flexWrap:"wrap",marginBottom:18}}>
+          {/* Avatar with online ring */}
+          <div style={{position:"relative",flexShrink:0}}>
+            {isOnline&&<div style={{position:"absolute",inset:-6,borderRadius:"50%",border:`3px solid ${T.ok}88`,animation:"pv-ring 2s infinite"}}/>}
+            <div style={{
+              width:84,height:84,borderRadius:"50%",
+              background:`linear-gradient(135deg,${T.orange},${T.od},${T.purple})`,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              fontSize:38,fontWeight:900,color:"#fff",
+              border:`4px solid ${lv.color}`,
+              boxShadow:`0 0 24px ${lv.color}88`,
+              animation:"pv-float 3.5s ease-in-out infinite",
+            }}>{child.name[0]}</div>
+            {isOnline&&<div style={{
+              position:"absolute",bottom:2,right:2,
+              width:18,height:18,borderRadius:"50%",
+              background:T.ok,
+              border:`3px solid ${T.bg}`,
+              boxShadow:`0 0 8px ${T.ok}`,
+            }}/>}
+          </div>
+
+          <div style={{flex:1,minWidth:200}}>
+            <h1 style={{margin:0,fontSize:30,fontWeight:900,color:T.tp,letterSpacing:.3,lineHeight:1.1}}>{child.name}</h1>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6,flexWrap:"wrap"}}>
+              <span style={{fontSize:13,padding:"4px 12px",borderRadius:8,background:`${lv.color}33`,color:lv.color,fontWeight:800,border:`1px solid ${lv.color}55`}}>
+                {lv.icon} Lv.{lv.lv} • {lv.name}
+              </span>
+              {isOnline?(
+                <span style={{fontSize:12,padding:"4px 10px",borderRadius:8,background:`${T.ok}22`,color:T.ok,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5,animation:"pv-pulse-soft 2s infinite",border:`1px solid ${T.ok}55`}}>
+                  <span style={{width:7,height:7,borderRadius:"50%",background:T.ok}}/>
+                  ŞU AN AKTİF
+                </span>
+              ):(
+                <span style={{fontSize:12,padding:"4px 10px",borderRadius:8,background:`${T.tm}22`,color:T.tm,fontWeight:600}}>○ Çevrimdışı</span>
+              )}
+            </div>
+            {currentTask&&isOnline&&<div style={{
+              marginTop:10,padding:"8px 12px",borderRadius:10,
+              background:`${T.cyan}15`,border:`1px solid ${T.cyan}44`,
+              fontSize:13,color:T.cyan,
+              display:"inline-flex",alignItems:"center",gap:6,
+            }}>
+              <span style={{fontSize:14}}>▶</span>
+              <span>Şu an çalışıyor: <b>#{currentTask.id} {currentTask.title}</b></span>
+            </div>}
+          </div>
+
+          {/* Big circular progress */}
+          <div style={{textAlign:"center",flexShrink:0}}>
+            <div style={{
+              width:110,height:110,borderRadius:"50%",
+              background:`conic-gradient(${T.ok} ${pct*3.6}deg,${T.border} 0deg)`,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              boxShadow:`0 0 24px ${T.ok}44`,
+              position:"relative",
+            }}>
+              <div style={{
+                width:88,height:88,borderRadius:"50%",
+                background:`radial-gradient(circle,${T.bg},#0a0518)`,
+                display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+                border:`2px solid ${T.ok}33`,
+              }}>
+                <div style={{fontSize:30,fontWeight:900,color:T.ok,lineHeight:1}}>{pct}<span style={{fontSize:14}}>%</span></div>
+                <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1}}>{cnt}/36 GÖREV</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Level XP progress bar */}
+        <div style={{marginBottom:14}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6,flexWrap:"wrap",gap:6}}>
+            <span style={{fontSize:12,color:T.ts,fontWeight:700,letterSpacing:1}}>
+              ⚡ <b style={{color:T.warn,fontSize:14}}>{xp}</b> XP toplandı
+            </span>
+            {nlv&&<span style={{fontSize:11,color:T.tm}}>
+              Sonraki: {nlv.icon} <b style={{color:nlv.color}}>{nlv.name}</b> ({nlv.min-xp} XP)
+            </span>}
+          </div>
+          <div style={{position:"relative",width:"100%",height:14,borderRadius:7,background:"#0008",overflow:"hidden",border:`1px solid ${T.border}`}}>
+            <div style={{
+              height:"100%",borderRadius:7,
+              background:`linear-gradient(90deg,${T.warn},${lv.color},${T.pl})`,
+              backgroundSize:"200% 100%",
+              animation:"pv-shimmer 2s infinite linear",
+              width:`${lvProgress}%`,
+              boxShadow:`0 0 10px ${lv.color}88`,
+              transition:"width .6s ease",
+            }}/>
+          </div>
+        </div>
+
+        {/* Quick stats grid */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8}}>
+          <PVStat icon="📅" label="Bugün" value={todayCount} unit="görev" color={T.ok} highlight={todayCount>0}/>
+          <PVStat icon="⏱️" label="Toplam Süre" value={totalMs>0?fd(totalMs):"—"} color={T.cyan}/>
+          <PVStat icon="🎯" label="Performans" value={avgScore!==null?avgScore:"—"} unit={avgScore!==null?"/100":""} color={avgScore!==null?gradeColor(avgScore):T.tm}/>
+          <PVStat icon="📚" label="Kazanım" value={[...new Set(completed.flatMap(t=>t.learnings||[]))].length} color={T.pl}/>
+        </div>
+      </div>
     </div>
 
-    {tab==="class"&&<ParentClassroomView child={child} sp={sp} classLayout={classLayout} logs={logs} prog={prog}/>}
-    {tab==="learnings"&&<ParentLearningsView child={child} sp={sp}/>}
-    {tab==="cv"&&<ParentCVView child={child} sp={sp}/>}
+    {/* ═══ TABS ═══ */}
+    <div style={{
+      display:"flex",gap:6,marginBottom:14,flexWrap:"wrap",
+      padding:6,borderRadius:14,
+      background:T.card,border:`1px solid ${T.border}`,
+    }}>
+      {[
+        {k:"class",l:"🏫 Sınıf & Aktivite",d:"Çocuğun şu an ne yapıyor",c:T.orange,emoji:"🏫"},
+        {k:"learnings",l:"📚 Kazanımlar",d:"Neler öğrendi",c:T.pl,emoji:"📚"},
+        {k:"cv",l:"📜 Sertifika & CV",d:"Profesyonel rapor",c:T.cyan,emoji:"📜"},
+      ].map(t=>(
+        <button key={t.k} onClick={()=>setTab(t.k)} style={{
+          flex:"1 1 200px",
+          fontSize:14,padding:"12px 16px",borderRadius:10,
+          border:tab===t.k?`2px solid ${t.c}`:"2px solid transparent",
+          background:tab===t.k?`linear-gradient(135deg,${t.c}33,${t.c}11)`:"transparent",
+          color:tab===t.k?t.c:T.ts,
+          cursor:"pointer",fontWeight:tab===t.k?800:600,
+          textAlign:"left",transition:"all .2s",
+          display:"flex",alignItems:"center",gap:10,
+        }}>
+          <span style={{fontSize:24,filter:tab===t.k?`drop-shadow(0 2px 6px ${t.c}88)`:"none"}}>{t.emoji}</span>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:14,fontWeight:800,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{t.l.replace(t.emoji,"").trim()}</div>
+            <div style={{fontSize:11,opacity:.75,fontWeight:500,marginTop:1}}>{t.d}</div>
+          </div>
+        </button>
+      ))}
+    </div>
+
+    {/* ═══ CONTENT ═══ */}
+    <div className="pv-content" key={tab}>
+      {tab==="class"&&<ParentClassroomView child={child} sp={sp} classLayout={classLayout} logs={logs} prog={prog}/>}
+      {tab==="learnings"&&<ParentLearningsView child={child} sp={sp}/>}
+      {tab==="cv"&&<ParentCVView child={child} sp={sp}/>}
+    </div>
+  </div>);
+}
+
+// ─── Helper: parent stat pill ───
+function PVStat({icon,label,value,unit,color,highlight}){
+  return(<div style={{
+    padding:"10px 12px",borderRadius:12,
+    background:`${color}22`,border:`1px solid ${color}55`,
+    textAlign:"center",
+    boxShadow:highlight?`0 0 16px ${color}44`:"none",
+  }}>
+    <div style={{fontSize:18,marginBottom:2}}>{icon}</div>
+    <div style={{fontSize:9,color:T.tm,fontWeight:700,letterSpacing:1,textTransform:"uppercase"}}>{label}</div>
+    <div style={{fontSize:16,fontWeight:900,color,lineHeight:1.2}}>{value}{unit&&<span style={{fontSize:10,opacity:.7,marginLeft:2}}>{unit}</span>}</div>
   </div>);
 }
 
