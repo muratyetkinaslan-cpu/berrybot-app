@@ -2733,124 +2733,258 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
 // ═══════════════════════════════════════
 //  PARENT: DASHBOARD — kendi çocuğunun durumunu görür
 // ═══════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// DAILY SHOW — Eğitmen günlük takip ekranı (yeniden tasarlandı)
+// ═══════════════════════════════════════════════════════════════
 function DailyShow({users,prog,logs,onSel}){
   const[selStudent,setSelStudent]=useState(null);
-  const[dayFilter,setDayFilter]=useState("today"); // today, week, all
+  const[expandedTask,setExpandedTask]=useState(null);
+  const[dayFilter,setDayFilter]=useState("today"); // today | week | all
 
   const students=users.filter(u=>u.role===ROLES.STUDENT);
   const now=Date.now();
   const dayStart=new Date();dayStart.setHours(0,0,0,0);
   const weekAgo=now-7*24*60*60*1000;
+  const filterStart=dayFilter==="today"?dayStart.getTime():dayFilter==="week"?weekAgo:0;
 
-  const isInRange=(ts)=>{
-    if(!ts)return false;
-    if(dayFilter==="today")return ts>=dayStart.getTime();
-    if(dayFilter==="week")return ts>=weekAgo;
-    return true;
-  };
-
-  // Today's active students
-  const activeStudents=students.map(s=>{
+  // Each student → list of completed tasks in date range
+  const studentRows=students.map(s=>{
     const sp=prog[s.id]||{};
-    const tasksInRange=TASKS.filter(t=>{
+    const completed=TASKS.filter(t=>{
       const tp=sp[t.id];
-      return tp&&(isInRange(tp.startedAt)||isInRange(tp.completedAt)||isInRange(tp.approvedAt));
-    });
-    const approved=tasksInRange.filter(t=>sp[t.id]?.status===TS.APPROVED);
-    const xpGained=approved.reduce((a,t)=>a+t.xp,0);
-    let totalMs=0;
-    tasksInRange.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
-    return{student:s,tasks:tasksInRange,approved,xpGained,totalMs};
-  }).filter(x=>x.tasks.length>0).sort((a,b)=>b.xpGained-a.xpGained);
-
-  const detail=selStudent;
-  if(detail){
-    const sp=prog[detail.id]||{};
-    const allTasks=TASKS.filter(t=>{
+      if(!tp||tp.status!==TS.APPROVED)return false;
+      const ts=tp.approvedAt||tp.completedAt;
+      return ts&&ts>=filterStart;
+    }).map(t=>{
       const tp=sp[t.id];
-      return tp&&(isInRange(tp.startedAt)||isInRange(tp.completedAt)||isInRange(tp.approvedAt));
-    });
-    const totalLearnings=[...new Set(allTasks.filter(t=>sp[t.id]?.status===TS.APPROVED).flatMap(t=>t.learnings||[]))];
-    let totalMs=0;
-    allTasks.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+      const dur=(tp.startedAt&&tp.completedAt)?(tp.completedAt-tp.startedAt):null;
+      const score=dur?calcTaskScore(dur,t.expectedMin):null;
+      return{...t,dur,score,tp};
+    }).sort((a,b)=>(b.tp.approvedAt||0)-(a.tp.approvedAt||0));
 
+    const totalXP=completed.reduce((a,t)=>a+t.xp,0);
+    const avgScore=completed.length>0?Math.round(completed.filter(t=>t.score).reduce((a,t)=>a+t.score,0)/completed.filter(t=>t.score).length):null;
+    const fastCount=completed.filter(t=>t.score&&t.score>=90).length;
+
+    return{student:s,completed,totalXP,avgScore,fastCount};
+  }).filter(r=>r.completed.length>0).sort((a,b)=>b.completed.length-a.completed.length);
+
+  const allCount=studentRows.reduce((a,r)=>a+r.completed.length,0);
+
+  if(selStudent){
+    const row=studentRows.find(r=>r.student.id===selStudent);
+    if(!row)return null;
     return(<div>
-      <button onClick={()=>setSelStudent(null)} style={{fontSize:14,padding:"6px 14px",borderRadius:8,background:T.border,color:T.ts,border:"none",cursor:"pointer",marginBottom:14}}>← Geri</button>
-      <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 4px"}}>📊 {detail.name}</h1>
-      <div style={{fontSize:14,color:T.tm,marginBottom:14}}>{dayFilter==="today"?"Bugün":dayFilter==="week"?"Son 7 Gün":"Tüm Zaman"} özeti</div>
+      <button onClick={()=>{setSelStudent(null);setExpandedTask(null);}} style={{fontSize:14,padding:"8px 18px",borderRadius:10,background:`${T.cyan}22`,color:T.cyan,border:`2px solid ${T.cyan}44`,cursor:"pointer",marginBottom:14,fontWeight:700}}>← Tüm Öğrenciler</button>
 
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}}>
-        <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.ok}}>{allTasks.filter(t=>sp[t.id]?.status===TS.APPROVED).length}</div><div style={{fontSize:13,color:T.ts}}>Tamamlanan</div></Card>
-        <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.cyan}}>{fd(totalMs)}</div><div style={{fontSize:13,color:T.ts}}>Süre</div></Card>
-        <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.warn}}>{allTasks.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0)}</div><div style={{fontSize:13,color:T.ts}}>XP</div></Card>
-        <Card style={{textAlign:"center",padding:14}}><div style={{fontSize:24,fontWeight:800,color:T.pl}}>{totalLearnings.length}</div><div style={{fontSize:13,color:T.ts}}>Kazanım</div></Card>
+      {/* Student hero */}
+      <div style={{padding:18,borderRadius:18,background:`linear-gradient(135deg,${T.orange}22,${T.purple}22,${T.card})`,border:`2px solid ${T.orange}55`,marginBottom:14}}>
+        <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+          <div style={{width:60,height:60,borderRadius:"50%",background:`linear-gradient(135deg,${T.orange},${T.od})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,fontWeight:900,color:"#fff"}}>{row.student.name[0]}</div>
+          <div style={{flex:1,minWidth:160}}>
+            <h2 style={{margin:0,fontSize:22,color:T.tp}}>{row.student.name}</h2>
+            <div style={{fontSize:12,color:T.ts,marginTop:2}}>{dayFilter==="today"?"Bugün":dayFilter==="week"?"Son 7 gün":"Tüm zaman"} özeti</div>
+          </div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            <div style={{padding:"8px 12px",borderRadius:10,background:`${T.ok}22`,border:`1px solid ${T.ok}55`,textAlign:"center"}}>
+              <div style={{fontSize:10,color:T.tm,fontWeight:700}}>GÖREV</div>
+              <div style={{fontSize:20,fontWeight:900,color:T.ok}}>{row.completed.length}</div>
+            </div>
+            <div style={{padding:"8px 12px",borderRadius:10,background:`${T.warn}22`,border:`1px solid ${T.warn}55`,textAlign:"center"}}>
+              <div style={{fontSize:10,color:T.tm,fontWeight:700}}>XP</div>
+              <div style={{fontSize:20,fontWeight:900,color:T.warn}}>{row.totalXP}</div>
+            </div>
+            {row.avgScore!==null&&<div style={{padding:"8px 12px",borderRadius:10,background:`${gradeColor(row.avgScore)}22`,border:`1px solid ${gradeColor(row.avgScore)}66`,textAlign:"center"}}>
+              <div style={{fontSize:10,color:T.tm,fontWeight:700}}>PUAN</div>
+              <div style={{fontSize:20,fontWeight:900,color:gradeColor(row.avgScore)}}>🎯 {row.avgScore}</div>
+            </div>}
+          </div>
+        </div>
       </div>
 
-      {totalLearnings.length>0&&<Card style={{marginBottom:14}}>
-        <div style={{fontSize:15,fontWeight:700,color:T.pl,marginBottom:8}}>🎯 Kazanılan Yetkinlikler</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-          {totalLearnings.map((lr,i)=><span key={i} style={{fontSize:13,padding:"4px 12px",borderRadius:6,background:T.purple+"22",color:T.pl,border:`1px solid ${T.purple}44`}}>{lr}</span>)}
-        </div>
-      </Card>}
+      {/* Task rows — expand on click */}
+      <div style={{display:"grid",gap:8}}>
+        {row.completed.map(t=>{
+          const expanded=expandedTask===t.id;
+          const sc=t.score;
+          const sg=gradeColor(sc);
+          const ratio=t.dur?t.dur/(t.expectedMin*60000):null;
+          return(<div key={t.id} style={{
+            borderRadius:14,background:T.card,
+            border:`2px solid ${expanded?sg+"88":T.border}`,
+            overflow:"hidden",transition:"all .2s",
+          }}>
+            {/* Row */}
+            <div onClick={()=>setExpandedTask(expanded?null:t.id)} style={{
+              display:"flex",alignItems:"center",gap:10,padding:"12px 14px",
+              cursor:"pointer",background:expanded?`${sg}11`:"transparent",
+              transition:"background .15s",
+            }}>
+              <TaskImage taskId={t.id} type="gorsel" size={42} fallbackEmoji={t.img} style={{borderRadius:8,flexShrink:0}}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:3}}>
+                  <span style={{fontSize:11,color:T.tm,fontFamily:"monospace",fontWeight:700}}>#{t.id}</span>
+                  <span style={{fontSize:14,fontWeight:700,color:T.tp,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.title}</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:10,fontSize:11,color:T.ts,flexWrap:"wrap"}}>
+                  <span style={{padding:"2px 8px",borderRadius:6,background:`${T.purple}22`,color:T.pl,fontWeight:600}}>{t.cat}</span>
+                  <span style={{color:T.warn,fontWeight:700}}>+{t.xp} XP</span>
+                </div>
+              </div>
 
-      <div style={{fontSize:16,fontWeight:700,color:T.ol,marginBottom:8}}>📋 Görev Detayları ({allTasks.length})</div>
-      {allTasks.map(t=>{
-        const tp=sp[t.id];
-        const dur=(tp.startedAt&&tp.completedAt)?fd(tp.completedAt-tp.startedAt):null;
-        return(<Card key={t.id} style={{marginBottom:8,padding:12}}>
-          <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
-            <TaskImage taskId={t.id} type="gorsel" size={42} fallbackEmoji={t.img}/>
-            <div style={{flex:1}}>
-              <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:3}}>
-                <span style={{fontSize:14,fontWeight:700}}>#{t.id} {t.title}</span>
-                <Badge s={tp.status}/>
-                {dur&&<span style={{fontSize:12,color:T.cyan}}>⏱ {dur}</span>}
-                <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{t.xp} XP</span>
+              {/* Time comparison */}
+              <div style={{textAlign:"center",minWidth:90}}>
+                <div style={{fontSize:10,color:T.tm,letterSpacing:1,fontWeight:700}}>SÜRE</div>
+                <div style={{display:"flex",alignItems:"baseline",gap:4,justifyContent:"center"}}>
+                  <span style={{fontSize:18,fontWeight:900,color:sg||T.tp,lineHeight:1}}>{t.dur?fd(t.dur):"—"}</span>
+                  <span style={{fontSize:11,color:T.tm}}>/ {t.expectedMin}dk</span>
+                </div>
+                {ratio&&<div style={{fontSize:10,marginTop:2,color:sg,fontWeight:700}}>
+                  {ratio<0.8?`⚡ %${Math.round((1-ratio)*100)} hızlı`:ratio<=1.0?"✓ Zamanında":`+%${Math.round((ratio-1)*100)} fazla`}
+                </div>}
               </div>
-              <div style={{fontSize:11,color:T.tm}}>
-                {tp.startedAt&&`Başladı: ${ft(tp.startedAt)} `}
-                {tp.completedAt&&`• Bitti: ${ft(tp.completedAt)} `}
-                {tp.approvedAt&&`• Onay: ${ft(tp.approvedAt)}`}
-              </div>
-              {t.learnings&&tp.status===TS.APPROVED&&<div style={{marginTop:4,display:"flex",flexWrap:"wrap",gap:4}}>
-                {t.learnings.map((lr,i)=><span key={i} style={{fontSize:10,padding:"2px 7px",borderRadius:4,background:T.purple+"15",color:T.pl}}>{lr}</span>)}
+
+              {/* Score */}
+              {sc!==null&&<div style={{
+                padding:"6px 12px",borderRadius:10,
+                background:`${sg}22`,border:`1px solid ${sg}66`,
+                textAlign:"center",minWidth:62,
+              }}>
+                <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1}}>PUAN</div>
+                <div style={{fontSize:18,fontWeight:900,color:sg,lineHeight:1}}>🎯 {sc}</div>
               </div>}
+
+              <span style={{fontSize:18,color:T.tm,transition:"transform .2s",transform:expanded?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
             </div>
-          </div>
-        </Card>);
-      })}
+
+            {/* Expanded — what they learned */}
+            {expanded&&<div style={{padding:"14px 16px",background:`${sg}08`,borderTop:`1px solid ${sg}33`}}>
+              <div style={{fontSize:10,color:sg,fontWeight:800,letterSpacing:2,marginBottom:8,textTransform:"uppercase"}}>📚 Bu Görevden Öğrendi</div>
+              {t.learnings&&t.learnings.length>0?(
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {t.learnings.map((lr,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",borderRadius:8,background:`${T.purple}15`,border:`1px solid ${T.purple}33`}}>
+                      <span style={{width:22,height:22,borderRadius:"50%",background:`linear-gradient(135deg,${T.pl},${T.purple})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:"#fff",flexShrink:0}}>{i+1}</span>
+                      <span style={{fontSize:13,color:T.tp,fontWeight:600}}>{lr}</span>
+                    </div>
+                  ))}
+                </div>
+              ):<div style={{fontSize:13,color:T.tm,fontStyle:"italic"}}>Bu görev için kazanım kaydı yok.</div>}
+
+              {/* Performance breakdown */}
+              <div style={{marginTop:12,padding:"10px 12px",borderRadius:10,background:T.dark,border:`1px solid ${T.border}`,fontSize:12,color:T.ts}}>
+                <div style={{fontSize:10,color:T.tm,fontWeight:800,letterSpacing:1,marginBottom:6,textTransform:"uppercase"}}>⏱ Performans Analizi</div>
+                <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:4}}>
+                  <span>Beklenen: <b style={{color:T.cyan}}>{t.expectedMin} dk</b></span>
+                  <span>•</span>
+                  <span>Gerçekleşen: <b style={{color:sg}}>{fd(t.dur||0)}</b></span>
+                  {sc!==null&&<><span>•</span><span style={{color:sg,fontWeight:800}}>{gradeLabel(sc)}</span></>}
+                </div>
+                {/* Visual bar comparison */}
+                <div style={{position:"relative",height:6,borderRadius:3,background:"#0008",marginTop:4,overflow:"hidden"}}>
+                  <div style={{position:"absolute",left:0,top:0,bottom:0,width:`${Math.min(100,(ratio||0)*100)}%`,background:`linear-gradient(90deg,${sg},${sg}cc)`,borderRadius:3}}/>
+                  <div style={{position:"absolute",top:-2,left:`${Math.min(100,100)}%`,width:2,height:10,background:T.tp,opacity:.6}}/>
+                </div>
+                <div style={{fontSize:10,color:T.tm,marginTop:4,textAlign:"right"}}>↑ Hedef süre</div>
+              </div>
+
+              {t.tp.instructorNote&&<div style={{marginTop:8,padding:"8px 12px",borderRadius:8,background:`${T.ok}15`,border:`1px solid ${T.ok}44`,fontSize:13,color:"#86efac",fontStyle:"italic"}}>
+                💬 Notunuz: "{t.tp.instructorNote}"
+              </div>}
+              <div style={{marginTop:8,fontSize:11,color:T.tm}}>
+                ✓ Onay: {new Date(t.tp.approvedAt||t.tp.completedAt).toLocaleString("tr-TR")}
+              </div>
+            </div>}
+          </div>);
+        })}
+      </div>
     </div>);
   }
 
+  // ═══ MAIN LIST VIEW ═══
   return(<div>
-    <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 14px"}}>📊 Günlük Show</h1>
-    <div style={{display:"flex",gap:6,marginBottom:14}}>
-      {[{k:"today",l:"Bugün"},{k:"week",l:"Son 7 Gün"},{k:"all",l:"Tüm Zaman"}].map(d=>
-        <button key={d.k} onClick={()=>setDayFilter(d.k)} style={{fontSize:13,padding:"7px 16px",borderRadius:8,border:dayFilter===d.k?`2px solid ${T.orange}`:`1px solid ${T.border}`,background:dayFilter===d.k?T.orange+"20":T.card,color:dayFilter===d.k?T.orange:T.ts,cursor:"pointer",fontWeight:dayFilter===d.k?700:400}}>{d.l}</button>
-      )}
-    </div>
-    {activeStudents.length===0?<Card><div style={{padding:30,textAlign:"center",color:T.tm,fontSize:15}}>Bu zaman aralığında aktivite yok.</div></Card>:
-    activeStudents.map(({student:s,tasks,approved,xpGained,totalMs})=>(
-      <Card key={s.id} style={{marginBottom:10,cursor:"pointer"}} >
-        <div onClick={()=>setSelStudent(s)} style={{display:"flex",alignItems:"center",gap:14}}>
-          <div style={{width:46,height:46,borderRadius:"50%",background:T.orange+"15",color:T.orange,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18,border:`2px solid ${T.orange}44`}}>{s.name[0]}</div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:16,fontWeight:700}}>{s.name}</div>
-            <div style={{fontSize:13,color:T.tm}}>{tasks.length} görev • {approved.length} tamamlandı • {fd(totalMs)} süre</div>
-          </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:18,fontWeight:800,color:T.warn}}>+{xpGained} XP</div>
-            <div style={{fontSize:11,color:T.tm}}>tıkla → detay</div>
-          </div>
+    {/* Hero */}
+    <div style={{padding:18,borderRadius:18,background:`linear-gradient(135deg,${T.cyan}22,${T.purple}33,#1a0a3a)`,border:`2px solid ${T.cyan}55`,marginBottom:14}}>
+      <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+        <div style={{fontSize:42}}>📊</div>
+        <div style={{flex:1,minWidth:200}}>
+          <h2 style={{margin:0,fontSize:24,color:T.cyan,fontWeight:900}}>Günlük Show</h2>
+          <div style={{fontSize:13,color:T.ts,marginTop:2}}>Öğrenci ilerlemesi & kazanımlar</div>
         </div>
-      </Card>
-    ))}
+        <div style={{padding:"8px 14px",borderRadius:10,background:`${T.ok}22`,border:`1px solid ${T.ok}55`,textAlign:"center"}}>
+          <div style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1}}>TOPLAM GÖREV</div>
+          <div style={{fontSize:22,fontWeight:900,color:T.ok}}>{allCount}</div>
+        </div>
+      </div>
+
+      {/* Date filters */}
+      <div style={{display:"flex",gap:6,marginTop:14,flexWrap:"wrap"}}>
+        {[{id:"today",label:"📅 Bugün"},{id:"week",label:"🗓️ Son 7 Gün"},{id:"all",label:"♾️ Tüm Zaman"}].map(f=>(
+          <button key={f.id} onClick={()=>setDayFilter(f.id)} style={{
+            padding:"8px 16px",borderRadius:10,
+            border:`2px solid ${dayFilter===f.id?T.cyan:T.border}`,
+            background:dayFilter===f.id?T.cyan+"33":T.dark,
+            color:dayFilter===f.id?T.cyan:T.ts,
+            cursor:"pointer",fontWeight:700,fontSize:13,
+            transition:"all .15s",
+          }}>{f.label}</button>
+        ))}
+      </div>
+    </div>
+
+    {/* Student cards */}
+    {studentRows.length===0?(
+      <div style={{padding:50,textAlign:"center",borderRadius:16,background:T.card,border:`1px solid ${T.border}`}}>
+        <div style={{fontSize:48,opacity:.4,marginBottom:8}}>📭</div>
+        <div style={{fontSize:15,color:T.ts,fontWeight:600}}>Bu zaman aralığında tamamlanan görev yok</div>
+        <div style={{fontSize:13,color:T.tm,marginTop:4}}>Filtreyi değiştirmeyi dene</div>
+      </div>
+    ):(
+      <div style={{display:"grid",gap:10}}>
+        {studentRows.map(r=>(
+          <div key={r.student.id} onClick={()=>setSelStudent(r.student.id)} style={{
+            padding:14,borderRadius:14,cursor:"pointer",
+            background:T.card,
+            border:`2px solid ${T.border}`,
+            transition:"all .2s",
+          }} onMouseOver={e=>{e.currentTarget.style.borderColor=T.orange+"66";e.currentTarget.style.transform="translateX(4px)";}} onMouseOut={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.transform="translateX(0)";}}>
+            <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+              <div style={{width:42,height:42,borderRadius:"50%",background:`linear-gradient(135deg,${T.orange},${T.od})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:900,color:"#fff",flexShrink:0}}>{r.student.name[0]}</div>
+              <div style={{flex:1,minWidth:140}}>
+                <div style={{fontSize:15,fontWeight:800,color:T.tp}}>{r.student.name}</div>
+                <div style={{fontSize:12,color:T.ts,marginTop:2}}>{r.completed.length} görev tamamladı</div>
+              </div>
+
+              {/* Stats inline */}
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                <div style={{padding:"4px 10px",borderRadius:8,background:`${T.warn}22`,fontSize:12,color:T.warn,fontWeight:800,whiteSpace:"nowrap"}}>⚡ {r.totalXP}</div>
+                {r.avgScore!==null&&<div style={{padding:"4px 10px",borderRadius:8,background:`${gradeColor(r.avgScore)}22`,fontSize:12,color:gradeColor(r.avgScore),fontWeight:800,whiteSpace:"nowrap"}}>🎯 {r.avgScore}</div>}
+                {r.fastCount>0&&<div style={{padding:"4px 10px",borderRadius:8,background:`${T.ok}22`,fontSize:12,color:T.ok,fontWeight:800,whiteSpace:"nowrap"}}>⚡ {r.fastCount} hızlı</div>}
+              </div>
+
+              <span style={{fontSize:18,color:T.tm}}>▶</span>
+            </div>
+
+            {/* Mini task preview row */}
+            <div style={{display:"flex",gap:4,marginTop:10,flexWrap:"wrap"}}>
+              {r.completed.slice(0,8).map(t=>(
+                <div key={t.id} title={`#${t.id} ${t.title}`} style={{
+                  width:30,height:30,borderRadius:6,
+                  background:gradeColor(t.score)+"33",
+                  border:`1px solid ${gradeColor(t.score)}66`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:11,fontWeight:800,color:gradeColor(t.score),
+                }}>#{t.id}</div>
+              ))}
+              {r.completed.length>8&&<div style={{padding:"6px 10px",borderRadius:6,background:T.dark,fontSize:11,color:T.tm,fontWeight:600}}>+{r.completed.length-8}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
   </div>);
 }
 
-// ═══════════════════════════════════════
-//  PARENT: NEW UNIFIED VIEW — 3 sekme: Sınıf | Kazanımlar | CV
-// ═══════════════════════════════════════
 function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
   const[tab,setTab]=useState(initialTab);
   const child=users.find(u=>u.id===parent.childId);
