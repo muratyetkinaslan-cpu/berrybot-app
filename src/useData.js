@@ -49,33 +49,48 @@ export function useData() {
   const [classLayout, setClassLayout] = useState(DEFAULT_CL);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [practiceProg, setPracticeProg] = useState([]);
+  const [homeworks, setHomeworks] = useState([]);
+  const [homeworkSubs, setHomeworkSubs] = useState([]);
 
   // SMART LOAD: students fetch only their 36 rows, admin/instructor fetch all (paginated)
   const loadAll = useCallback(async (user) => {
     const u = user || currentUser;
     try {
       if (u?.role === 'student') {
-        const [sp, m] = await Promise.all([
+        const [sp, m, pp, hw, hs] = await Promise.all([
           db.getStudentProgress(u.id),
           db.getAllMeta(),
+          db.fetchPracticeProgress(u.id),
+          db.fetchHomework(),
+          db.fetchHomeworkSubmissions(),
         ]);
         setProgress(prev => ({ ...prev, [u.id]: sp }));
         setMeta(m);
+        setPracticeProg(pp);
+        setHomeworks(hw);
+        setHomeworkSubs(hs.filter(s => s.student_id === u.id));
       } else if (u?.role === 'parent' && u.childId) {
-        const [sp, m, l] = await Promise.all([
+        const [sp, m, l, hw, hs] = await Promise.all([
           db.getStudentProgress(u.childId),
           db.getAllMeta(),
           db.getLogs(500),
+          db.fetchHomework(),
+          db.fetchHomeworkSubmissions(),
         ]);
         setProgress(prev => ({ ...prev, [u.childId]: sp }));
         setMeta(m);
         setLogs(l.filter(lg => lg.userId === u.childId || lg.targetUser === u.childId));
+        setHomeworks(hw);
+        setHomeworkSubs(hs.filter(s => s.student_id === u.childId));
       } else {
         // Admin/instructor: fetch everything
-        const [us, p, m, l, cl] = await Promise.all([
+        const [us, p, m, l, cl, hw, hs] = await Promise.all([
           db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
+          db.fetchHomework(), db.fetchHomeworkSubmissions(),
         ]);
         setUsers(us); setProgress(p); setMeta(m); setLogs(l);
+        setHomeworks(hw); setHomeworkSubs(hs);
         if (cl.length > 0) setClassLayout(cl);
       }
     } catch (e) { console.error('loadAll:', e); }
@@ -277,9 +292,48 @@ export function useData() {
     }
   }, [currentUser]);
 
+  // ─── PRACTICE ACTIONS ───
+  const recordPractice = useCallback(async ({ questionId, category, topic, isCorrect, xp }) => {
+    if (!currentUser) return;
+    await db.recordPracticeAttempt({ studentId: currentUser.id, questionId, category, topic, isCorrect, xp });
+    const pp = await db.fetchPracticeProgress(currentUser.id);
+    setPracticeProg(pp);
+  }, [currentUser]);
+
+  // ─── HOMEWORK ACTIONS ───
+  const addHomework = useCallback(async (data) => {
+    if (!currentUser) return;
+    await db.createHomework({ ...data, instructorId: currentUser.id });
+    const [hw, hs] = await Promise.all([db.fetchHomework(), db.fetchHomeworkSubmissions()]);
+    setHomeworks(hw); setHomeworkSubs(hs);
+  }, [currentUser]);
+
+  const removeHomework = useCallback(async (id) => {
+    if (!currentUser) return;
+    await db.deleteHomework(id, currentUser.id);
+    const hw = await db.fetchHomework();
+    setHomeworks(hw);
+  }, [currentUser]);
+
+  const sendHomework = useCallback(async ({ homeworkId, photoFlag, note }) => {
+    if (!currentUser) return;
+    await db.submitHomework({ homeworkId, studentId: currentUser.id, photoFlag, note });
+    const hs = await db.fetchHomeworkSubmissions();
+    setHomeworkSubs(hs.filter(s => s.student_id === currentUser.id));
+  }, [currentUser]);
+
+  const reviewHw = useCallback(async ({ submissionId, status, instructorNote }) => {
+    if (!currentUser) return;
+    await db.reviewHomework({ submissionId, status, instructorNote, instructorId: currentUser.id });
+    const hs = await db.fetchHomeworkSubmissions();
+    setHomeworkSubs(hs);
+  }, [currentUser]);
+
   return {
     loading, currentUser, users, progress: merged, logs, classLayout,
+    practiceProg, homeworks, homeworkSubs,
     login, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh: loadAll,
+    recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
   };
 }

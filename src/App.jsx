@@ -122,6 +122,140 @@ const LEVELS=[
   {lv:10,name:"Elon Musk",min:900,icon:"🚀",color:"#ff6b9d",title:"BerryBot Master Mühendisi",fact:"İnsanlığı Mars'a taşımak için çalışıyor"},
 ];
 const getLevel=(xp)=>{let l=LEVELS[0];for(const lv of LEVELS)if(xp>=lv.min)l=lv;return l;};
+
+// ═══════════════════════════════════════════════════════════════
+// PRACTICE QUESTIONS — Robotik & Yazılım kavramları
+// ═══════════════════════════════════════════════════════════════
+const QUIZ=[
+  // ─── RGB LED ───
+  {id:"q_rgb_1",topic:"RGB LED",q:"RGB LED'inde 'R' harfi hangi rengi temsil eder?",opts:["Red (Kırmızı)","Rainbow","Round","Rapid"],ans:0,xp:5},
+  {id:"q_rgb_2",topic:"RGB LED",q:"set_rgb(0,255,0) komutu LED'i hangi renge ayarlar?",opts:["Kırmızı","Yeşil","Mavi","Beyaz"],ans:1,xp:5},
+  {id:"q_rgb_3",topic:"RGB LED",q:"set_rgb(255,255,0) hangi renk olur?",opts:["Mor","Sarı","Camgöbeği","Pembe"],ans:1,xp:8},
+  {id:"q_rgb_4",topic:"RGB LED",q:"RGB değer aralığı kaçtan kaça kadardır?",opts:["0-100","0-255","0-1024","-128 ile 127"],ans:1,xp:5},
+  {id:"q_rgb_5",topic:"RGB LED",q:"Tüm değerler 0 olduğunda LED ne yapar?",opts:["Beyaz yanar","Kırmızı yanar","Söner (kapalı)","Yanıp söner"],ans:2,xp:5},
+
+  // ─── Motor ───
+  {id:"q_mot_1",topic:"Motor",q:"DC motor robotu hareket için nasıl kontrol edilir?",opts:["Sadece açıp kapamak","Hız ve yön kontrolü","Sadece ses","Sadece ışık"],ans:1,xp:5},
+  {id:"q_mot_2",topic:"Motor",q:"Robotun ileri gitmesi için iki motor nasıl çalışmalı?",opts:["İkisi ters","İkisi aynı yön ileri","Biri durmalı","Biri ters biri ileri"],ans:1,xp:5},
+  {id:"q_mot_3",topic:"Motor",q:"Robotun sağa dönmesi için ne yapılır?",opts:["İki motor da ileri","Sol motor ileri sağ motor geri","İki motor geri","İki motor durur"],ans:1,xp:8},
+  {id:"q_mot_4",topic:"Motor",q:"PWM nedir?",opts:["Permanent Wave Motor","Pulse Width Modulation","Power Wire Mode","Programlama Web Modu"],ans:1,xp:10},
+  {id:"q_mot_5",topic:"Motor",q:"Motor hızı %50 demek nedir?",opts:["Yarım voltaj","PWM duty %50","Yarı dönüş","2 saniye gider"],ans:1,xp:8},
+
+  // ─── Sensör ───
+  {id:"q_sen_1",topic:"Sensörler",q:"Ultrasonik sensör neyi ölçer?",opts:["Sıcaklık","Mesafe","Renk","Ses"],ans:1,xp:5},
+  {id:"q_sen_2",topic:"Sensörler",q:"Çizgi takip sensörü hangi prensiple çalışır?",opts:["Manyetik alan","Işık yansıması","Ses dalgası","Hava basıncı"],ans:1,xp:8},
+  {id:"q_sen_3",topic:"Sensörler",q:"LDR sensörü neyi algılar?",opts:["Sıcaklık","Işık","Hareket","Nem"],ans:1,xp:5},
+  {id:"q_sen_4",topic:"Sensörler",q:"IR sensörü ne işe yarar?",opts:["Su geçirmezlik","Kızılötesi sinyal almak","Renk algılamak","GPS"],ans:1,xp:8},
+  {id:"q_sen_5",topic:"Sensörler",q:"Ultrasonik sensör 30cm görürse engel hakkında ne söylenir?",opts:["Yakın","Uzak","Sensör bozuk","Renk siyah"],ans:0,xp:5},
+
+  // ─── Buzzer ───
+  {id:"q_buz_1",topic:"Buzzer",q:"Buzzer ne işe yarar?",opts:["Işık verir","Ses üretir","Hareket eder","Mesafe ölçer"],ans:1,xp:5},
+  {id:"q_buz_2",topic:"Buzzer",q:"Buzzer'da 440 Hz değeri hangi notayı temsil eder?",opts:["Do","Re","La","Sol"],ans:2,xp:10},
+
+  // ─── IR Kumanda ───
+  {id:"q_ir_1",topic:"IR Kumanda",q:"IR kumanda hangi dalga boyu ile çalışır?",opts:["Görünür ışık","Kızılötesi","Ultraviyole","Radyo dalgası"],ans:1,xp:8},
+  {id:"q_ir_2",topic:"IR Kumanda",q:"IR alıcısı kaç pin ile bağlanır genelde?",opts:["1","2","3","5"],ans:2,xp:8},
+
+  // ─── Programlama Temelleri ───
+  {id:"q_prog_1",topic:"Programlama",q:"Bir değişken neye benzer?",opts:["Sabit kutu","Etiketli bir kutu","Çıkmaz sokak","Sadece sayı"],ans:1,xp:5},
+  {id:"q_prog_2",topic:"Programlama",q:"Robotun karar vermesi için kullandığımız blok nedir?",opts:["if (eğer)","print","wait","loop"],ans:0,xp:5},
+  {id:"q_prog_3",topic:"Programlama",q:"Tekrar etmesi için kullandığımız yapı?",opts:["if","while/for","def","import"],ans:1,xp:5},
+];
+
+// ─── KOD CHALLENGE (öğrencinin kodu seçmesi) ───
+const CODE_CHALLENGES=[
+  {id:"c_if_1",topic:"if/else",q:"Mesafe 20cm'den küçükse robotu durdur, yoksa devam ettir.",opts:[
+    `if mesafe < 20:\n  dur()\nelse:\n  ileri()`,
+    `while mesafe < 20:\n  dur()`,
+    `if mesafe > 20:\n  dur()`,
+    `for i in mesafe:\n  dur()`,
+  ],ans:0,xp:10},
+  {id:"c_if_2",topic:"if/else",q:"Çizgi sensörü siyah görürse ileri, beyaz görürse dur.",opts:[
+    `if cizgi == "siyah":\n  ileri()\nelse:\n  dur()`,
+    `while True:\n  ileri()`,
+    `if cizgi:\n  dur()`,
+    `for c in cizgi:\n  ileri()`,
+  ],ans:0,xp:10},
+  {id:"c_elif_1",topic:"elif",q:"Mesafe 10'dan az = dur, 30'dan az = yavaş, yoksa hızlı.",opts:[
+    `if m<10: dur()\nelif m<30: yavas()\nelse: hizli()`,
+    `if m<10: dur()\nif m<30: yavas()\nif m>=30: hizli()`,
+    `if m<10 and m<30: yavas()`,
+    `while m<10: dur()`,
+  ],ans:0,xp:15},
+  {id:"c_while_1",topic:"while",q:"Engel olmayana kadar ileri git.",opts:[
+    `while engel == False:\n  ileri()`,
+    `if engel == False:\n  ileri()`,
+    `for i in range(10):\n  ileri()`,
+    `def ileri(): pass`,
+  ],ans:0,xp:10},
+  {id:"c_while_2",topic:"while",q:"5 saniye boyunca LED'i yanıp söndür.",opts:[
+    `t=0\nwhile t<5:\n  led(1); bekle(0.5)\n  led(0); bekle(0.5)\n  t+=1`,
+    `if t<5:\n  led(1)`,
+    `for t in 5:\n  led(1)`,
+    `led(1)\nled(0)`,
+  ],ans:0,xp:15},
+  {id:"c_for_1",topic:"for",q:"3 kez ileri-geri yap.",opts:[
+    `for i in range(3):\n  ileri()\n  geri()`,
+    `while i==3:\n  ileri()`,
+    `if i<3:\n  geri()`,
+    `def hareket(): pass`,
+  ],ans:0,xp:10},
+  {id:"c_for_2",topic:"for",q:"RGB LED'i kırmızı→yeşil→mavi yap (her biri 1 sn).",opts:[
+    `for renk in [(255,0,0),(0,255,0),(0,0,255)]:\n  set_rgb(*renk); bekle(1)`,
+    `set_rgb(255,255,255)`,
+    `if renk: set_rgb(255,0,0)`,
+    `while True: bekle(1)`,
+  ],ans:0,xp:15},
+  {id:"c_func_1",topic:"Fonksiyon",q:"saga_don() adlı bir fonksiyon nasıl tanımlanır? (Sol motor ileri, sağ motor geri)",opts:[
+    `def saga_don():\n  sol_motor(50)\n  sag_motor(-50)`,
+    `if saga_don():\n  pass`,
+    `for d in saga_don:\n  pass`,
+    `saga_don = 50`,
+  ],ans:0,xp:15},
+  {id:"c_func_2",topic:"Fonksiyon",q:"Bir mesafe parametresi alan ileriGit fonksiyonu.",opts:[
+    `def ileriGit(mesafe):\n  while gidilen < mesafe:\n    ileri()`,
+    `def ileriGit:\n  ileri()`,
+    `if ileriGit(50): pass`,
+    `mesafe = ileriGit`,
+  ],ans:0,xp:18},
+  {id:"c_var_1",topic:"Değişken",q:"hiz adlı bir değişken oluştur ve değeri 100 ata.",opts:[
+    `hiz = 100`,
+    `def hiz: 100`,
+    `if hiz==100`,
+    `hiz()`,
+  ],ans:0,xp:5},
+  {id:"c_op_1",topic:"Operatörler",q:"x değişkeninin 5'ten büyük VE 10'dan küçük olduğu durumu nasıl yazarsın?",opts:[
+    `if x > 5 and x < 10:`,
+    `if x > 5 or x < 10:`,
+    `if x in 5..10:`,
+    `if 5 < x < 10 +`,
+  ],ans:0,xp:10},
+  {id:"c_op_2",topic:"Operatörler",q:"İki sensörden BİRİ tetiklendiğinde alarm çal.",opts:[
+    `if sensor1 or sensor2:\n  alarm()`,
+    `if sensor1 and sensor2:\n  alarm()`,
+    `if not sensor1:\n  alarm()`,
+    `for s in sensor: alarm()`,
+  ],ans:0,xp:10},
+  {id:"c_logic_1",topic:"Mantık",q:"Robot duvara çarpmak üzereyken (mesafe<5) hem dur hem buzzer çal.",opts:[
+    `if mesafe < 5:\n  dur()\n  buzzer()`,
+    `if mesafe < 5: dur()\nif mesafe > 5: buzzer()`,
+    `while mesafe<5: dur()`,
+    `for m in mesafe: dur()`,
+  ],ans:0,xp:12},
+  {id:"c_sumo_1",topic:"Sumo",q:"Rakibi gördüğünde hızlı saldır, yoksa dön.",opts:[
+    `if rakip_var:\n  hizli_ileri()\nelse:\n  don()`,
+    `while rakip_var:\n  don()`,
+    `if not rakip_var:\n  hizli_ileri()`,
+    `for r in rakip: don()`,
+  ],ans:0,xp:15},
+  {id:"c_line_1",topic:"Çizgi Takip",q:"3 sensörlü çizgi takip — orta sensör çizgi görünce ileri.",opts:[
+    `if orta == "siyah":\n  ileri()\nelif sol == "siyah":\n  saga_don()\nelse:\n  sola_don()`,
+    `if orta: dur()`,
+    `while orta: ileri()`,
+    `for s in [sol,orta,sag]: ileri()`,
+  ],ans:0,xp:18},
+];
+
 const getNextLevel=(xp)=>{const cur=getLevel(xp);const idx=LEVELS.indexOf(cur);return idx<LEVELS.length-1?LEVELS[idx+1]:null;};
 
 // ─── FORMAT HELPERS ───
@@ -201,8 +335,10 @@ const NBtn=({a,o,children})=><button onClick={o} style={{fontSize:14,padding:"7p
 export default function App() {
   const data = useData();
   const { loading, currentUser: user, users, progress: prog, logs, classLayout,
+    practiceProg, homeworks, homeworkSubs,
     login: doLogin, logout, addUser, startTask, submitTask, approveTask,
-    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh } = data;
+    rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh,
+    recordPractice, addHomework, removeHomework, sendHomework, reviewHw } = data;
 
   const [page,setPage]=useState("dash");
   const [selS,setSelS]=useState(null);
@@ -313,8 +449,8 @@ export default function App() {
         <div style={{display:"flex",alignItems:"center",gap:10}}><span style={{color:T.orange,display:"flex",alignItems:"center",gap:6}}><I.Bot/><b style={{fontSize:22}}>BerryBot</b></span><span className="resp-hide-phone" style={{fontSize:12,background:T.purple,color:"#fff",padding:"3px 10px",borderRadius:6,fontWeight:700}}>LMS</span></div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
           {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
-          {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
-          {user.role===ROLES.STUDENT&&<NBtn a={page==="dash"} o={()=>nav("dash")}>Görevlerim</NBtn>}
+          {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
+          {user.role===ROLES.STUDENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>🗺️ Görev</NBtn><NBtn a={page==="practice"} o={()=>nav("practice")}>🧠 Practice</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn></>}
           {user.role===ROLES.PARENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>👨‍👩‍👧 Çocuğum</NBtn><NBtn a={page==="cv"} o={()=>nav("cv")}>📜 CV</NBtn></>}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
@@ -339,10 +475,13 @@ export default function App() {
         {user.role===ROLES.INSTRUCTOR&&page==="pend"&&<PendingReviews user={user} users={users} prog={prog} onApprove={handleApprove} onReject={handleReject}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="show"&&<DailyShow users={users} prog={prog} logs={logs} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="tasks"&&<TaskBrowser showAns/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="hw"&&<InstructorHomework user={user} users={users} homeworks={homeworks} subs={homeworkSubs} onAdd={addHomework} onDel={removeHomework} onReview={reviewHw}/>}
 
         {/* ──── STUDENT ──── */}
-        {user.role===ROLES.STUDENT&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)}/>}
-        {user.role===ROLES.STUDENT&&selT&&<StudentTaskView user={user} task={selT} prog={prog} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
+        {user.role===ROLES.STUDENT&&page==="dash"&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)}/>}
+        {user.role===ROLES.STUDENT&&page==="dash"&&selT&&<StudentTaskView user={user} task={selT} prog={prog} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
+        {user.role===ROLES.STUDENT&&page==="practice"&&<PracticeView user={user} practiceProg={practiceProg} onAnswer={recordPractice}/>}
+        {user.role===ROLES.STUDENT&&page==="hw"&&<StudentHomework user={user} homeworks={homeworks} subs={homeworkSubs} onSubmit={sendHomework}/>}
 
         {/* ──── PARENT ──── */}
         {user.role===ROLES.PARENT&&<ParentView parent={user} users={users} prog={prog} classLayout={classLayout} logs={logs} initialTab={page==="cv"?"cv":"class"}/>}
@@ -2865,5 +3004,575 @@ function ParentCVView({child,sp}){
         </div>
       </div>
     </div>
+  </div>);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PRACTICE VIEW — Quiz + Code Challenges
+// ═══════════════════════════════════════════════════════════════
+function PracticeView({user,practiceProg,onAnswer}){
+  const[mode,setMode]=useState("home"); // home | quiz | code | results
+  const[currentQ,setCurrentQ]=useState(null);
+  const[selectedOpt,setSelectedOpt]=useState(null);
+  const[showResult,setShowResult]=useState(false);
+  const[startTime,setStartTime]=useState(null);
+
+  // Stats
+  const quizStats={total:QUIZ.length,correct:practiceProg.filter(p=>p.category==="quiz"&&p.correct>0).length};
+  const codeStats={total:CODE_CHALLENGES.length,correct:practiceProg.filter(p=>p.category==="code"&&p.correct>0).length};
+  const totalXP=practiceProg.reduce((a,p)=>a+(p.xp_earned||0),0);
+
+  const startRandom=(category)=>{
+    const pool=category==="quiz"?QUIZ:CODE_CHALLENGES;
+    // Prefer questions never answered correctly
+    const unsolved=pool.filter(q=>{
+      const pp=practiceProg.find(p=>p.question_id===q.id);
+      return !pp||pp.correct===0;
+    });
+    const target=unsolved.length>0?unsolved:pool;
+    const q=target[Math.floor(Math.random()*target.length)];
+    setCurrentQ({...q,category});
+    setSelectedOpt(null);
+    setShowResult(false);
+    setStartTime(Date.now());
+    setMode(category);
+  };
+
+  const submitAnswer=()=>{
+    if(selectedOpt===null||!currentQ)return;
+    const isCorrect=selectedOpt===currentQ.ans;
+    setShowResult(true);
+    onAnswer({
+      questionId:currentQ.id,
+      category:currentQ.category,
+      topic:currentQ.topic,
+      isCorrect,
+      xp:currentQ.xp,
+    });
+  };
+
+  const next=()=>{
+    if(currentQ)startRandom(currentQ.category);
+  };
+
+  const goHome=()=>{setMode("home");setCurrentQ(null);setSelectedOpt(null);setShowResult(false);};
+
+  // ═══ HOME SCREEN ═══
+  if(mode==="home"){
+    // Topic-wise stats
+    const topics={};
+    [...QUIZ,...CODE_CHALLENGES].forEach(q=>{
+      if(!topics[q.topic])topics[q.topic]={total:0,solved:0,cat:QUIZ.includes(q)?"quiz":"code"};
+      topics[q.topic].total++;
+      const pp=practiceProg.find(p=>p.question_id===q.id);
+      if(pp&&pp.correct>0)topics[q.topic].solved++;
+    });
+
+    return(<div>
+      <style>{`
+        @keyframes pv-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+        @keyframes pv-fade { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .pv-card{animation:pv-fade .5s ease-out backwards}
+      `}</style>
+
+      <div className="pv-card" style={{
+        marginBottom:18,padding:24,borderRadius:20,
+        background:`linear-gradient(135deg,${T.cyan}33,${T.purple}33,#1a0a3a)`,
+        border:`3px solid ${T.cyan}66`,
+      }}>
+        <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+          <div style={{fontSize:48}}>🧠</div>
+          <div style={{flex:1,minWidth:200}}>
+            <h2 style={{margin:0,fontSize:26,color:T.cyan,fontWeight:900}}>Practice Bölümü</h2>
+            <div style={{fontSize:14,color:T.ts,marginTop:4}}>Robotik konseptleri ve kod yazımı pratik et!</div>
+          </div>
+          <div style={{padding:"10px 18px",borderRadius:14,background:`${T.warn}22`,border:`2px solid ${T.warn}55`,textAlign:"center"}}>
+            <div style={{fontSize:11,color:T.tm,fontWeight:700,letterSpacing:1}}>TOPLAM XP</div>
+            <div style={{fontSize:24,fontWeight:900,color:T.warn}}>⚡ {totalXP}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* TWO BIG MODE CARDS */}
+      <div className="pv-card" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:14,marginBottom:18,animationDelay:".1s"}}>
+        <div onClick={()=>startRandom("quiz")} style={{
+          padding:22,borderRadius:18,cursor:"pointer",
+          background:`linear-gradient(135deg,${T.orange}33,${T.warn}22,${T.card})`,
+          border:`3px solid ${T.orange}66`,
+          transition:"transform .2s",
+        }} onMouseOver={e=>e.currentTarget.style.transform="scale(1.02)"} onMouseOut={e=>e.currentTarget.style.transform="scale(1)"}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+            <div style={{width:60,height:60,borderRadius:14,background:`linear-gradient(135deg,${T.orange},${T.od})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,boxShadow:`0 6px 20px ${T.orange}66`}}>🤖</div>
+            <div>
+              <div style={{fontSize:20,fontWeight:900,color:T.orange}}>Robotik Quiz</div>
+              <div style={{fontSize:13,color:T.ts}}>Çoktan seçmeli sorular</div>
+            </div>
+          </div>
+          <div style={{fontSize:13,color:T.ts,marginBottom:10,lineHeight:1.5}}>RGB LED, Motor, Sensörler, IR Kumanda ve daha fazlası hakkında bilgini test et.</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+            <div style={{fontSize:14,color:T.warn,fontWeight:700}}>{quizStats.correct} / {quizStats.total} çözüldü</div>
+            <button style={{padding:"10px 18px",borderRadius:10,border:"none",background:T.orange,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer"}}>▶ Başla</button>
+          </div>
+          <div style={{height:8,borderRadius:4,background:"#0008",marginTop:8,overflow:"hidden"}}>
+            <div style={{height:"100%",borderRadius:4,background:`linear-gradient(90deg,${T.orange},${T.warn})`,width:`${(quizStats.correct/quizStats.total)*100}%`,boxShadow:`0 0 8px ${T.orange}`}}/>
+          </div>
+        </div>
+
+        <div onClick={()=>startRandom("code")} style={{
+          padding:22,borderRadius:18,cursor:"pointer",
+          background:`linear-gradient(135deg,${T.pl}33,${T.cyan}22,${T.card})`,
+          border:`3px solid ${T.pl}66`,
+          transition:"transform .2s",
+        }} onMouseOver={e=>e.currentTarget.style.transform="scale(1.02)"} onMouseOut={e=>e.currentTarget.style.transform="scale(1)"}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+            <div style={{width:60,height:60,borderRadius:14,background:`linear-gradient(135deg,${T.pl},${T.purple})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,boxShadow:`0 6px 20px ${T.pl}66`}}>💻</div>
+            <div>
+              <div style={{fontSize:20,fontWeight:900,color:T.pl}}>Kod Challenge</div>
+              <div style={{fontSize:13,color:T.ts}}>Doğru kodu seç</div>
+            </div>
+          </div>
+          <div style={{fontSize:13,color:T.ts,marginBottom:10,lineHeight:1.5}}>if/else, while, for, fonksiyon ve operatörlerle robot programlama mantığını öğren.</div>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+            <div style={{fontSize:14,color:T.cyan,fontWeight:700}}>{codeStats.correct} / {codeStats.total} çözüldü</div>
+            <button style={{padding:"10px 18px",borderRadius:10,border:"none",background:T.pl,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer"}}>▶ Başla</button>
+          </div>
+          <div style={{height:8,borderRadius:4,background:"#0008",marginTop:8,overflow:"hidden"}}>
+            <div style={{height:"100%",borderRadius:4,background:`linear-gradient(90deg,${T.pl},${T.cyan})`,width:`${(codeStats.correct/codeStats.total)*100}%`,boxShadow:`0 0 8px ${T.pl}`}}/>
+          </div>
+        </div>
+      </div>
+
+      {/* TOPIC BREAKDOWN */}
+      <div className="pv-card" style={{padding:18,borderRadius:18,background:T.card,border:`1px solid ${T.border}`,animationDelay:".2s"}}>
+        <div style={{fontSize:12,color:T.tm,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>📊 Konu Bazlı İlerleme</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))",gap:8}}>
+          {Object.entries(topics).map(([t,s])=>{
+            const pct=s.total>0?(s.solved/s.total)*100:0;
+            const c=s.cat==="quiz"?T.orange:T.pl;
+            return(<div key={t} style={{padding:"10px 12px",borderRadius:10,background:T.dark,border:`1px solid ${c}44`}}>
+              <div style={{fontSize:13,fontWeight:700,color:c,marginBottom:4}}>{t}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <div style={{flex:1,height:6,borderRadius:3,background:"#0008",overflow:"hidden"}}>
+                  <div style={{height:"100%",background:c,width:`${pct}%`,boxShadow:`0 0 4px ${c}`}}/>
+                </div>
+                <span style={{fontSize:11,color:T.ts,fontWeight:700}}>{s.solved}/{s.total}</span>
+              </div>
+            </div>);
+          })}
+        </div>
+      </div>
+    </div>);
+  }
+
+  // ═══ QUESTION SCREEN ═══
+  const isQuiz=currentQ?.category==="quiz";
+  const accentColor=isQuiz?T.orange:T.pl;
+
+  return(<div>
+    <style>{`
+      @keyframes pv-correct { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+      @keyframes pv-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+      @keyframes pv-pop { 0%{opacity:0;transform:scale(.9) translateY(20px)} 100%{opacity:1;transform:scale(1) translateY(0)} }
+      .pv-q{animation:pv-pop .4s cubic-bezier(.34,1.56,.64,1)}
+    `}</style>
+
+    <button onClick={goHome} style={{
+      fontSize:14,padding:"8px 18px",borderRadius:10,
+      background:`${accentColor}22`,color:accentColor,
+      border:`2px solid ${accentColor}44`,cursor:"pointer",
+      marginBottom:14,fontWeight:700,
+    }}>← Practice'e Dön</button>
+
+    <div className="pv-q" style={{
+      padding:24,borderRadius:20,
+      background:`linear-gradient(135deg,${accentColor}22,${T.card})`,
+      border:`3px solid ${accentColor}66`,
+    }}>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexWrap:"wrap"}}>
+        <span style={{fontSize:11,padding:"3px 10px",borderRadius:8,background:`${accentColor}33`,color:accentColor,fontWeight:800,letterSpacing:1,textTransform:"uppercase"}}>
+          {isQuiz?"🤖 Quiz":"💻 Kod"} • {currentQ.topic}
+        </span>
+        <span style={{fontSize:11,padding:"3px 10px",borderRadius:8,background:`${T.warn}22`,color:T.warn,fontWeight:800}}>⚡ {currentQ.xp} XP</span>
+      </div>
+
+      <div style={{fontSize:18,fontWeight:700,color:T.tp,marginBottom:18,lineHeight:1.5}}>
+        {currentQ.q}
+      </div>
+
+      {/* Options */}
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {currentQ.opts.map((opt,i)=>{
+          const selected=selectedOpt===i;
+          const isCorrect=showResult&&i===currentQ.ans;
+          const isWrong=showResult&&selected&&i!==currentQ.ans;
+          return(<button key={i}
+            onClick={()=>!showResult&&setSelectedOpt(i)}
+            disabled={showResult}
+            style={{
+              padding:"14px 18px",borderRadius:12,
+              border:`2px solid ${isCorrect?T.ok:isWrong?T.err:selected?accentColor:T.border}`,
+              background:isCorrect?T.ok+"22":isWrong?T.err+"22":selected?accentColor+"22":T.dark,
+              color:isCorrect?T.ok:isWrong?T.err:T.tp,
+              cursor:showResult?"default":"pointer",
+              textAlign:"left",fontSize:14,
+              fontFamily:isQuiz?"inherit":"'JetBrains Mono','Courier New',monospace",
+              whiteSpace:"pre-wrap",
+              fontWeight:isQuiz?500:600,
+              animation:isCorrect?"pv-correct .5s":isWrong?"pv-shake .4s":"none",
+              transition:"all .2s",
+            }}>
+            <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:26,height:26,borderRadius:"50%",background:isCorrect?T.ok:isWrong?T.err:selected?accentColor:T.border,color:"#fff",marginRight:10,fontSize:13,fontWeight:900,verticalAlign:"middle"}}>{String.fromCharCode(65+i)}</span>
+            {opt}
+            {isCorrect&&<span style={{float:"right",fontSize:18}}>✓</span>}
+            {isWrong&&<span style={{float:"right",fontSize:18}}>✗</span>}
+          </button>);
+        })}
+      </div>
+
+      {/* Action */}
+      <div style={{marginTop:18,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+        {!showResult?(
+          <button onClick={submitAnswer} disabled={selectedOpt===null} style={{
+            padding:"12px 28px",borderRadius:12,border:"none",
+            background:selectedOpt===null?T.border:`linear-gradient(135deg,${accentColor},${accentColor}cc)`,
+            color:"#fff",fontSize:15,fontWeight:800,cursor:selectedOpt===null?"not-allowed":"pointer",
+            boxShadow:selectedOpt!==null?`0 4px 14px ${accentColor}66`:"none",
+          }}>✓ Cevabı Onayla</button>
+        ):(<>
+          <div style={{flex:1}}>
+            {selectedOpt===currentQ.ans?(
+              <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",borderRadius:10,background:`${T.ok}22`,border:`1px solid ${T.ok}55`}}>
+                <span style={{fontSize:24}}>🎉</span>
+                <div>
+                  <div style={{fontSize:15,fontWeight:800,color:T.ok}}>Doğru!</div>
+                  <div style={{fontSize:12,color:T.ts}}>+{currentQ.xp} XP kazandın</div>
+                </div>
+              </div>
+            ):(
+              <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",borderRadius:10,background:`${T.err}22`,border:`1px solid ${T.err}55`}}>
+                <span style={{fontSize:24}}>💪</span>
+                <div>
+                  <div style={{fontSize:15,fontWeight:800,color:T.err}}>Yanlış</div>
+                  <div style={{fontSize:12,color:T.ts}}>Tekrar dene, başaracaksın!</div>
+                </div>
+              </div>
+            )}
+          </div>
+          <button onClick={next} style={{
+            padding:"12px 28px",borderRadius:12,border:"none",
+            background:`linear-gradient(135deg,${accentColor},${accentColor}cc)`,
+            color:"#fff",fontSize:15,fontWeight:800,cursor:"pointer",
+            boxShadow:`0 4px 14px ${accentColor}66`,
+          }}>Sıradaki ▶</button>
+        </>)}
+      </div>
+    </div>
+  </div>);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STUDENT HOMEWORK
+// ═══════════════════════════════════════════════════════════════
+function StudentHomework({user,homeworks,subs,onSubmit}){
+  const[selHw,setSelHw]=useState(null);
+  const[note,setNote]=useState("");
+  const[photo,setPhoto]=useState(null);
+  const[photoPrev,setPhotoPrev]=useState(null);
+
+  // Filter homeworks for this student
+  const myHw=homeworks.filter(h=>{
+    if(h.target_type==="all")return true;
+    if(h.target_type==="student")return h.target_value===user.id;
+    if(h.target_type==="group")return h.target_value===user.grup;
+    return false;
+  });
+
+  const getSub=(hwId)=>subs.find(s=>s.homework_id===hwId);
+
+  const handlePhoto=(e)=>{
+    const f=e.target.files?.[0];
+    if(!f)return;
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=800;let w=img.width,h=img.height;
+      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
+      const c=document.createElement('canvas');
+      c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      const d=c.toDataURL('image/jpeg',0.6);
+      setPhoto(d);setPhotoPrev(d);
+      URL.revokeObjectURL(img.src);
+    };
+    img.src=URL.createObjectURL(f);
+  };
+
+  const handleSubmit=async()=>{
+    if(!photo){alert("Lütfen fotoğraf yükleyin");return;}
+    // Save to IndexedDB via savePhoto util — using same pattern as tasks
+    if(window.indexedDB){
+      const req=indexedDB.open("BerryPhotos",1);
+      req.onupgradeneeded=e=>{e.target.result.createObjectStore("photos",{keyPath:"k"});};
+      req.onsuccess=async e=>{
+        const tx=e.target.result.transaction("photos","readwrite");
+        tx.objectStore("photos").put({k:`hw_${user.id}_${selHw.id}`,d:photo});
+      };
+    }
+    await onSubmit({homeworkId:selHw.id,photoFlag:"local",note});
+    setSelHw(null);setPhoto(null);setPhotoPrev(null);setNote("");
+  };
+
+  if(selHw){
+    const sub=getSub(selHw.id);
+    return(<div>
+      <button onClick={()=>setSelHw(null)} style={{fontSize:14,padding:"8px 18px",borderRadius:10,background:`${T.cyan}22`,color:T.cyan,border:`2px solid ${T.cyan}44`,cursor:"pointer",marginBottom:14,fontWeight:700}}>← Ödevlere Dön</button>
+
+      <div style={{padding:24,borderRadius:20,background:`linear-gradient(135deg,${T.cyan}22,${T.card})`,border:`3px solid ${T.cyan}55`,marginBottom:14}}>
+        <div style={{fontSize:11,color:T.cyan,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:6}}>📝 ÖDEV</div>
+        <h2 style={{margin:"0 0 10px 0",fontSize:24,color:T.tp}}>{selHw.title}</h2>
+        <div style={{fontSize:15,color:T.ts,lineHeight:1.6,marginBottom:14,whiteSpace:"pre-wrap"}}>{selHw.description}</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <span style={{padding:"4px 12px",borderRadius:8,background:`${T.warn}22`,color:T.warn,fontSize:12,fontWeight:700}}>⚡ {selHw.xp} XP</span>
+          {selHw.due_at&&<span style={{padding:"4px 12px",borderRadius:8,background:`${T.err}22`,color:T.err,fontSize:12,fontWeight:700}}>⏰ Son Teslim: {new Date(selHw.due_at).toLocaleDateString("tr-TR")}</span>}
+        </div>
+      </div>
+
+      {sub?(
+        <div style={{padding:20,borderRadius:16,background:T.card,border:`2px solid ${sub.status==="approved"?T.ok:sub.status==="rejected"?T.err:T.pl}66`}}>
+          <div style={{fontSize:11,color:T.tm,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>📤 GÖNDERİLDİ</div>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}}>
+            {sub.status==="pending"&&<span style={{padding:"6px 14px",borderRadius:10,background:`${T.pl}33`,color:T.pl,fontWeight:800}}>⏳ Onay Bekleniyor</span>}
+            {sub.status==="approved"&&<span style={{padding:"6px 14px",borderRadius:10,background:`${T.ok}33`,color:T.ok,fontWeight:800}}>✓ Onaylandı</span>}
+            {sub.status==="rejected"&&<span style={{padding:"6px 14px",borderRadius:10,background:`${T.err}33`,color:T.err,fontWeight:800}}>↻ Reddedildi</span>}
+            <span style={{fontSize:12,color:T.tm}}>{new Date(sub.submitted_at).toLocaleString("tr-TR")}</span>
+          </div>
+          {sub.note&&<div style={{padding:12,background:T.dark,borderRadius:10,marginBottom:10,fontSize:14,color:T.ts}}>📝 Notum: {sub.note}</div>}
+          {sub.instructor_note&&<div style={{padding:12,background:`${T.warn}22`,border:`1px solid ${T.warn}44`,borderRadius:10,marginBottom:10,fontSize:14,color:T.tp,fontStyle:"italic"}}>💬 Eğitmen: "{sub.instructor_note}"</div>}
+          {sub.status==="rejected"&&<button onClick={()=>{setNote(sub.note||"");setPhoto(null);setPhotoPrev(null);}} style={{padding:"10px 20px",borderRadius:10,border:"none",background:T.warn,color:"#fff",fontWeight:800,cursor:"pointer"}}>↻ Tekrar Gönder</button>}
+        </div>
+      ):(
+        <div style={{padding:20,borderRadius:16,background:T.card,border:`2px solid ${T.cyan}55`}}>
+          <div style={{fontSize:11,color:T.cyan,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:10}}>📸 ÖDEVİ TAMAMLA</div>
+          {photoPrev&&<div style={{marginBottom:10,borderRadius:12,overflow:"hidden",border:`2px solid ${T.ok}55`}}><img src={photoPrev} style={{width:"100%",maxHeight:240,objectFit:"contain",background:T.dark,display:"block"}}/></div>}
+          <label style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"14px 20px",borderRadius:12,border:`2px dashed ${T.cyan}66`,background:`${T.cyan}10`,color:T.cyan,cursor:"pointer",fontWeight:700,fontSize:15,marginBottom:10}}>
+            📷 Fotoğraf Yükle
+            <input type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{display:"none"}}/>
+          </label>
+          <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="Notun (isteğe bağlı)" rows={3} style={{width:"100%",padding:12,borderRadius:10,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,fontSize:14,marginBottom:10,resize:"vertical",boxSizing:"border-box"}}/>
+          <button onClick={handleSubmit} disabled={!photo} style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:!photo?T.border:`linear-gradient(135deg,${T.ok},#22a55a)`,color:"#fff",fontSize:16,fontWeight:900,cursor:!photo?"not-allowed":"pointer",boxShadow:photo?`0 4px 16px ${T.ok}55`:"none"}}>✓ Ödevi Gönder</button>
+        </div>
+      )}
+    </div>);
+  }
+
+  return(<div>
+    <div style={{padding:20,borderRadius:18,background:`linear-gradient(135deg,${T.cyan}33,${T.purple}33,#1a0a3a)`,border:`3px solid ${T.cyan}66`,marginBottom:14}}>
+      <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+        <div style={{fontSize:48}}>📝</div>
+        <div style={{flex:1,minWidth:200}}>
+          <h2 style={{margin:0,fontSize:24,color:T.cyan,fontWeight:900}}>Ödevlerim</h2>
+          <div style={{fontSize:13,color:T.ts,marginTop:4}}>Eğitmenin verdiği özel ödevler</div>
+        </div>
+        <div style={{padding:"8px 14px",borderRadius:10,background:`${T.cyan}22`,fontSize:14,color:T.cyan,fontWeight:700}}>{myHw.length} ödev</div>
+      </div>
+    </div>
+
+    {myHw.length===0?(
+      <div style={{padding:40,textAlign:"center",borderRadius:16,background:T.card,border:`1px solid ${T.border}`}}>
+        <div style={{fontSize:48,marginBottom:8,opacity:.5}}>📭</div>
+        <div style={{fontSize:15,color:T.ts}}>Henüz ödev verilmemiş.</div>
+      </div>
+    ):(
+      <div style={{display:"grid",gap:10}}>
+        {myHw.map(h=>{
+          const sub=getSub(h.id);
+          const overdue=h.due_at&&Date.now()>h.due_at&&!sub;
+          return(<div key={h.id} onClick={()=>{setSelHw(h);setPhoto(null);setPhotoPrev(null);setNote("");}} style={{
+            padding:16,borderRadius:14,cursor:"pointer",
+            background:T.card,
+            border:`2px solid ${sub?(sub.status==="approved"?T.ok:sub.status==="rejected"?T.err:T.pl):overdue?T.err:T.cyan}55`,
+            transition:"transform .2s",
+          }} onMouseOver={e=>e.currentTarget.style.transform="translateX(4px)"} onMouseOut={e=>e.currentTarget.style.transform="translateX(0)"}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6,flexWrap:"wrap"}}>
+              <span style={{fontSize:16,fontWeight:800,color:T.tp,flex:1}}>{h.title}</span>
+              {sub?.status==="pending"&&<span style={{fontSize:11,padding:"3px 10px",borderRadius:8,background:`${T.pl}33`,color:T.pl,fontWeight:800}}>⏳ ONAYDA</span>}
+              {sub?.status==="approved"&&<span style={{fontSize:11,padding:"3px 10px",borderRadius:8,background:`${T.ok}33`,color:T.ok,fontWeight:800}}>✓ ONAYLANDI</span>}
+              {sub?.status==="rejected"&&<span style={{fontSize:11,padding:"3px 10px",borderRadius:8,background:`${T.err}33`,color:T.err,fontWeight:800}}>↻ TEKRAR</span>}
+              {!sub&&<span style={{fontSize:11,padding:"3px 10px",borderRadius:8,background:overdue?`${T.err}33`:`${T.cyan}33`,color:overdue?T.err:T.cyan,fontWeight:800}}>{overdue?"⏰ GECİKTİ":"📥 YENİ"}</span>}
+              <span style={{fontSize:11,color:T.warn,fontWeight:700}}>⚡ {h.xp} XP</span>
+            </div>
+            <div style={{fontSize:13,color:T.ts,lineHeight:1.5,whiteSpace:"pre-wrap",overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{h.description}</div>
+            {h.due_at&&<div style={{fontSize:11,color:T.tm,marginTop:6}}>⏰ Son: {new Date(h.due_at).toLocaleDateString("tr-TR")}</div>}
+          </div>);
+        })}
+      </div>
+    )}
+  </div>);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INSTRUCTOR HOMEWORK MANAGER
+// ═══════════════════════════════════════════════════════════════
+function InstructorHomework({user,users,homeworks,subs,onAdd,onDel,onReview}){
+  const[creating,setCreating]=useState(false);
+  const[viewSub,setViewSub]=useState(null);
+  const[form,setForm]=useState({title:"",description:"",xp:50,dueAt:"",targetType:"all",targetValue:""});
+
+  const myStudents=users.filter(u=>u.role==="student"&&u.instructorId===user.id);
+
+  const submit=async()=>{
+    if(!form.title.trim()||!form.description.trim()){alert("Başlık ve açıklama gerekli");return;}
+    await onAdd({
+      title:form.title,
+      description:form.description,
+      xp:parseInt(form.xp)||50,
+      dueAt:form.dueAt?new Date(form.dueAt).getTime():null,
+      targetType:form.targetType,
+      targetValue:form.targetType==="all"?null:form.targetValue,
+    });
+    setForm({title:"",description:"",xp:50,dueAt:"",targetType:"all",targetValue:""});
+    setCreating(false);
+  };
+
+  // View submissions for a homework
+  if(viewSub){
+    const hw=homeworks.find(h=>h.id===viewSub);
+    if(!hw)return null;
+    const hwSubs=subs.filter(s=>s.homework_id===viewSub);
+    return(<div>
+      <button onClick={()=>setViewSub(null)} style={{fontSize:14,padding:"8px 18px",borderRadius:10,background:`${T.cyan}22`,color:T.cyan,border:`2px solid ${T.cyan}44`,cursor:"pointer",marginBottom:14,fontWeight:700}}>← Ödevlere Dön</button>
+
+      <div style={{padding:18,borderRadius:18,background:`${T.cyan}22`,border:`2px solid ${T.cyan}55`,marginBottom:14}}>
+        <h3 style={{margin:0,fontSize:20,color:T.cyan}}>{hw.title}</h3>
+        <div style={{fontSize:13,color:T.ts,marginTop:4}}>{hwSubs.length} öğrenci gönderdi</div>
+      </div>
+
+      {hwSubs.length===0?(
+        <Card><div style={{padding:30,textAlign:"center",color:T.tm}}>Henüz teslim eden olmadı.</div></Card>
+      ):(
+        <div style={{display:"grid",gap:10}}>
+          {hwSubs.map(s=>{
+            const stu=users.find(u=>u.id===s.student_id);
+            return(<HomeworkSubCard key={s.id} sub={s} student={stu} onReview={onReview}/>);
+          })}
+        </div>
+      )}
+    </div>);
+  }
+
+  return(<div>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:10}}>
+      <h2 style={{margin:0,fontSize:22,color:T.cyan}}>📝 Ödev Yönetimi</h2>
+      <button onClick={()=>setCreating(!creating)} style={{
+        padding:"10px 20px",borderRadius:10,border:"none",
+        background:creating?T.err:`linear-gradient(135deg,${T.cyan},${T.purple})`,
+        color:"#fff",fontWeight:800,cursor:"pointer",fontSize:14,
+        boxShadow:`0 4px 14px ${T.cyan}66`,
+      }}>{creating?"✕ İptal":"+ Yeni Ödev"}</button>
+    </div>
+
+    {creating&&<Card style={{marginBottom:14,border:`2px solid ${T.cyan}66`}}>
+      <div style={{fontSize:12,color:T.cyan,fontWeight:800,letterSpacing:2,marginBottom:12,textTransform:"uppercase"}}>📝 YENİ ÖDEV OLUŞTUR</div>
+      <input value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="Ödev başlığı" style={{width:"100%",padding:"10px 14px",borderRadius:10,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,fontSize:14,marginBottom:10,boxSizing:"border-box"}}/>
+      <textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="Açıklama (öğrencilere talimat)" rows={4} style={{width:"100%",padding:"10px 14px",borderRadius:10,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,fontSize:14,marginBottom:10,boxSizing:"border-box",resize:"vertical"}}/>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginBottom:10}}>
+        <div>
+          <div style={{fontSize:11,color:T.tm,fontWeight:700,marginBottom:4}}>⚡ XP</div>
+          <input type="number" value={form.xp} onChange={e=>setForm({...form,xp:e.target.value})} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,boxSizing:"border-box"}}/>
+        </div>
+        <div>
+          <div style={{fontSize:11,color:T.tm,fontWeight:700,marginBottom:4}}>⏰ SON TESLİM</div>
+          <input type="date" value={form.dueAt} onChange={e=>setForm({...form,dueAt:e.target.value})} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,boxSizing:"border-box"}}/>
+        </div>
+        <div>
+          <div style={{fontSize:11,color:T.tm,fontWeight:700,marginBottom:4}}>🎯 HEDEF</div>
+          <select value={form.targetType} onChange={e=>setForm({...form,targetType:e.target.value,targetValue:""})} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,boxSizing:"border-box"}}>
+            <option value="all">Tüm öğrenciler</option>
+            <option value="student">Belirli öğrenci</option>
+            <option value="group">Grup</option>
+          </select>
+        </div>
+      </div>
+      {form.targetType==="student"&&<select value={form.targetValue} onChange={e=>setForm({...form,targetValue:e.target.value})} style={{width:"100%",padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,marginBottom:10,boxSizing:"border-box"}}><option value="">Öğrenci seç</option>{myStudents.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select>}
+      {form.targetType==="group"&&<input value={form.targetValue} onChange={e=>setForm({...form,targetValue:e.target.value})} placeholder="Grup adı (örn: A grubu)" style={{width:"100%",padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,marginBottom:10,boxSizing:"border-box"}}/>}
+      <button onClick={submit} style={{padding:"12px 28px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.ok},#22a55a)`,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer",boxShadow:`0 4px 14px ${T.ok}55`}}>✓ Ödev Oluştur</button>
+    </Card>}
+
+    {homeworks.length===0?(
+      <Card><div style={{padding:30,textAlign:"center",color:T.tm}}>Henüz ödev yok.</div></Card>
+    ):(
+      <div style={{display:"grid",gap:10}}>
+        {homeworks.map(h=>{
+          const hwSubs=subs.filter(s=>s.homework_id===h.id);
+          const pending=hwSubs.filter(s=>s.status==="pending").length;
+          return(<div key={h.id} style={{padding:14,borderRadius:12,background:T.card,border:`1px solid ${T.border}`}}>
+            <div style={{display:"flex",alignItems:"flex-start",gap:10,flexWrap:"wrap"}}>
+              <div style={{flex:1,minWidth:200}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}}>
+                  <span style={{fontSize:16,fontWeight:800,color:T.tp}}>{h.title}</span>
+                  {h.target_type==="all"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:6,background:T.purple+"33",color:T.pl}}>TÜM SINIF</span>}
+                  {h.target_type==="student"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:6,background:T.cyan+"33",color:T.cyan}}>BİREYSEL</span>}
+                  <span style={{fontSize:11,color:T.warn,fontWeight:700}}>⚡ {h.xp} XP</span>
+                </div>
+                <div style={{fontSize:12,color:T.ts,marginBottom:6,overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{h.description}</div>
+                <div style={{fontSize:11,color:T.tm}}>{new Date(h.created_at).toLocaleDateString("tr-TR")}{h.due_at&&` • Son: ${new Date(h.due_at).toLocaleDateString("tr-TR")}`}</div>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:4,alignItems:"flex-end"}}>
+                <button onClick={()=>setViewSub(h.id)} style={{padding:"6px 14px",borderRadius:8,border:"none",background:T.cyan,color:"#fff",fontWeight:700,cursor:"pointer",fontSize:13,whiteSpace:"nowrap"}}>{hwSubs.length} teslim {pending>0&&<span style={{background:T.warn,color:"#000",padding:"1px 6px",borderRadius:6,marginLeft:4,fontSize:11}}>{pending}</span>}</button>
+                <button onClick={()=>{if(confirm("Ödevi silmek istediğinden emin misin?"))onDel(h.id);}} style={{padding:"4px 10px",borderRadius:8,border:`1px solid ${T.err}55`,background:"transparent",color:T.err,cursor:"pointer",fontSize:11,fontWeight:700}}>✕ Sil</button>
+              </div>
+            </div>
+          </div>);
+        })}
+      </div>
+    )}
+  </div>);
+}
+
+// ═══ Sub-component for reviewing a single homework submission ═══
+function HomeworkSubCard({sub,student,onReview}){
+  const[showImg,setShowImg]=useState(false);
+  const[localImg,setLocalImg]=useState(null);
+  const[note,setNote]=useState(sub.instructor_note||"");
+
+  useEffect(()=>{
+    if(sub.photo==="local"){
+      // Try to load from IndexedDB (only works if this is the same device that submitted)
+      const req=indexedDB.open("BerryPhotos",1);
+      req.onsuccess=e=>{
+        try{
+          const tx=e.target.result.transaction("photos","readonly");
+          const r=tx.objectStore("photos").get(`hw_${sub.student_id}_${sub.homework_id}`);
+          r.onsuccess=()=>{if(r.result)setLocalImg(r.result.d);};
+        }catch(_){}
+      };
+    }
+  },[sub]);
+
+  return(<div style={{padding:14,borderRadius:12,background:T.card,border:`2px solid ${sub.status==="approved"?T.ok:sub.status==="rejected"?T.err:T.pl}55`}}>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
+      <div style={{width:36,height:36,borderRadius:"50%",background:T.orange+"22",color:T.orange,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,border:`1px solid ${T.orange}44`}}>{student?.name?.[0]||"?"}</div>
+      <div style={{flex:1,minWidth:120}}>
+        <div style={{fontSize:14,fontWeight:700}}>{student?.name||"?"}</div>
+        <div style={{fontSize:11,color:T.tm}}>{new Date(sub.submitted_at).toLocaleString("tr-TR")}</div>
+      </div>
+      {sub.status==="pending"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:6,background:T.pl+"33",color:T.pl,fontWeight:800}}>⏳ ONAYDA</span>}
+      {sub.status==="approved"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:6,background:T.ok+"33",color:T.ok,fontWeight:800}}>✓</span>}
+      {sub.status==="rejected"&&<span style={{fontSize:10,padding:"2px 8px",borderRadius:6,background:T.err+"33",color:T.err,fontWeight:800}}>↻</span>}
+    </div>
+    {sub.note&&<div style={{padding:8,background:T.dark,borderRadius:8,fontSize:13,color:T.ts,marginBottom:8}}>📝 {sub.note}</div>}
+    {localImg?(
+      <img src={localImg} onClick={()=>setShowImg(true)} style={{maxWidth:"100%",maxHeight:200,objectFit:"contain",borderRadius:10,cursor:"zoom-in",background:T.dark,marginBottom:8}}/>
+    ):sub.photo==="local"&&(
+      <div style={{padding:10,background:T.dark,borderRadius:8,fontSize:12,color:T.tm,fontStyle:"italic",marginBottom:8}}>📸 Fotoğraf öğrencinin cihazında kayıtlı (bu cihazdan görüntülenemez)</div>
+    )}
+    {showImg&&localImg&&<div onClick={()=>setShowImg(false)} style={{position:"fixed",inset:0,zIndex:100,background:"#000e",display:"flex",alignItems:"center",justifyContent:"center",cursor:"zoom-out"}}><img src={localImg} style={{maxWidth:"95vw",maxHeight:"95vh",objectFit:"contain"}}/></div>}
+    {sub.instructor_note&&sub.status!=="pending"&&<div style={{padding:8,background:T.warn+"22",borderRadius:8,fontSize:13,color:T.tp,fontStyle:"italic",marginBottom:8}}>💬 {sub.instructor_note}</div>}
+    {sub.status==="pending"&&<>
+      <input value={note} onChange={e=>setNote(e.target.value)} placeholder="Geri bildirim (isteğe bağlı)" style={{width:"100%",padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.dark,color:T.tp,fontSize:13,marginBottom:8,boxSizing:"border-box"}}/>
+      <div style={{display:"flex",gap:8}}>
+        <button onClick={()=>onReview({submissionId:sub.id,status:"approved",instructorNote:note})} style={{flex:1,padding:"8px 14px",borderRadius:8,border:"none",background:T.ok,color:"#fff",fontWeight:700,cursor:"pointer"}}>✓ Onayla</button>
+        <button onClick={()=>onReview({submissionId:sub.id,status:"rejected",instructorNote:note||"Tekrar gönder"})} style={{flex:1,padding:"8px 14px",borderRadius:8,border:"none",background:T.err,color:"#fff",fontWeight:700,cursor:"pointer"}}>✗ Reddet</button>
+      </div>
+    </>}
   </div>);
 }

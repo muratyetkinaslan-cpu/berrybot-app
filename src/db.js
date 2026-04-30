@@ -272,3 +272,122 @@ export function subscribeToAll(onUpdate) {
   });
   return () => channels.forEach(ch => supabase.removeChannel(ch));
 }
+
+// ═══════════════════════════════════════════════════════════════
+// PRACTICE PROGRESS CRUD
+// ═══════════════════════════════════════════════════════════════
+export async function fetchPracticeProgress(studentId) {
+  const { data, error } = await supabase.from('bb_practice_progress')
+    .select('*').eq('student_id', studentId);
+  if (error) { console.error('fetchPractice', error); return []; }
+  return data || [];
+}
+
+export async function recordPracticeAttempt({ studentId, questionId, category, topic, isCorrect, xp = 5 }) {
+  const now = Date.now();
+  const { data: existing } = await supabase.from('bb_practice_progress')
+    .select('*').eq('student_id', studentId).eq('question_id', questionId).maybeSingle();
+
+  if (existing) {
+    const update = {
+      attempts: existing.attempts + 1,
+      last_attempt_at: now,
+    };
+    if (isCorrect) {
+      update.correct = existing.correct + 1;
+      if (!existing.first_correct_at) {
+        update.first_correct_at = now;
+        update.xp_earned = (existing.xp_earned || 0) + xp;
+      }
+    }
+    await supabase.from('bb_practice_progress')
+      .update(update).eq('id', existing.id);
+  } else {
+    await supabase.from('bb_practice_progress').insert({
+      student_id: studentId,
+      question_id: questionId,
+      category, topic,
+      attempts: 1,
+      correct: isCorrect ? 1 : 0,
+      last_attempt_at: now,
+      first_correct_at: isCorrect ? now : null,
+      xp_earned: isCorrect ? xp : 0,
+    });
+  }
+  addLog({ type: 'practice_attempt', userId: studentId, taskId: questionId, detail: `${topic}: ${isCorrect?'✓':'✗'}` });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOMEWORK CRUD
+// ═══════════════════════════════════════════════════════════════
+export async function fetchHomework() {
+  const { data, error } = await supabase.from('bb_homework')
+    .select('*').eq('active', true).order('created_at', { ascending: false });
+  if (error) { console.error('fetchHomework', error); return []; }
+  return data || [];
+}
+
+export async function createHomework({ instructorId, title, description, dueAt, xp, targetType, targetValue }) {
+  const { data, error } = await supabase.from('bb_homework').insert({
+    instructor_id: instructorId,
+    title, description,
+    due_at: dueAt,
+    xp: xp || 50,
+    target_type: targetType || 'all',
+    target_value: targetValue || null,
+    created_at: Date.now(),
+    active: true,
+  }).select().single();
+  if (error) { console.error('createHomework', error); return null; }
+  addLog({ type: 'homework_created', userId: instructorId, detail: `Ödev oluşturuldu: ${title}` });
+  return data;
+}
+
+export async function deleteHomework(id, instructorId) {
+  await supabase.from('bb_homework').update({ active: false }).eq('id', id);
+  addLog({ type: 'homework_deleted', userId: instructorId, detail: `Ödev silindi: #${id}` });
+}
+
+export async function fetchHomeworkSubmissions(homeworkId) {
+  const q = homeworkId
+    ? supabase.from('bb_homework_submission').select('*').eq('homework_id', homeworkId)
+    : supabase.from('bb_homework_submission').select('*');
+  const { data, error } = await q;
+  if (error) { console.error('fetchSubmissions', error); return []; }
+  return data || [];
+}
+
+export async function submitHomework({ homeworkId, studentId, photoFlag, note }) {
+  const now = Date.now();
+  const { data: existing } = await supabase.from('bb_homework_submission')
+    .select('*').eq('homework_id', homeworkId).eq('student_id', studentId).maybeSingle();
+  if (existing) {
+    await supabase.from('bb_homework_submission').update({
+      status: 'pending',
+      photo: photoFlag,
+      note: note || null,
+      submitted_at: now,
+      reviewed_at: null,
+      instructor_note: null,
+    }).eq('id', existing.id);
+  } else {
+    await supabase.from('bb_homework_submission').insert({
+      homework_id: homeworkId,
+      student_id: studentId,
+      status: 'pending',
+      photo: photoFlag,
+      note: note || null,
+      submitted_at: now,
+    });
+  }
+  addLog({ type: 'homework_submitted', userId: studentId, detail: `Ödev gönderildi: #${homeworkId}` });
+}
+
+export async function reviewHomework({ submissionId, status, instructorNote, instructorId }) {
+  await supabase.from('bb_homework_submission').update({
+    status,
+    instructor_note: instructorNote || null,
+    reviewed_at: Date.now(),
+  }).eq('id', submissionId);
+  addLog({ type: 'homework_reviewed', userId: instructorId, detail: `${status}: #${submissionId}` });
+}
