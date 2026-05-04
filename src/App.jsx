@@ -5604,58 +5604,41 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
     finally { setRefreshing(false); }
   };
 
-  // Merge: customTasks (from DB) override hardcoded TASKS for BerryBot kit
-  // For Tank/PicoBricks, only show customTasks
-  const kitTasks = (() => {
-    // Defensive: filter only matching kit, treat missing kit as berrybot (legacy)
-    const dbTasks = customTasks.filter(t => (t.kit || "berrybot") === selKit);
-    if (selKit !== "berrybot") {
-      return dbTasks.sort((a, b) => a.task_id - b.task_id);
-    }
-    // BerryBot: merge default TASKS with customTasks (DB version wins)
-    const dbMap = new Map(dbTasks.map(t => [t.task_id, t]));
-    const merged = TASKS.map(t => {
-      const fromDb = dbMap.get(t.id);
-      if (fromDb) return fromDb;
-      // Convert TASKS-format to customTask-format for editor
-      return {
-        id: null, // means "not in DB yet"
-        kit: "berrybot",
-        task_id: t.id,
-        title: t.title,
-        category: t.cat,
-        difficulty: t.diff,
-        expected_min: t.expectedMin,
-        xp: t.xp,
-        emoji: t.img,
-        description: t.desc,
-        answer: t.answer || "",
-        learnings: t.learnings || [],
-        image_url: "",
-        video_url: "",
-        answer_image_url: "",
-        position: t.id - 1,
-        _isDefault: true, // marker — not yet customized
-      };
-    });
-    // Add any DB tasks with task_id > 36 (admin added beyond defaults)
-    dbTasks.filter(t => t.task_id > TASKS.length).forEach(t => merged.push(t));
-    return merged.sort((a, b) => a.task_id - b.task_id);
-  })();
+  // Each kit shows ONLY its own admin-added tasks from bb_tasks (DB).
+  // BerryBot's 36 hardcoded defaults are NOT auto-imported here — they live in TASKS array
+  // and are used by MissionBoard for backwards compatibility.
+  // To customize a default, admin can manually create a task with same task_id (1-36) for berrybot.
+  const kitTasks = customTasks
+    .filter(t => (t.kit || "berrybot") === selKit)
+    .sort((a, b) => a.task_id - b.task_id);
 
   const kitInfo = KITS[selKit];
 
   const empty = {
     kit: selKit,
-    task_id: (kitTasks.length > 0 ? Math.max(...kitTasks.map(t => t.task_id)) + 1 : 1),
+    task_id: 1,  // computed in startEdit
     title: "", category: "", difficulty: 1, expected_min: 15, xp: 10, emoji: "📋",
     description: "", answer: "",
     learnings: [],
     image_url: "", video_url: "", answer_image_url: "",
-    position: kitTasks.length,
+    position: 0,
   };
 
-  const startEdit = (task) => setEditing(task ? { ...task, learnings: task.learnings || [] } : { ...empty, kit: selKit, task_id: kitTasks.length + 1, position: kitTasks.length });
+  const startEdit = (task) => {
+    if (task) {
+      setEditing({ ...task, learnings: task.learnings || [] });
+    } else {
+      // For NEW task: next task_id = max existing + 1, or 1 if none
+      const existingIds = kitTasks.map(t => t.task_id);
+      const nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+      setEditing({
+        ...empty,
+        kit: selKit,
+        task_id: nextId,
+        position: kitTasks.length,
+      });
+    }
+  };
 
   const handleUpload = async (type, file) => {
     if (!file || !editing) return;
@@ -5686,8 +5669,35 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
       alert("Başlık ve kategori zorunlu");
       return;
     }
-    await onSave(editing);
-    setEditing(null);
+    // Strip the _isDefault marker and other client-only fields before save
+    const payload = {
+      kit: editing.kit,
+      task_id: editing.task_id,
+      title: editing.title.trim(),
+      category: editing.category.trim(),
+      difficulty: editing.difficulty || 1,
+      expected_min: editing.expected_min || 15,
+      xp: editing.xp || 10,
+      emoji: editing.emoji || "📋",
+      description: editing.description || "",
+      answer: editing.answer || "",
+      learnings: editing.learnings || [],
+      image_url: editing.image_url || null,
+      video_url: editing.video_url || null,
+      answer_image_url: editing.answer_image_url || null,
+      position: editing.position || 0,
+    };
+    try {
+      const result = await onSave(payload);
+      if (result === null || result === undefined || result === false) {
+        alert("⚠ Görev kaydedilemedi. Konsolu kontrol et (F12).");
+        return;
+      }
+      setEditing(null);
+    } catch (err) {
+      console.error("save task error:", err);
+      alert("⚠ Hata: " + (err?.message || "Bilinmeyen hata. Konsolu kontrol et (F12)."));
+    }
   };
 
   // ─── EDITOR FORM ───
@@ -5888,35 +5898,35 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
           <div style={{ fontSize: 12, color: T.tm, marginTop: 4 }}>Yukarıdaki butonla ekle</div>
         </div>
       ) : (
-        <div style={{ display: "grid", gap: 8 }}>
-          {kitTasks.map(t => (
-            <div key={t.id} onClick={() => startEdit(t)} style={{
-              padding: 12, borderRadius: 12, cursor: "pointer",
-              background: T.card,
-              border: `1px solid ${T.border}`,
-              display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
-              transition: "transform .15s",
-            }} onMouseOver={e => e.currentTarget.style.transform = "translateX(4px)"} onMouseOut={e => e.currentTarget.style.transform = "translateX(0)"}>
-              <span style={{ fontSize: 11, fontFamily: "monospace", color: T.tm, fontWeight: 700, minWidth: 30 }}>#{t.task_id}</span>
-              <span style={{ fontSize: 24 }}>{t.emoji}</span>
-              <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: T.tp, marginBottom: 2 }}>{t.title}</div>
-                <div style={{ fontSize: 11, color: T.ts, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  <span style={{ padding: "1px 7px", borderRadius: 5, background: T.purple + "22", color: T.pl, fontWeight: 600 }}>{t.category}</span>
-                  <span style={{ color: T.warn, fontWeight: 700 }}>+{t.xp} XP</span>
-                  <span style={{ color: T.cyan }}>⏱ {t.expected_min}dk</span>
-                  <span>{"★".repeat(t.difficulty)}</span>
+          <div style={{ display: "grid", gap: 8 }}>
+            {kitTasks.map(t => (
+              <div key={`${t.kit}-${t.task_id}`} onClick={() => startEdit(t)} style={{
+                padding: 12, borderRadius: 12, cursor: "pointer",
+                background: T.card,
+                border: `1px solid ${T.border}`,
+                display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+                transition: "transform .15s",
+              }} onMouseOver={e => e.currentTarget.style.transform = "translateX(4px)"} onMouseOut={e => e.currentTarget.style.transform = "translateX(0)"}>
+                <span style={{ fontSize: 11, fontFamily: "monospace", color: T.tm, fontWeight: 700, minWidth: 30 }}>#{t.task_id}</span>
+                <span style={{ fontSize: 24 }}>{t.emoji}</span>
+                <div style={{ flex: 1, minWidth: 180 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.tp, marginBottom: 2 }}>{t.title}</div>
+                  <div style={{ fontSize: 11, color: T.ts, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <span style={{ padding: "1px 7px", borderRadius: 5, background: T.purple + "22", color: T.pl, fontWeight: 600 }}>{t.category}</span>
+                    <span style={{ color: T.warn, fontWeight: 700 }}>+{t.xp} XP</span>
+                    <span style={{ color: T.cyan }}>⏱ {t.expected_min}dk</span>
+                    <span>{"★".repeat(t.difficulty)}</span>
+                  </div>
                 </div>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {t.image_url && <span title="Görsel var" style={{ fontSize: 16 }}>📷</span>}
+                  {t.video_url && <span title="Video var" style={{ fontSize: 16 }}>▶️</span>}
+                  {t.answer_image_url && <span title="Cevap var" style={{ fontSize: 16 }}>🗝️</span>}
+                </div>
+                <span style={{ fontSize: 16, color: T.tm }}>▶</span>
               </div>
-              <div style={{ display: "flex", gap: 4 }}>
-                {t.image_url && <span title="Görsel var" style={{ fontSize: 16 }}>📷</span>}
-                {t.video_url && <span title="Video var" style={{ fontSize: 16 }}>▶️</span>}
-                {t.answer_image_url && <span title="Cevap var" style={{ fontSize: 16 }}>🗝️</span>}
-              </div>
-              <span style={{ fontSize: 16, color: T.tm }}>▶</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
       )}
     </div>
   );
