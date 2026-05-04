@@ -547,24 +547,28 @@ export async function upsertTask(t) {
     addLog({ type: 'task_created', detail: `${t.kit} #${t.task_id}: ${t.title}` });
 
     // Auto-seed progress rows for all students of this kit.
-    // Simple rule: in task_id order, the FIRST task that isn't approved becomes 'active',
-    // all later tasks become 'locked'. In-flight statuses (in_progress, pending_review,
-    // rejected) are preserved.
+    // Rule: in task_id order (ascending), the FIRST task that isn't approved/in-flight becomes 'active',
+    // all later tasks become 'locked'. In-flight statuses (in_progress, pending_review, rejected)
+    // are preserved. Approved tasks ALWAYS preserved (student already finished them).
     try {
       const { data: kitStudents } = await supabase.from('bb_users')
         .select('id').eq('role', 'student').eq('kit', t.kit);
       if (kitStudents && kitStudents.length > 0) {
-        // All currently active tasks for this kit, sorted by task_id
+        // All currently active tasks for this kit, sorted by task_id ascending
         const { data: allKitTasks } = await supabase.from('bb_tasks')
-          .select('task_id').eq('kit', t.kit).eq('active', true).order('task_id');
-        const taskIds = (allKitTasks || []).map(x => x.task_id);
+          .select('task_id').eq('kit', t.kit).eq('active', true);
+        const taskIds = (allKitTasks || [])
+          .map(x => parseInt(x.task_id))
+          .filter(n => !isNaN(n))
+          .sort((a, b) => a - b);  // explicit ascending sort
+        console.log('💾 Auto-seed task_ids (sorted):', taskIds);
 
         const PRESERVE = new Set(['approved', 'in_progress', 'pending_review', 'rejected']);
 
         for (const s of kitStudents) {
           const { data: existingProgress } = await supabase.from('bb_progress')
             .select('task_id, status').eq('student_id', s.id).eq('kit', t.kit);
-          const progMap = new Map((existingProgress || []).map(p => [p.task_id, p.status]));
+          const progMap = new Map((existingProgress || []).map(p => [parseInt(p.task_id), p.status]));
 
           const newRows = [];
           let activeAssigned = false;
@@ -572,8 +576,15 @@ export async function upsertTask(t) {
             const cur = progMap.get(tid);
             let status;
             if (cur && PRESERVE.has(cur)) {
-              status = cur; // keep
+              // Already approved/in-flight — KEEP IT (don't disturb student progress)
+              status = cur;
+              // If approved, the active slot moves to next non-approved task
+              // If in_progress/pending_review/rejected — student is on this task, NO active needed
+              if (cur !== 'approved') {
+                activeAssigned = true; // student already on a task, no other active
+              }
             } else if (!activeAssigned) {
+              // First non-approved-or-in-flight task → active
               status = 'active';
               activeAssigned = true;
             } else {
@@ -581,6 +592,7 @@ export async function upsertTask(t) {
             }
             newRows.push({ student_id: s.id, task_id: tid, status, kit: t.kit });
           }
+          console.log(`💾 Student ${s.id}:`, newRows.map(r => `${r.task_id}=${r.status}`).join(', '));
 
           if (newRows.length > 0) {
             const { error: progErr } = await supabase.from('bb_progress')
@@ -588,7 +600,7 @@ export async function upsertTask(t) {
             if (progErr) console.error(`seed progress for ${s.id}:`, progErr);
           }
         }
-        console.log(`Re-seeded progress for ${kitStudents.length} ${t.kit} students`);
+        console.log(`💾 Re-seeded progress for ${kitStudents.length} ${t.kit} students`);
       }
     } catch (e) {
       console.error('auto-seed progress failed:', e);

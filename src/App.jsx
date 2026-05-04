@@ -31,12 +31,12 @@ const KITS = {
     bgGradient: "linear-gradient(135deg,#0f0828,#2a1050,#1a0a3a)",
     Component3D: BerryBot3D,
     theme: {
-      orange: "#FF8800",
-      od: "#cc6a00",
-      ol: "#FFA940",
-      purple: "#6B3FA0",
-      pl: "#9B7FCB",
-      pd: "#4A2880",
+      // Brand colors
+      orange: "#FF8800", od: "#cc6a00", ol: "#FFA940",
+      purple: "#6B3FA0", pl: "#9B7FCB", pd: "#4A2880",
+      // Base UI palette (mor tonları)
+      bg: "#1a1035", card: "#231845", input: "#15102a", dark: "#110d20",
+      border: "#3a2860", tp: "#f0e8ff", ts: "#a090c0", tm: "#6b5a90",
     },
   },
   tank: {
@@ -50,12 +50,12 @@ const KITS = {
     bgGradient: "linear-gradient(135deg,#0a1f15,#143e2a,#0f2e20)",
     Component3D: TankRobot3D,
     theme: {
-      orange: "#4ade80",   // green primary (was orange)
-      od: "#16a34a",
-      ol: "#86efac",
-      purple: "#1f6840",
-      pl: "#4ade80",
-      pd: "#0f4d2a",
+      // Brand colors (yeşil)
+      orange: "#4ade80", od: "#16a34a", ol: "#86efac",
+      purple: "#22c55e", pl: "#4ade80", pd: "#15803d",
+      // Base UI palette (yeşil-asker tonları)
+      bg: "#0a1410", card: "#0f1f17", input: "#070d0a", dark: "#040806",
+      border: "#1f3a2a", tp: "#e8f5ee", ts: "#90c0a0", tm: "#5a7a68",
     },
   },
   picobricks: {
@@ -69,12 +69,12 @@ const KITS = {
     bgGradient: "linear-gradient(135deg,#2a1505,#3a1f08,#1f1004)",
     Component3D: PicoBricks3D,
     theme: {
-      orange: "#fb923c",
-      od: "#ea580c",
-      ol: "#fdba74",
-      purple: "#a16207",
-      pl: "#fbbf24",
-      pd: "#7c2d12",
+      // Brand colors (turuncu)
+      orange: "#fb923c", od: "#ea580c", ol: "#fdba74",
+      purple: "#f59e0b", pl: "#fbbf24", pd: "#b45309",
+      // Base UI palette (sıcak turuncu-kahverengi tonları)
+      bg: "#1a0e05", card: "#241608", input: "#0f0803", dark: "#0a0502",
+      border: "#3a2810", tp: "#fff5e8", ts: "#c0a090", tm: "#7a5a48",
     },
   },
 };
@@ -89,12 +89,10 @@ const T = { bg:"#1a1035", card:"#231845", input:"#15102a", dark:"#110d20", purpl
 const applyKitTheme = (kitId) => {
   const theme = KITS[kitId]?.theme;
   if (!theme) return;
-  T.orange = theme.orange;
-  T.od = theme.od;
-  T.ol = theme.ol;
-  T.purple = theme.purple;
-  T.pl = theme.pl;
-  T.pd = theme.pd;
+  // Mutate every key from the theme onto T
+  for (const key of Object.keys(theme)) {
+    T[key] = theme[key];
+  }
 };
 
 // ─── TASK IMAGE COMPONENT ───
@@ -5935,7 +5933,15 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
             <span style={{ fontSize: 20 }}>{k.icon}</span>
             <span>{k.name}</span>
             <span style={{ fontSize: 11, padding: "1px 7px", borderRadius: 6, background: selKit === k.id ? k.primaryColor + "33" : T.border, opacity: .8 }}>
-              {customTasks.filter(t => (t.kit || "berrybot") === k.id).length}
+              {(() => {
+                const customCount = customTasks.filter(t => (t.kit || "berrybot") === k.id).length;
+                // BerryBot has 36 hardcoded templates plus any DB additions beyond #36
+                if (k.id === "berrybot") {
+                  const beyondDefault = customTasks.filter(t => (t.kit || "berrybot") === "berrybot" && t.task_id > 36).length;
+                  return TASKS.length + beyondDefault;
+                }
+                return customCount;
+              })()}
             </span>
           </button>
         ))}
