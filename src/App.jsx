@@ -3,6 +3,7 @@ import { useData, getLocalPhoto } from "./useData";
 import BerryBot3D from "./BerryBot3D";
 import TankRobot3D from "./TankRobot3D";
 import PicoBricks3D from "./PicoBricks3D";
+import Robot3DPreview from "./Robot3DPreview";
 
 // ═══════════════════════════════════════════════════════════
 //  BerryBot LMS — Production (Supabase)
@@ -5001,211 +5002,238 @@ function HomeworkSubCard({sub,student,onReview}){
 // ═══════════════════════════════════════════════════════════════
 // KIT SELECTOR — İlk açılışta kit seçim ekranı
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// KIT SELECTOR — Minimalist premium kit picker
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// KIT SELECTOR — Oyun karakteri seçimi tarzı
+// ═══════════════════════════════════════════════════════════════
 function KitSelector({ onSelect }) {
-  const [hovering, setHovering] = useState("berrybot");
+  const [selected, setSelected] = useState("berrybot");
+  const kit = KITS[selected];
 
   return (
     <div style={{
       minHeight: "100vh",
-      background: KITS[hovering]?.bgGradient || KITS.berrybot.bgGradient,
+      background: kit.bgGradient,
       transition: "background 0.6s ease",
-      padding: "20px",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
       position: "relative",
       overflow: "hidden",
+      padding: "20px",
     }}>
       <style>{`
-        @keyframes ks-twinkle { 0%,100%{opacity:.3} 50%{opacity:1} }
-        @keyframes ks-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes ks-twinkle { 0%,100%{opacity:.2} 50%{opacity:1} }
         @keyframes ks-fade { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes ks-glow { 0%,100%{box-shadow:0 8px 32px var(--gc)55,0 0 0 1px var(--gc)33} 50%{box-shadow:0 12px 48px var(--gc)88,0 0 0 2px var(--gc)66} }
-        .ks-card { animation: ks-fade .6s ease-out backwards; transition: all .3s cubic-bezier(.34,1.56,.64,1); }
-        .ks-card:hover { transform: scale(1.04) translateY(-8px); }
-        .ks-card.active { animation: ks-glow 2s infinite, ks-fade .6s ease-out backwards; }
-        /* Constrain full-screen 3D components to fit card */
-        .robot-preview-wrapper { contain: layout size style paint; }
-        .robot-preview-wrapper > div,
-        .robot-preview-wrapper > div > div { height: 100% !important; min-height: 0 !important; max-height: 100% !important; }
-        .robot-preview-wrapper [class*="h-screen"] { height: 100% !important; min-height: 0 !important; }
-        /* Hide the original component's header bars and toolbars */
-        .robot-preview-wrapper > div > div:first-child:has(button) { display: none !important; }
-        .robot-preview-wrapper button { display: none !important; }
-        .robot-preview-wrapper [class*="border-b"] { display: none !important; }
-        .robot-preview-wrapper [class*="px-6 py-4"] { display: none !important; }
-        .robot-preview-wrapper [class*="absolute top"] { display: none !important; }
-        .robot-preview-wrapper [class*="absolute bottom"] { display: none !important; }
+        @keyframes ks-glow-pulse { 0%,100%{filter:drop-shadow(0 0 30px var(--kc)) drop-shadow(0 0 60px var(--kc))} 50%{filter:drop-shadow(0 0 50px var(--kc)) drop-shadow(0 0 100px var(--kc))} }
+        @keyframes ks-shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+        .ks-stage { animation: ks-fade .8s ease-out; }
+        .ks-arrow { transition: all .2s; }
+        .ks-arrow:hover { transform: scale(1.15); }
+        .ks-arrow:active { transform: scale(0.95); }
+        .ks-cta { transition: all .2s; }
+        .ks-cta:hover { transform: translateY(-3px) scale(1.03); }
+        .ks-cta:active { transform: translateY(0) scale(0.98); }
       `}</style>
 
-      {/* Background stars */}
-      {[...Array(30)].map((_, i) => (
+      {/* Background twinkles */}
+      {[...Array(40)].map((_, i) => (
         <div key={i} style={{
           position: "absolute",
           left: `${(i * 7 + 5) % 95}%`,
           top: `${(i * 11 + 3) % 95}%`,
-          fontSize: `${8 + (i % 4) * 4}px`,
+          fontSize: `${6 + (i % 3) * 3}px`,
           opacity: 0.3,
           animation: `ks-twinkle ${2 + (i % 3)}s infinite`,
           animationDelay: `${(i * 0.2) % 3}s`,
-          color: i % 4 === 0 ? "#fbbf24" : i % 4 === 1 ? "#a78bfa" : i % 4 === 2 ? "#22d3ee" : "#fff",
+          color: "#fff",
           pointerEvents: "none",
-        }}>{i % 3 === 0 ? "✦" : "·"}</div>
+        }}>·</div>
       ))}
 
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: 30, position: "relative", zIndex: 2 }}>
+      {/* TOP: Title small */}
+      <div style={{
+        textAlign: "center", position: "relative", zIndex: 5,
+        marginBottom: 20,
+      }}>
         <div style={{
-          fontSize: 56,
-          fontWeight: 900,
-          background: "linear-gradient(135deg,#fff,#fbbf24,#fff)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
+          fontSize: 18, fontWeight: 800,
+          color: "#fbbf24", letterSpacing: 6, textTransform: "uppercase",
+          textShadow: "0 2px 12px #fbbf2466",
+        }}>
+          🚀 Kitini Seç, Maceraya Başla
+        </div>
+      </div>
+
+      {/* CENTER: 3D STAGE — game-character-picker style */}
+      <div className="ks-stage" key={selected} style={{
+        position: "relative", zIndex: 4,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        width: "100%", maxWidth: 900, gap: 20,
+      }}>
+        {/* LEFT ARROW */}
+        <button
+          className="ks-arrow"
+          onClick={() => {
+            const ids = Object.keys(KITS);
+            const i = ids.indexOf(selected);
+            setSelected(ids[(i - 1 + ids.length) % ids.length]);
+          }}
+          style={{
+            width: 56, height: 56, borderRadius: "50%",
+            background: "rgba(0,0,0,0.4)",
+            border: `2px solid ${kit.primaryColor}66`,
+            color: "#fff", fontSize: 28, fontWeight: 900,
+            cursor: "pointer", flexShrink: 0,
+            backdropFilter: "blur(8px)",
+            boxShadow: `0 4px 16px ${kit.primaryColor}44`,
+          }}
+        >‹</button>
+
+        {/* 3D STAGE — clipped & non-interactive */}
+        <div style={{
+          flex: 1, maxWidth: 600, height: 420,
+          position: "relative",
+          borderRadius: 24,
+          overflow: "hidden",
+          background: `radial-gradient(ellipse at center,${kit.primaryColor}22,transparent 70%)`,
+        }}>
+          {/* Glowing platform under robot */}
+          <div style={{
+            position: "absolute", bottom: 30, left: "50%",
+            transform: "translateX(-50%)",
+            width: 280, height: 14,
+            borderRadius: "50%",
+            background: `radial-gradient(ellipse,${kit.primaryColor}88,${kit.primaryColor}22 60%,transparent 80%)`,
+            filter: "blur(6px)",
+            zIndex: 1,
+          }}/>
+
+          {/* Locked 3D viewer — no interactivity, no UI chrome */}
+          <div className="ks-3d-locked" style={{
+            position: "absolute", inset: 0,
+            ["--kc"]: kit.primaryColor + "55",
+            animation: "ks-glow-pulse 4s infinite ease-in-out",
+            pointerEvents: "none",
+          }}>
+            <kit.Component3D />
+          </div>
+        </div>
+
+        {/* RIGHT ARROW */}
+        <button
+          className="ks-arrow"
+          onClick={() => {
+            const ids = Object.keys(KITS);
+            const i = ids.indexOf(selected);
+            setSelected(ids[(i + 1) % ids.length]);
+          }}
+          style={{
+            width: 56, height: 56, borderRadius: "50%",
+            background: "rgba(0,0,0,0.4)",
+            border: `2px solid ${kit.primaryColor}66`,
+            color: "#fff", fontSize: 28, fontWeight: 900,
+            cursor: "pointer", flexShrink: 0,
+            backdropFilter: "blur(8px)",
+            boxShadow: `0 4px 16px ${kit.primaryColor}44`,
+          }}
+        >›</button>
+      </div>
+
+      {/* KIT NAME */}
+      <div className="ks-stage" key={selected + "_name"} style={{
+        marginTop: 10, textAlign: "center", position: "relative", zIndex: 5,
+      }}>
+        <div style={{
+          fontSize: 44, fontWeight: 900,
+          color: "#fff",
           letterSpacing: 2,
-          marginBottom: 8,
-          filter: "drop-shadow(0 4px 20px #0008)",
-        }}>BerryBot LMS</div>
-        <div style={{ fontSize: 18, color: "#fbbf24", letterSpacing: 4, fontWeight: 700, textTransform: "uppercase" }}>
-          🚀 Maceran Hangi Robotla Başlasın?
-        </div>
-        <div style={{ fontSize: 13, color: "#fff8", marginTop: 6 }}>
-          Bir kit seç ve robotik dünyasının kapılarını arala
-        </div>
+          textShadow: `0 0 30px ${kit.primaryColor}, 0 4px 20px #000`,
+        }}>{kit.icon} {kit.name}</div>
+        <div style={{
+          fontSize: 13, color: kit.primaryColor,
+          letterSpacing: 4, fontWeight: 800, textTransform: "uppercase",
+          marginTop: 4,
+        }}>{kit.tagline}</div>
       </div>
 
-      {/* Kit Cards */}
+      {/* DOTS — kit indicator */}
       <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
-        gap: 20,
-        width: "100%",
-        maxWidth: 1100,
-        position: "relative",
-        zIndex: 2,
+        marginTop: 16, display: "flex", gap: 10,
+        position: "relative", zIndex: 5,
       }}>
-        {Object.values(KITS).map((kit, idx) => {
-          const Component3D = kit.Component3D;
-          const isActive = hovering === kit.id;
-          return (
-            <div
-              key={kit.id}
-              className={`ks-card ${isActive ? "active" : ""}`}
-              onMouseEnter={() => setHovering(kit.id)}
-              onClick={() => onSelect(kit.id)}
-              style={{
-                cursor: "pointer",
-                borderRadius: 24,
-                padding: 20,
-                background: `linear-gradient(135deg,${kit.primaryColor}22,${kit.accentColor}22,#1a0a3a99)`,
-                border: `3px solid ${kit.primaryColor}66`,
-                animationDelay: `${idx * 100}ms`,
-                position: "relative",
-                overflow: "hidden",
-                ["--gc"]: kit.primaryColor,
-              }}
-            >
-              {/* Decorative big icon */}
-              <div style={{
-                position: "absolute",
-                top: -10, right: -10,
-                fontSize: 100,
-                opacity: 0.08,
-                pointerEvents: "none",
-              }}>{kit.icon}</div>
-
-              {/* 3D Robot — wrapped to fit card */}
-              <div className="robot-preview-wrapper" style={{
-                height: 240,
-                marginBottom: 14,
-                position: "relative",
-                borderRadius: 14,
-                overflow: "hidden",
-                background: "rgba(0,0,0,0.35)",
-                border: `1px solid ${kit.primaryColor}33`,
-              }}>
-                <Component3D />
-              </div>
-
-              {/* Title */}
-              <div style={{
-                fontSize: 28,
-                fontWeight: 900,
-                color: "#fff",
-                marginBottom: 4,
-                textAlign: "center",
-                letterSpacing: .5,
-                textShadow: `0 0 20px ${kit.primaryColor}66`,
-              }}>{kit.icon} {kit.name}</div>
-
-              {/* Tagline */}
-              <div style={{
-                fontSize: 12,
-                color: kit.primaryColor,
-                fontWeight: 800,
-                letterSpacing: 2,
-                textAlign: "center",
-                textTransform: "uppercase",
-                marginBottom: 10,
-              }}>{kit.tagline}</div>
-
-              {/* Description */}
-              <div style={{
-                fontSize: 13,
-                color: "#fff9",
-                textAlign: "center",
-                lineHeight: 1.5,
-                marginBottom: 16,
-                minHeight: 40,
-              }}>{kit.desc}</div>
-
-              {/* Select button */}
-              <button
-                onClick={(e) => { e.stopPropagation(); onSelect(kit.id); }}
-                style={{
-                  width: "100%",
-                  padding: "12px 20px",
-                  borderRadius: 12,
-                  border: "none",
-                  background: `linear-gradient(135deg,${kit.primaryColor},${kit.accentColor})`,
-                  color: "#fff",
-                  fontSize: 16,
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  letterSpacing: 1,
-                  textTransform: "uppercase",
-                  boxShadow: `0 6px 20px ${kit.primaryColor}66`,
-                  transition: "transform .15s",
-                }}
-                onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.96)"}
-                onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
-              >
-                ▶ Bu Kitle Devam Et
-              </button>
-            </div>
-          );
-        })}
+        {Object.keys(KITS).map(id => (
+          <button key={id} onClick={() => setSelected(id)} style={{
+            width: id === selected ? 32 : 12, height: 12,
+            borderRadius: 6,
+            background: id === selected ? kit.primaryColor : "rgba(255,255,255,0.3)",
+            border: "none", cursor: "pointer",
+            transition: "all .3s",
+            boxShadow: id === selected ? `0 0 12px ${kit.primaryColor}` : "none",
+          }}/>
+        ))}
       </div>
 
-      {/* Footer */}
+      {/* CTA Button */}
+      <button
+        className="ks-cta"
+        onClick={() => onSelect(selected)}
+        style={{
+          marginTop: 24,
+          padding: "16px 48px",
+          borderRadius: 14,
+          border: "none",
+          background: `linear-gradient(135deg,${kit.primaryColor},${kit.accentColor})`,
+          color: "#fff",
+          fontSize: 18,
+          fontWeight: 900,
+          cursor: "pointer",
+          letterSpacing: 2,
+          textTransform: "uppercase",
+          boxShadow: `0 8px 28px ${kit.primaryColor}88`,
+          position: "relative",
+          zIndex: 5,
+        }}
+      >
+        ▶ Maceraya Başla
+      </button>
+
+      {/* SPONSOR LOGOS */}
       <div style={{
-        marginTop: 30,
-        fontSize: 12,
-        color: "#fff5",
-        textAlign: "center",
-        letterSpacing: 1,
-        position: "relative",
-        zIndex: 2,
+        marginTop: 30, display: "flex", alignItems: "center", justifyContent: "center",
+        gap: 32, flexWrap: "wrap", position: "relative", zIndex: 5,
+        opacity: 0.85,
       }}>
-        💡 Seçimin admin tarafından sonradan değiştirilebilir
+        <div style={{ fontSize: 10, color: "#fff8", letterSpacing: 2, fontWeight: 600, marginRight: 4 }}>POWERED BY</div>
+        <img src="/logos/robogpt.png" alt="RoboGPT" style={{ height: 32, width: "auto", filter: "brightness(0) invert(1) drop-shadow(0 2px 6px #000)", opacity: 0.9 }} />
+        <img src="/logos/robotistan.png" alt="Robotistan" style={{ height: 32, width: "auto", filter: "brightness(0) invert(1) drop-shadow(0 2px 6px #000)", opacity: 0.9 }} />
       </div>
+
+      {/* Lock all interactivity inside 3D area */}
+      <style>{`
+        @keyframes ks-rotate-slow { from{transform:rotateY(0deg)} to{transform:rotateY(360deg)} }
+        @keyframes ks-rotate-very-slow { from{transform:rotateY(0deg)} to{transform:rotateY(360deg)} }
+        @keyframes ks-sway { 0%,100%{transform:rotateY(-8deg)} 50%{transform:rotateY(8deg)} }
+        .ks-3d-locked > div { height: 100% !important; min-height: 0 !important; max-height: 100% !important; }
+        .ks-3d-locked > div > div { height: 100% !important; min-height: 0 !important; }
+        .ks-3d-locked [class*="h-screen"] { height: 100% !important; min-height: 0 !important; }
+        .ks-3d-locked button { display: none !important; }
+        .ks-3d-locked input { display: none !important; }
+        .ks-3d-locked label { display: none !important; }
+        .ks-3d-locked [class*="border-b"] { display: none !important; }
+        .ks-3d-locked [class*="border-t"] { display: none !important; }
+        .ks-3d-locked [class*="px-6 py-4"] { display: none !important; }
+        .ks-3d-locked [class*="absolute top"] { display: none !important; }
+        .ks-3d-locked [class*="absolute bottom"] { display: none !important; }
+        .ks-3d-locked canvas { pointer-events: none !important; }
+      `}</style>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ADMIN TASK EDITOR — Görev oluştur/düzenle/sil + medya yükle
-// ═══════════════════════════════════════════════════════════════
 function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload }) {
   const [selKit, setSelKit] = useState("berrybot");
   const [editing, setEditing] = useState(null); // task object or "new"
