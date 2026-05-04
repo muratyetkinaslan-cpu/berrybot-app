@@ -477,13 +477,19 @@ export default function App() {
   const handleLogin=async(e,p)=>{
     const u=await doLogin(e,p);
     if(u){
-      // Kit gate: if student/parent has explicit kit assigned, must match selected kit
-      const explicitKit = u.kit;  // null means kit not yet assigned (legacy account)
-      if ((u.role === 'student' || u.role === 'parent') && explicitKit && selectedKit && selectedKit !== explicitKit) {
-        const kitName = KITS[explicitKit]?.name || explicitKit;
-        notify(`Bu hesap ${kitName} kitine atanmış. Lütfen ${kitName} ekranından giriş yap.`, "err");
+      // Kit gate: if student/parent has kits assigned, the selected kit must be in their list
+      const enrolledKits = Array.isArray(u.kits) && u.kits.length > 0 
+        ? u.kits 
+        : (u.kit ? [u.kit] : []);
+      if ((u.role === 'student' || u.role === 'parent') && enrolledKits.length > 0 && selectedKit && !enrolledKits.includes(selectedKit)) {
+        const kitNames = enrolledKits.map(k => KITS[k]?.name || k).join(', ');
+        notify(`Bu hesap şu kit'lere kayıtlı: ${kitNames}. Lütfen onlardan birinden gir.`, "err");
         await logout();
         return false;
+      }
+      // If selected kit is in user's enrolled list, set it as their active kit for this session
+      if (selectedKit && enrolledKits.includes(selectedKit) && u.kit !== selectedKit) {
+        // Optional: could update u.kit here. Leaving as-is so primary kit stays from DB.
       }
       setPage("dash");
       return true;
@@ -516,11 +522,21 @@ export default function App() {
   const [themeVersion, setThemeVersion] = useState(0);
 
   // Determine active kit:
-  //   - Students/parents: their assigned kit (user.kit)
-  //   - Admin/instructor: kit they entered through (selectedKit) — they may oversee multiple kits
+  //   - Students/parents: selectedKit if they're enrolled in it, else their primary kit
+  //   - Admin/instructor: kit they entered through (selectedKit) — they may oversee multiple
   //   - Fallback: berrybot
   const isStudentLike = user?.role === "student" || user?.role === "parent";
-  const activeKit = (isStudentLike ? user?.kit : selectedKit) || selectedKit || user?.kit || "berrybot";
+  const userEnrolledKits = Array.isArray(user?.kits) && user.kits.length > 0 
+    ? user.kits 
+    : (user?.kit ? [user.kit] : []);
+  const activeKit = (() => {
+    if (isStudentLike) {
+      // If user selected a kit and they're enrolled, use it; otherwise use primary kit
+      if (selectedKit && userEnrolledKits.includes(selectedKit)) return selectedKit;
+      return user?.kit || userEnrolledKits[0] || "berrybot";
+    }
+    return selectedKit || user?.kit || "berrybot";
+  })();
 
   // Apply theme synchronously every render — ensures first paint is correct
   applyKitTheme(activeKit);
@@ -555,7 +571,51 @@ export default function App() {
 
   console.log("[BB-RENDER] loading:", loading, "user:", user?.id, "kit:", activeKit);
 
-  if(loading)return<div style={{background:T.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:T.orange,fontSize:18}}>⏳ {KITS[activeKit]?.name || "BerryBot"} LMS Yükleniyor...</div>;
+  if(loading)return(
+    <div style={{
+      background:T.bg,minHeight:"100vh",
+      display:"flex",alignItems:"center",justifyContent:"center",
+      flexDirection:"column",gap:30,padding:20,
+    }}>
+      <img
+        src={`/logos/${activeKit}.png`}
+        alt={KITS[activeKit]?.name || "Robot"}
+        onError={(e) => { e.currentTarget.src = "/logos/berrybot.png"; }}
+        style={{
+          height:80,width:"auto",maxWidth:280,objectFit:"contain",
+          filter:`drop-shadow(0 4px 20px ${T.orange}88)`,
+          animation:"loadingPulse 1.5s ease-in-out infinite",
+        }}
+      />
+      <div style={{textAlign:"center"}}>
+        <div style={{fontSize:20,fontWeight:800,color:T.orange,letterSpacing:2,marginBottom:6}}>
+          {KITS[activeKit]?.name || "BerryBot"} LMS
+        </div>
+        <div style={{fontSize:13,color:T.ts,letterSpacing:1}}>Görevler yükleniyor...</div>
+      </div>
+      <div style={{
+        width:"min(280px, 80vw)",height:6,borderRadius:3,
+        background:T.border,overflow:"hidden",position:"relative",
+      }}>
+        <div style={{
+          position:"absolute",top:0,left:0,bottom:0,
+          width:"40%",
+          background:`linear-gradient(90deg,transparent,${T.orange},transparent)`,
+          animation:"loadingBar 1.4s ease-in-out infinite",
+        }}/>
+      </div>
+      <style>{`
+        @keyframes loadingPulse {
+          0%, 100% { transform: scale(1); opacity: 0.9; }
+          50% { transform: scale(1.05); opacity: 1; }
+        }
+        @keyframes loadingBar {
+          0% { left: -40%; }
+          100% { left: 100%; }
+        }
+      `}</style>
+    </div>
+  );
   if(!user&&!selectedKit)return<KitSelector onSelect={handleKitSelect}/>;
   if(!user)return<LoginPage onLogin={handleLogin} kit={KITS[selectedKit]||KITS.berrybot} onChangeKit={handleResetKit}/>;
 
@@ -641,6 +701,37 @@ export default function App() {
           {user.role===ROLES.PARENT&&null}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+          {/* Kit switcher — show if student is enrolled in multiple kits */}
+          {isStudentLike && userEnrolledKits.length > 1 && (
+            <div style={{display:"flex",gap:4,padding:"3px",borderRadius:10,background:T.dark,border:`1px solid ${T.border}`}}>
+              {userEnrolledKits.map(kid => {
+                const k = KITS[kid];
+                if (!k) return null;
+                const isActive = activeKit === kid;
+                return (
+                  <button
+                    key={kid}
+                    onClick={() => {
+                      try { localStorage.setItem("bb_selected_kit", kid); } catch {}
+                      setSelectedKit(kid);
+                    }}
+                    title={`${k.name}'a geç`}
+                    style={{
+                      padding:"4px 10px",borderRadius:7,
+                      background: isActive ? `${k.primaryColor}33` : "transparent",
+                      border: isActive ? `1px solid ${k.primaryColor}88` : "1px solid transparent",
+                      color: isActive ? k.primaryColor : T.tm,
+                      fontSize:11,fontWeight:800,cursor:"pointer",
+                      display:"inline-flex",alignItems:"center",gap:4,
+                    }}
+                  >
+                    <span style={{fontSize:13}}>{k.icon}</span>
+                    {k.name.split(" ")[0]}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {user.role===ROLES.STUDENT&&<span style={{fontSize:14,padding:"5px 12px",borderRadius:8,background:T.orange+"22",color:T.ol,fontWeight:700,whiteSpace:"nowrap"}}>{getLevel(getXP(user.id)).icon} Lv.{getLevel(getXP(user.id)).lv} • {getXP(user.id)} XP</span>}
           <span className="resp-hide-phone" style={{fontSize:14,color:T.ts,fontWeight:500}}>{user.name}</span>
           <button onClick={()=>{logout();nav("dash");}} style={{background:"none",border:`1px solid ${T.err}44`,borderRadius:8,cursor:"pointer",color:T.err,padding:"4px 12px",fontSize:13,fontWeight:600}}>Çıkış</button>
@@ -666,7 +757,7 @@ export default function App() {
         {user.role===ROLES.INSTRUCTOR&&page==="hw"&&<InstructorHomework user={user} users={users} homeworks={homeworks} subs={homeworkSubs} onAdd={addHomework} onDel={removeHomework} onReview={reviewHw}/>}
 
         {/* ──── STUDENT ──── */}
-        {user.role===ROLES.STUDENT&&page==="dash"&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)} customTasks={customTasks}/>}
+        {user.role===ROLES.STUDENT&&page==="dash"&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)} customTasks={customTasks} activeKit={activeKit}/>}
         {user.role===ROLES.STUDENT&&page==="dash"&&selT&&<StudentTaskView user={user} task={selT} prog={prog} answerUnlocks={answerUnlocks} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
         {user.role===ROLES.STUDENT&&page==="practice"&&<PracticeView user={user} practiceProg={practiceProg} onAnswer={recordPractice}/>}
         {user.role===ROLES.STUDENT&&page==="hw"&&<StudentHomework user={user} homeworks={homeworks} subs={homeworkSubs} onSubmit={sendHomework}/>}
@@ -683,8 +774,32 @@ export default function App() {
 // ═══════════════════════════════════════
 function LoginPage({onLogin, kit, onChangeKit}){
   const[e,setE]=useState("");const[p,setP]=useState("");const[err,setErr]=useState("");
+  const[busy,setBusy]=useState(false);
   const kitColor = kit?.primaryColor || T.orange;
   const kitAccent = kit?.accentColor || T.purple;
+
+  const handleSubmit = async () => {
+    if (busy) return;
+    if (!e.trim() || !p.trim()) {
+      setErr("Email ve şifre boş bırakılamaz");
+      return;
+    }
+    setBusy(true);
+    setErr("");
+    try {
+      const ok = await onLogin(e, p);
+      if (!ok) {
+        setErr("❌ Email veya şifre hatalı");
+      }
+      // If ok, App will navigate away — don't unset busy
+    } catch (ex) {
+      console.error("login error:", ex);
+      setErr("Giriş yapılırken bir hata oluştu. Tekrar dene.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return(<div style={{
     background: kit?.bgGradient || `linear-gradient(135deg,#0f0828,#2a1050,#1a0a3a)`,
     height:"100vh",width:"100vw",
@@ -827,7 +942,7 @@ function LoginPage({onLogin, kit, onChangeKit}){
             }}
             onFocus={x=>{x.currentTarget.style.borderColor=kitColor;x.currentTarget.style.boxShadow=`0 0 0 3px ${kitColor}33`;}}
             onBlur={x=>{x.currentTarget.style.borderColor=`${kitColor}66`;x.currentTarget.style.boxShadow="none";}}/>
-          <input type="password" placeholder="🔑 Şifre" value={p} onChange={x=>setP(x.target.value)} onKeyDown={x=>x.key==="Enter"&&(onLogin(e,p)||setErr("Hatalı!"))}
+          <input type="password" placeholder="🔑 Şifre" value={p} onChange={x=>setP(x.target.value)} onKeyDown={x=>x.key==="Enter"&&handleSubmit()}
             style={{
               width:"100%",padding:"13px 16px",borderRadius:12,
               border:`2px solid ${kitColor}66`,
@@ -837,17 +952,48 @@ function LoginPage({onLogin, kit, onChangeKit}){
             }}
             onFocus={x=>{x.currentTarget.style.borderColor=kitColor;x.currentTarget.style.boxShadow=`0 0 0 3px ${kitColor}33`;}}
             onBlur={x=>{x.currentTarget.style.borderColor=`${kitColor}66`;x.currentTarget.style.boxShadow="none";}}/>
-          {err&&<div style={{fontSize:13,marginTop:8,padding:"8px 12px",borderRadius:10,background:"#5c1a1a",color:"#fca5a5",fontWeight:600,textAlign:"center"}}>⚠️ {err}</div>}
-          <button onClick={()=>onLogin(e,p)||setErr("Hatalı giriş!")} style={{
+          {err&&<div style={{fontSize:13,marginTop:8,padding:"8px 12px",borderRadius:10,background:"#5c1a1a",color:"#fca5a5",fontWeight:600,textAlign:"center",animation:"errorShake 0.4s"}}>{err}</div>}
+          <button onClick={handleSubmit} disabled={busy} style={{
             width:"100%",marginTop:12,padding:"14px",borderRadius:12,border:"none",
-            background:`linear-gradient(135deg,${kitColor},${kitAccent})`,
-            color:"#fff",fontSize:17,fontWeight:800,cursor:"pointer",
+            background: busy ? `${kitColor}66` : `linear-gradient(135deg,${kitColor},${kitAccent})`,
+            color:"#fff",fontSize:17,fontWeight:800,cursor: busy ? "wait" : "pointer",
             letterSpacing:1,textTransform:"uppercase",
-            boxShadow:`0 6px 20px ${kitColor}66`,
-            transition:"transform .2s",
-          }} onMouseDown={e=>e.currentTarget.style.transform="scale(0.98)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>
-            🚀 Maceraya Başla
+            boxShadow: busy ? "none" : `0 6px 20px ${kitColor}66`,
+            transition:"transform .2s, background .2s",
+            position: "relative", overflow: "hidden",
+          }} onMouseDown={e=>!busy&&(e.currentTarget.style.transform="scale(0.98)")} onMouseUp={e=>!busy&&(e.currentTarget.style.transform="scale(1)")}>
+            {busy ? (
+              <>
+                <span style={{display:"inline-flex",alignItems:"center",gap:10}}>
+                  <span style={{
+                    width:18,height:18,borderRadius:"50%",
+                    border:"3px solid #ffffff44",borderTopColor:"#fff",
+                    animation:"spin 0.8s linear infinite",
+                    display:"inline-block",
+                  }}/>
+                  Giriş yapılıyor...
+                </span>
+                <div style={{
+                  position:"absolute",bottom:0,left:0,height:3,
+                  background:"#ffffff",
+                  animation:"loginProgress 2s ease-in-out infinite",
+                }}/>
+              </>
+            ) : "🚀 Maceraya Başla"}
           </button>
+          <style>{`
+            @keyframes spin { to { transform: rotate(360deg); } }
+            @keyframes loginProgress { 
+              0% { width: 0%; left: 0; }
+              50% { width: 70%; left: 15%; }
+              100% { width: 0%; left: 100%; }
+            }
+            @keyframes errorShake {
+              0%, 100% { transform: translateX(0); }
+              20%, 60% { transform: translateX(-4px); }
+              40%, 80% { transform: translateX(4px); }
+            }
+          `}</style>
         </div>
 
         {/* SPONSOR LOGOS */}
@@ -1190,8 +1336,9 @@ function AdminClassroom({users,prog,classLayout,saveLayout,onClearHelp,onSel}){
 //  STUDENT: MISSION BOARD (GAME STYLE)
 // ═══════════════════════════════════════
 // ═══════════════════════════════════════
-function MissionBoard({user,prog,onSel,onHelp,customTasks}){
-  const userKit = user.kit || "berrybot";
+function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit}){
+  // Use activeKit if provided (multi-kit support), else fall back to user.kit
+  const userKit = activeKit || user.kit || "berrybot";
 
   // Kit-aware task list:
   //  - BerryBot: hardcoded TASKS array (36 görev) + any custom additions
@@ -3312,44 +3459,113 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
     {/* Student list */}
     <div style={{fontSize:16,fontWeight:700,color:T.orange,marginBottom:8}}>Öğrenciler ({students.length})</div>
     <Card>
-      <div style={{maxHeight:500,overflowY:"auto"}}>
+      <div style={{maxHeight:560,overflowY:"auto"}}>
         {students.map((u,i)=>{
           const cnt=getApprovedCount(u.id);const pct=Math.round(cnt/36*100);
-          const studentKit = u.kit || "berrybot";
-          const kitInfo = KITS[studentKit] || KITS.berrybot;
-          return(<div key={u.id} style={{padding:"8px 0",borderBottom:`1px solid ${T.border}22`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-            <div style={{display:"flex",alignItems:"center",gap:8,flex:"1 1 200px",minWidth:0}}>
-              <span style={{fontSize:13,color:T.tm,width:28,textAlign:"right"}}>{i+1}.</span>
-              <div style={{minWidth:0}}><div style={{fontSize:14,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.name}</div><div style={{fontSize:12,color:T.tm,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.email}</div></div>
+          const enrolledKits = Array.isArray(u.kits) && u.kits.length > 0 
+            ? u.kits 
+            : (u.kit ? [u.kit] : []);
+          const primaryKit = u.kit || enrolledKits[0] || "berrybot";
+
+          const toggleKit = async (kitId) => {
+            const isEnrolled = enrolledKits.includes(kitId);
+            const kitName = KITS[kitId]?.name || kitId;
+            try {
+              if (isEnrolled) {
+                if (enrolledKits.length === 1) {
+                  alert(`⚠ Öğrencinin son kiti silinemez. Önce başka bir kit ekle.`);
+                  return;
+                }
+                if (!confirm(`${u.name} için ${kitName} kiti kaldırılsın mı?\n\nGörev ilerlemesi DB'de kalır (geri eklerseniz devam edebilir).`)) return;
+                await db.removeKitFromUser(u.id, kitId);
+              } else {
+                if (!confirm(`${u.name} için ${kitName} kiti eklensin mi?\n\nO kit'in görevleri atanır.`)) return;
+                await db.addKitToUser(u.id, kitId);
+              }
+              if (onRefresh) await onRefresh();
+            } catch (err) {
+              alert("Hata: " + (err?.message || "Bilinmeyen"));
+            }
+          };
+
+          const setPrimary = async (kitId) => {
+            if (kitId === primaryKit) return;
+            if (!enrolledKits.includes(kitId)) {
+              alert(`⚠ Önce ${KITS[kitId]?.name || kitId} kitini ekle.`);
+              return;
+            }
+            try {
+              await db.setPrimaryKit(u.id, kitId);
+              if (onRefresh) await onRefresh();
+            } catch (err) { alert("Hata: " + (err?.message || "Bilinmeyen")); }
+          };
+
+          return (
+            <div key={u.id} style={{
+              padding:"10px 6px",borderBottom:`1px solid ${T.border}22`,
+              display:"flex",flexDirection:"column",gap:6,
+            }}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,flex:"1 1 200px",minWidth:0}}>
+                  <span style={{fontSize:13,color:T.tm,width:24,textAlign:"right"}}>{i+1}.</span>
+                  <div style={{minWidth:0,flex:1}}>
+                    <div style={{fontSize:14,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.name}</div>
+                    <div style={{fontSize:11,color:T.tm,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.email}</div>
+                  </div>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+                  <span style={{fontSize:13,color:T.orange,fontWeight:600}}>{cnt}/36</span>
+                  <div style={{width:50,height:5,borderRadius:3,background:T.border,overflow:"hidden"}}><div style={{height:"100%",background:T.orange,width:`${pct}%`}}/></div>
+                  <span style={{fontSize:12,padding:"2px 8px",borderRadius:4,background:u.grup==="Kids"?T.cyan+"20":T.orange+"20",color:u.grup==="Kids"?T.cyan:T.orange}}>{u.grup||"Büyük"}</span>
+                </div>
+              </div>
+              {/* Kit chips — multi-select */}
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingLeft:32,alignItems:"center"}}>
+                <span style={{fontSize:10,color:T.tm,fontWeight:700,letterSpacing:1}}>KİTLER:</span>
+                {Object.values(KITS).map(k => {
+                  const isEnrolled = enrolledKits.includes(k.id);
+                  const isPrimary = k.id === primaryKit;
+                  return (
+                    <div key={k.id} style={{display:"inline-flex",alignItems:"center",gap:0}}>
+                      <button
+                        onClick={() => toggleKit(k.id)}
+                        title={isEnrolled ? "Tıkla: kit kaldır" : "Tıkla: kit ekle"}
+                        style={{
+                          padding:"4px 10px",borderRadius:isEnrolled?"8px 0 0 8px":8,
+                          border:`2px solid ${isEnrolled ? k.primaryColor + "cc" : T.border}`,
+                          background:isEnrolled ? `${k.primaryColor}25` : "transparent",
+                          color:isEnrolled ? k.primaryColor : T.tm,
+                          fontSize:11,fontWeight:800,cursor:"pointer",
+                          display:"inline-flex",alignItems:"center",gap:4,
+                          opacity:isEnrolled ? 1 : 0.6,
+                        }}
+                      >
+                        <span style={{fontSize:13}}>{k.icon}</span>
+                        {k.name.split(" ")[0]}
+                        {isEnrolled && <span style={{fontSize:10,color:k.primaryColor,marginLeft:2}}>✓</span>}
+                      </button>
+                      {isEnrolled && (
+                        <button
+                          onClick={() => setPrimary(k.id)}
+                          title={isPrimary ? "Ana kit" : "Tıkla: ana kit yap"}
+                          style={{
+                            padding:"4px 8px",borderRadius:"0 8px 8px 0",
+                            border:`2px solid ${k.primaryColor}cc`,
+                            borderLeft:"none",
+                            background: isPrimary ? k.primaryColor : `${k.primaryColor}10`,
+                            color: isPrimary ? "#fff" : k.primaryColor,
+                            cursor:"pointer",fontSize:10,fontWeight:800,
+                          }}
+                        >
+                          {isPrimary ? "★" : "☆"}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-              <select
-                value={studentKit}
-                onChange={async (ev)=>{
-                  const newKit=ev.target.value;
-                  if(newKit===studentKit)return;
-                  if(!confirm(`${u.name} için kiti ${kitInfo.name} → ${KITS[newKit].name} olarak değiştirilsin mi?\n\n⚠️ Mevcut görev ilerlemesi sıfırlanacak ve yeni kit'in görevleri atanacak.`))return;
-                  await db.setUserKit(u.id,newKit);
-                  if(onRefresh)await onRefresh();
-                  alert(`✓ ${u.name} kiti ${KITS[newKit].name} olarak değiştirildi.`);
-                }}
-                title="Kit değiştir"
-                style={{
-                  fontSize:11,padding:"4px 8px",borderRadius:6,
-                  border:`2px solid ${kitInfo.primaryColor}88`,
-                  background:`${kitInfo.primaryColor}15`,
-                  color:kitInfo.primaryColor,fontWeight:800,outline:"none",cursor:"pointer",
-                }}
-              >
-                <option value="berrybot">🍓 BerryBot</option>
-                <option value="tank">🪖 Tank</option>
-                <option value="picobricks">🧱 PicoBricks</option>
-              </select>
-              <span style={{fontSize:13,color:T.orange,fontWeight:600}}>{cnt}/36</span>
-              <div style={{width:50,height:5,borderRadius:3,background:T.border,overflow:"hidden"}}><div style={{height:"100%",background:T.orange,width:`${pct}%`}}/></div>
-              <span style={{fontSize:12,padding:"2px 8px",borderRadius:4,background:u.grup==="Kids"?T.cyan+"20":T.orange+"20",color:u.grup==="Kids"?T.cyan:T.orange}}>{u.grup||"Büyük"}</span>
-            </div>
-          </div>);
+          );
         })}
       </div>
     </Card>

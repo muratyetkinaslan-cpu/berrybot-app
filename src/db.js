@@ -24,12 +24,14 @@ export async function getUsers() {
 export async function createUser(userData) {
   const id = `${userData.role}_${Date.now()}`;
   const kit = userData.kit || 'berrybot';
+  const isStudent = userData.role === 'student';
   const { data, error } = await supabase.from('bb_users').insert({
     id, name: userData.name, email: userData.email, password: userData.password,
     role: userData.role, instructor_id: userData.instructorId || null,
     child_id: userData.childId || null,
     grup: userData.grup || 'Büyük',
-    kit: userData.role === 'student' ? kit : null,
+    kit: isStudent ? kit : null,
+    kits: isStudent ? [kit] : [],  // multi-kit array starts with primary
   }).select().single();
   if (error) { console.error('createUser:', error); return null; }
   if (userData.role === 'student') {
@@ -476,7 +478,97 @@ export async function setUserKit(userId, kit) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CUSTOM TASKS — admin yönetir
+// MULTI-KIT SUPPORT — Öğrenci birden çok kite kayıtlı olabilir
+// ═══════════════════════════════════════════════════════════════
+
+// Add a kit to a student's enrolled kit list (additive — does not remove others)
+export async function addKitToUser(userId, kitToAdd) {
+  console.log('🎒 addKitToUser:', userId, kitToAdd);
+
+  // Read current kits + primary kit
+  const { data: user } = await supabase.from('bb_users')
+    .select('kit, kits, name').eq('id', userId).single();
+  if (!user) throw new Error("Kullanıcı bulunamadı");
+
+  const currentKits = Array.isArray(user.kits) ? user.kits : [];
+  if (currentKits.includes(kitToAdd)) {
+    console.log('🎒 Kit already enrolled — skipping');
+    return { added: false, reason: 'already-enrolled' };
+  }
+
+  const newKits = [...currentKits, kitToAdd];
+  // If primary kit is null, set this as primary
+  const newPrimary = user.kit || kitToAdd;
+
+  // Update user record
+  const { error: upErr } = await supabase.from('bb_users')
+    .update({ kits: newKits, kit: newPrimary })
+    .eq('id', userId);
+  if (upErr) throw new Error("Kayıt güncellenemedi: " + upErr.message);
+
+  // Seed progress rows for this new kit (without disturbing other kits' progress)
+  if (kitToAdd === 'berrybot') {
+    // Only insert if no berrybot rows exist
+    const { data: existing } = await supabase.from('bb_progress')
+      .select('task_id').eq('student_id', userId).eq('kit', 'berrybot').limit(1);
+    if (!existing || existing.length === 0) {
+      const rows = [];
+      for (let i = 1; i <= 36; i++) {
+        rows.push({ student_id: userId, task_id: i, status: i === 1 ? 'active' : 'locked', kit: 'berrybot' });
+      }
+      await supabase.from('bb_progress').upsert(rows, { onConflict: 'student_id,task_id', ignoreDuplicates: true });
+    }
+  } else {
+    const { data: kitTasks } = await supabase.from('bb_tasks')
+      .select('task_id').eq('kit', kitToAdd).eq('active', true);
+    if (kitTasks && kitTasks.length > 0) {
+      const ids = kitTasks.map(x => parseInt(x.task_id)).sort((a, b) => a - b);
+      const rows = ids.map((tid, i) => ({
+        student_id: userId, task_id: tid, status: i === 0 ? 'active' : 'locked', kit: kitToAdd,
+      }));
+      await supabase.from('bb_progress').upsert(rows, { onConflict: 'student_id,task_id', ignoreDuplicates: true });
+    }
+  }
+
+  addLog({ type: 'kit_added', userId, detail: `${user.name} → +${kitToAdd}` });
+  return { added: true, newKits };
+}
+
+// Remove a kit from a student's enrolled list (does NOT delete progress rows)
+export async function removeKitFromUser(userId, kitToRemove) {
+  console.log('🎒 removeKitFromUser:', userId, kitToRemove);
+
+  const { data: user } = await supabase.from('bb_users')
+    .select('kit, kits, name').eq('id', userId).single();
+  if (!user) throw new Error("Kullanıcı bulunamadı");
+
+  const currentKits = Array.isArray(user.kits) ? user.kits : [];
+  const newKits = currentKits.filter(k => k !== kitToRemove);
+
+  // If removing the primary kit, switch primary to first remaining
+  let newPrimary = user.kit;
+  if (user.kit === kitToRemove) {
+    newPrimary = newKits[0] || null;
+  }
+
+  await supabase.from('bb_users')
+    .update({ kits: newKits, kit: newPrimary })
+    .eq('id', userId);
+
+  // Optional: also delete progress for that kit (uncomment if needed)
+  // await supabase.from('bb_progress').delete().eq('student_id', userId).eq('kit', kitToRemove);
+
+  addLog({ type: 'kit_removed', userId, detail: `${user.name} → -${kitToRemove}` });
+  return { newKits };
+}
+
+// Set primary kit (which one student logs into by default)
+export async function setPrimaryKit(userId, kit) {
+  await supabase.from('bb_users').update({ kit }).eq('id', userId);
+  addLog({ type: 'primary_kit_changed', userId, detail: `Primary: ${kit}` });
+}
+
+
 // ═══════════════════════════════════════════════════════════════
 export async function fetchCustomTasks(kit) {
   const q = kit

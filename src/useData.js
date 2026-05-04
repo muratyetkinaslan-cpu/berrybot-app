@@ -174,29 +174,48 @@ export function useData() {
       setCurrentUser(u);
       // Save session for 24h
       localStorage.setItem('bb_session', JSON.stringify({ userId: u.id, ts: Date.now() }));
-      // Load full data for this user's role
+      // Load full data for this user's role — all fetches IN PARALLEL for speed
       if (u.role === 'student') {
-        const [sp, m] = await Promise.all([db.getStudentProgress(u.id), db.getAllMeta()]);
+        const studentKit = u.kit || 'berrybot';
+        const [sp, m, pp, hw, hs, au, ct] = await Promise.all([
+          db.getStudentProgress(u.id),
+          db.getAllMeta(),
+          db.fetchPracticeProgress(u.id),
+          db.fetchHomework(),
+          db.fetchHomeworkSubmissions(),
+          db.fetchAnswerUnlocks(u.id),
+          db.fetchCustomTasks(),  // load ALL kits' tasks (student may have multi-kit)
+        ]);
         setProgress(prev => ({ ...prev, [u.id]: sp }));
         setMeta(m);
+        setPracticeProg(pp);
+        setHomeworks(hw);
+        setHomeworkSubs(hs.filter(s => s.student_id === u.id));
+        setAnswerUnlocks(au);
+        setCustomTasks(ct);
       } else if (u.role === 'parent' && u.childId) {
-        // Parent: load own child's progress + child's logs + class layouts
-        const [sp, m, l, cl] = await Promise.all([
+        const [sp, m, l, cl, ct] = await Promise.all([
           db.getStudentProgress(u.childId),
           db.getAllMeta(),
           db.getLogs(500),
           db.getClassLayouts(),
+          db.fetchCustomTasks(),
         ]);
         setProgress(prev => ({ ...prev, [u.childId]: sp }));
         setMeta(m);
-        // Filter logs to only this child
         setLogs(l.filter(lg => lg.userId === u.childId || lg.targetUser === u.childId));
         if (cl.length > 0) setClassLayout(cl);
+        setCustomTasks(ct);
       } else {
-        const [us, p, m, l, cl] = await Promise.all([
+        const [us, p, m, l, cl, hw, hs, au, ct] = await Promise.all([
           db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
+          db.fetchHomework(), db.fetchHomeworkSubmissions(),
+          db.fetchAnswerUnlocks(),
+          db.fetchCustomTasks(),
         ]);
         setUsers(us); setProgress(p); setMeta(m); setLogs(l);
+        setHomeworks(hw); setHomeworkSubs(hs); setAnswerUnlocks(au);
+        setCustomTasks(ct);
         if (cl.length > 0) setClassLayout(cl);
       }
     }
