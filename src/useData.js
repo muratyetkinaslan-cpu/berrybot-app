@@ -54,7 +54,6 @@ export function useData() {
   const [homeworkSubs, setHomeworkSubs] = useState([]);
   const [answerUnlocks, setAnswerUnlocks] = useState([]);
   const [customTasks, setCustomTasks] = useState([]);
-  const [customTasks, setCustomTasks] = useState([]); // all kits, admin can see all
 
   // SMART LOAD: students fetch only their 36 rows, admin/instructor fetch all (paginated)
   const loadAll = useCallback(async (user) => {
