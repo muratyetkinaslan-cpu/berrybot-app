@@ -25,8 +25,8 @@ const KITS = {
     tagline: "Modüler Robotik Macera",
     desc: "Ahşap gövdeli, sensör zengini eğitim robotu. RGB LED'den Sumo Robot'a tam paket.",
     icon: "🍓",
-    primaryColor: "#FF8800",
-    accentColor: "#6B3FA0",
+    primaryColor: "#6B3FA0",
+    accentColor: "#FF8800",
     bgGradient: "linear-gradient(135deg,#0f0828,#2a1050,#1a0a3a)",
     Component3D: BerryBot3D,
     theme: {
