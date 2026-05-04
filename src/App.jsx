@@ -690,19 +690,24 @@ function LoginPage({onLogin, kit, onChangeKit}){
           `}</style>
         </div>
 
-        {/* BerryBot logo image */}
-        <div style={{textAlign:"center",marginTop:-80,width:"100%",position:"relative",zIndex:3}}>
+        {/* Kit logo image (dynamic) */}
+        <div style={{textAlign:"center",marginTop:0,width:"100%",position:"relative",zIndex:3}}>
           <div style={{display:"inline-flex",alignItems:"center",gap:14,flexWrap:"wrap",justifyContent:"center"}}>
-            <img src="/logos/berrybot.png" alt="BerryBot" style={{maxWidth:"100%",width:340,height:"auto",maxHeight:140,objectFit:"contain",filter:`drop-shadow(0 4px 14px ${T.orange}88)`}}/>
+            <img
+              src={kit?.id === "picobricks" ? "/logos/picobricks.png" : `/logos/${kit?.id || "berrybot"}.png`}
+              alt={kit?.name || "BerryBot"}
+              style={{maxWidth:"100%",width:340,height:"auto",maxHeight:140,objectFit:"contain",filter:`drop-shadow(0 4px 14px ${kitColor}88)`}}
+              onError={(e) => { e.currentTarget.src = "/logos/berrybot.png"; }}
+            />
             <span style={{
               fontSize:22,padding:"8px 18px",borderRadius:12,
-              background:`linear-gradient(135deg,${T.purple},${T.pd})`,
+              background:`linear-gradient(135deg,${kitAccent},${kitColor})`,
               color:"#fff",fontWeight:900,letterSpacing:2,
-              boxShadow:`0 4px 16px ${T.purple}88`,
-              border:`2px solid ${T.pl}66`,
+              boxShadow:`0 4px 16px ${kitAccent}88`,
+              border:`2px solid ${kitColor}66`,
             }}>LMS</span>
           </div>
-          <div style={{fontSize:13,color:T.ts,marginTop:-12,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
+          <div style={{fontSize:13,color:T.ts,marginTop:6,letterSpacing:3,textTransform:"uppercase",fontWeight:700}}>Robotik Görev Akademisi</div>
         </div>
       </div>
 
@@ -715,18 +720,24 @@ function LoginPage({onLogin, kit, onChangeKit}){
         <div style={{
           background:`linear-gradient(135deg,${T.card},#1a0e3a)`,
           borderRadius:20,padding:22,
-          border:`2px solid ${T.orange}55`,
-          animation:"login-glow 3s infinite ease-in-out",
+          border:`2px solid ${kitColor}55`,
+          boxShadow: `0 0 30px ${kitColor}44, 0 0 60px ${kitAccent}22`,
         }}>
-          <input type="email" placeholder="📧 E-posta" value={e} onChange={x=>setE(x.target.value)} style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:15,outline:"none",marginBottom:10,boxSizing:"border-box",fontWeight:500}}/>
-          <input type="password" placeholder="🔑 Şifre" value={p} onChange={x=>setP(x.target.value)} onKeyDown={x=>x.key==="Enter"&&(onLogin(e,p)||setErr("Hatalı!"))} style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:15,outline:"none",boxSizing:"border-box",fontWeight:500}}/>
+          <input type="email" placeholder="📧 E-posta" value={e} onChange={x=>setE(x.target.value)}
+            style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:15,outline:"none",marginBottom:10,boxSizing:"border-box",fontWeight:500}}
+            onFocus={x=>x.currentTarget.style.borderColor=kitColor}
+            onBlur={x=>x.currentTarget.style.borderColor=T.border}/>
+          <input type="password" placeholder="🔑 Şifre" value={p} onChange={x=>setP(x.target.value)} onKeyDown={x=>x.key==="Enter"&&(onLogin(e,p)||setErr("Hatalı!"))}
+            style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:15,outline:"none",boxSizing:"border-box",fontWeight:500}}
+            onFocus={x=>x.currentTarget.style.borderColor=kitColor}
+            onBlur={x=>x.currentTarget.style.borderColor=T.border}/>
           {err&&<div style={{fontSize:13,marginTop:8,padding:"8px 12px",borderRadius:10,background:"#5c1a1a",color:"#fca5a5",fontWeight:600,textAlign:"center"}}>⚠️ {err}</div>}
           <button onClick={()=>onLogin(e,p)||setErr("Hatalı giriş!")} style={{
             width:"100%",marginTop:12,padding:"14px",borderRadius:12,border:"none",
-            background:`linear-gradient(135deg,${T.orange},${T.od})`,
+            background:`linear-gradient(135deg,${kitColor},${kitAccent})`,
             color:"#fff",fontSize:17,fontWeight:800,cursor:"pointer",
             letterSpacing:1,textTransform:"uppercase",
-            boxShadow:`0 6px 20px ${T.orange}66`,
+            boxShadow:`0 6px 20px ${kitColor}66`,
             transition:"transform .2s",
           }} onMouseDown={e=>e.currentTarget.style.transform="scale(0.98)"} onMouseUp={e=>e.currentTarget.style.transform="scale(1)"}>
             🚀 Maceraya Başla

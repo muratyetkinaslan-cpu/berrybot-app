@@ -33,8 +33,8 @@ export default function TankRobot3D({ interactive = true } = {}) {
     //  SCENE / CAMERA / RENDERER
     // ============================================================
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x06070b);
-    scene.fog = new THREE.Fog(0x06070b, 18, 40);
+    // scene.background removed — let HTML wrapper gradient show through (transparent canvas)
+    scene.fog = new THREE.Fog(0x14532d, 18, 40);  // subtle dark green fog instead of black
 
     const camera = new THREE.PerspectiveCamera(40, W0 / H0, 0.1, 100);
     camera.position.set(5, 3.5, 7);
