@@ -5055,7 +5055,10 @@ function KitSelector({ onSelect }) {
   return (
     <div style={{
       height: "100vh", width: "100vw",
-      background: "radial-gradient(ellipse at 50% 30%,#1a1448 0%,#0a0820 50%,#000 100%)",
+      background: hovered
+        ? `radial-gradient(ellipse at 50% 30%,${KITS[hovered].primaryColor}33 0%,${KITS[hovered].accentColor}22 30%,#0a0820 70%,#000 100%)`
+        : "radial-gradient(ellipse at 50% 30%,#1a1448 0%,#0a0820 50%,#000 100%)",
+      transition: "background 0.6s ease",
       display: "flex", flexDirection: "column",
       position: "fixed", inset: 0, overflow: "hidden",
       padding: "clamp(8px, 1.5vh, 18px) clamp(8px, 1.5vw, 18px)",
@@ -5083,7 +5086,7 @@ function KitSelector({ onSelect }) {
         .ks-card.hovered { animation: ks-glow-pulse 2s infinite, ks-fade .8s ease-out backwards; }
 
         /* Animated corner brackets — futuristic UI */
-        .ks-corner { position: absolute; width: 22px; height: 22px; border: 2px solid var(--gc); pointer-events: none; }
+        .ks-corner { position: absolute; width: 22px; height: 22px; border: 3px solid var(--gc); pointer-events: none; filter: drop-shadow(0 0 4px var(--gc)); }
         .ks-corner.tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
         .ks-corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
         .ks-corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
@@ -5176,11 +5179,12 @@ function KitSelector({ onSelect }) {
         <div style={{
           fontSize: "clamp(11px, 1.2vw, 14px)",
           fontWeight: 700,
-          color: "#00d4ff",
+          color: hovered ? KITS[hovered].primaryColor : "#00d4ff",
           letterSpacing: "clamp(3px, 1vw, 8px)",
           textTransform: "uppercase",
-          opacity: 0.7,
+          opacity: 0.85,
           marginBottom: 4,
+          transition: "color 0.4s ease",
         }}>// MISSION CONTROL — KIT SELECTION</div>
         <div style={{
           fontSize: "clamp(18px, 2.6vw, 30px)",
@@ -5188,7 +5192,10 @@ function KitSelector({ onSelect }) {
           color: "#fff",
           letterSpacing: "clamp(2px, 0.6vw, 4px)",
           textTransform: "uppercase",
-          animation: "ks-title-glow 3s ease-in-out infinite",
+          textShadow: hovered
+            ? `0 0 24px ${KITS[hovered].primaryColor}, 0 0 48px ${KITS[hovered].primaryColor}88`
+            : "0 0 24px #00d4ff, 0 0 48px #00d4ff88",
+          transition: "text-shadow 0.4s ease",
         }}>⟨ Kitini Seç · Maceraya Başla ⟩</div>
       </div>
 
@@ -5216,12 +5223,12 @@ function KitSelector({ onSelect }) {
                 position: "relative",
                 borderRadius: 4,
                 background: `
-                  linear-gradient(135deg,${kit.primaryColor}15,${kit.accentColor}15),
+                  linear-gradient(135deg,${kit.primaryColor}25,${kit.accentColor}25),
                   linear-gradient(180deg,#0a0820cc,#000c)
                 `,
-                border: `1px solid ${kit.primaryColor}66`,
+                border: `2px solid ${kit.primaryColor}88`,
                 animationDelay: `${idx * 150}ms`,
-                ["--gc"]: kit.primaryColor + "88",
+                ["--gc"]: kit.primaryColor + "aa",
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
@@ -5241,14 +5248,15 @@ function KitSelector({ onSelect }) {
                 padding: "clamp(6px, 1vh, 10px) clamp(20px, 2.5vw, 28px)",
                 fontSize: "clamp(9px, 0.9vw, 11px)",
                 color: kit.primaryColor,
-                fontWeight: 700,
+                fontWeight: 800,
                 letterSpacing: 2,
                 textTransform: "uppercase",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                borderBottom: `1px solid ${kit.primaryColor}33`,
-                background: `${kit.primaryColor}08`,
+                borderBottom: `1px solid ${kit.primaryColor}55`,
+                background: `${kit.primaryColor}15`,
+                textShadow: `0 0 8px ${kit.primaryColor}66`,
               }}>
                 <span>UNIT-0{idx + 1}</span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -5269,7 +5277,7 @@ function KitSelector({ onSelect }) {
                 minHeight: 0,
                 margin: "clamp(4px, 0.8vh, 8px)",
                 overflow: "hidden",
-                background: kit.id === "berrybot" ? `radial-gradient(ellipse at center,#6B3FA055 0%,#2a1050 50%,#0f0828 100%)` : kit.id === "tank" ? `radial-gradient(ellipse at center,#15803d66 0%,#14532d 45%,#052e16 100%)` : `radial-gradient(ellipse at center,#ea580c44 0%,#2a1505 50%,#000 100%)`,
+                background: kit.id === "berrybot" ? `radial-gradient(ellipse at center,#6B3FA055 0%,#2a1050 50%,#0f0828 100%)` : kit.id === "tank" ? `radial-gradient(ellipse at center,#15803d66 0%,#14532d 45%,#052e16 100%)` : `radial-gradient(ellipse at center,#fb923c66 0%,#9a3412 45%,#451a03 100%)`,
               }}>
                 {/* Targeting crosshair */}
                 {isHovered && <svg style={{
@@ -5312,8 +5320,8 @@ function KitSelector({ onSelect }) {
                 flexDirection: "column",
                 alignItems: "center",
                 gap: "clamp(6px, 1vh, 10px)",
-                borderTop: `1px solid ${kit.primaryColor}33`,
-                background: `${kit.primaryColor}08`,
+                borderTop: `1px solid ${kit.primaryColor}55`,
+                background: `${kit.primaryColor}15`,
               }}>
                 {/* LOGO */}
                 <img
@@ -5345,23 +5353,26 @@ function KitSelector({ onSelect }) {
                     width: "100%",
                     padding: "clamp(8px, 1.3vh, 11px) clamp(12px, 1.6vw, 18px)",
                     borderRadius: 2,
-                    border: `1px solid ${kit.primaryColor}`,
-                    background: `linear-gradient(135deg,${kit.primaryColor}33,transparent)`,
+                    border: `2px solid ${kit.primaryColor}`,
+                    background: `linear-gradient(135deg,${kit.primaryColor}55,${kit.accentColor}33)`,
                     color: "#fff",
                     fontSize: "clamp(10px, 1.1vw, 12px)",
-                    fontWeight: 800,
+                    fontWeight: 900,
                     cursor: "pointer",
                     letterSpacing: "clamp(1px, 0.3vw, 2px)",
                     textTransform: "uppercase",
                     fontFamily: "inherit",
-                    boxShadow: `0 0 12px ${kit.primaryColor}66, inset 0 0 12px ${kit.primaryColor}22`,
+                    boxShadow: `0 0 16px ${kit.primaryColor}88, inset 0 0 12px ${kit.primaryColor}33`,
+                    textShadow: `0 0 8px ${kit.primaryColor}`,
                     transition: "all .15s",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = `linear-gradient(135deg,${kit.primaryColor}66,${kit.primaryColor}22)`;
+                    e.currentTarget.style.background = `linear-gradient(135deg,${kit.primaryColor}88,${kit.accentColor}55)`;
+                    e.currentTarget.style.boxShadow = `0 0 24px ${kit.primaryColor}, inset 0 0 16px ${kit.primaryColor}55`;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = `linear-gradient(135deg,${kit.primaryColor}33,transparent)`;
+                    e.currentTarget.style.background = `linear-gradient(135deg,${kit.primaryColor}55,${kit.accentColor}33)`;
+                    e.currentTarget.style.boxShadow = `0 0 16px ${kit.primaryColor}88, inset 0 0 12px ${kit.primaryColor}33`;
                   }}
                 >▶ DEPLOY UNIT</button>
               </div>
