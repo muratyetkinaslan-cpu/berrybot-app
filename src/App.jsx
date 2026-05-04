@@ -668,7 +668,7 @@ function LoginPage({onLogin, kit, onChangeKit}){
             position:"absolute",bottom:10,left:"50%",
             transform:"translateX(-50%)",
             width:240,height:18,borderRadius:"50%",
-            background:`radial-gradient(ellipse,${T.purple}aa,transparent 70%)`,
+            background:`radial-gradient(ellipse,${kitColor}aa,transparent 70%)`,
             animation:"shadow-pulse 4s infinite ease-in-out",
             filter:"blur(8px)",
             zIndex:1,
@@ -696,7 +696,14 @@ function LoginPage({onLogin, kit, onChangeKit}){
             <img
               src={kit?.id === "picobricks" ? "/logos/picobricks.png" : `/logos/${kit?.id || "berrybot"}.png`}
               alt={kit?.name || "BerryBot"}
-              style={{maxWidth:"100%",width:340,height:"auto",maxHeight:140,objectFit:"contain",filter:`drop-shadow(0 4px 14px ${kitColor}88)`}}
+              style={{
+                maxWidth:"100%",
+                width: kit?.id === "picobricks" ? 240 : 340,
+                height:"auto",
+                maxHeight: kit?.id === "picobricks" ? 100 : 140,
+                objectFit:"contain",
+                filter:`drop-shadow(0 4px 14px ${kitColor}88)`,
+              }}
               onError={(e) => { e.currentTarget.src = "/logos/berrybot.png"; }}
             />
             <span style={{
@@ -724,13 +731,25 @@ function LoginPage({onLogin, kit, onChangeKit}){
           boxShadow: `0 0 30px ${kitColor}44, 0 0 60px ${kitAccent}22`,
         }}>
           <input type="email" placeholder="📧 E-posta" value={e} onChange={x=>setE(x.target.value)}
-            style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:15,outline:"none",marginBottom:10,boxSizing:"border-box",fontWeight:500}}
-            onFocus={x=>x.currentTarget.style.borderColor=kitColor}
-            onBlur={x=>x.currentTarget.style.borderColor=T.border}/>
+            style={{
+              width:"100%",padding:"13px 16px",borderRadius:12,
+              border:`2px solid ${kitColor}66`,
+              background:`linear-gradient(135deg,${T.input},${kitColor}15)`,
+              color:T.tp,fontSize:15,outline:"none",marginBottom:10,boxSizing:"border-box",fontWeight:500,
+              transition:"all .2s",
+            }}
+            onFocus={x=>{x.currentTarget.style.borderColor=kitColor;x.currentTarget.style.boxShadow=`0 0 0 3px ${kitColor}33`;}}
+            onBlur={x=>{x.currentTarget.style.borderColor=`${kitColor}66`;x.currentTarget.style.boxShadow="none";}}/>
           <input type="password" placeholder="🔑 Şifre" value={p} onChange={x=>setP(x.target.value)} onKeyDown={x=>x.key==="Enter"&&(onLogin(e,p)||setErr("Hatalı!"))}
-            style={{width:"100%",padding:"13px 16px",borderRadius:12,border:`2px solid ${T.border}`,background:T.input,color:T.tp,fontSize:15,outline:"none",boxSizing:"border-box",fontWeight:500}}
-            onFocus={x=>x.currentTarget.style.borderColor=kitColor}
-            onBlur={x=>x.currentTarget.style.borderColor=T.border}/>
+            style={{
+              width:"100%",padding:"13px 16px",borderRadius:12,
+              border:`2px solid ${kitColor}66`,
+              background:`linear-gradient(135deg,${T.input},${kitColor}15)`,
+              color:T.tp,fontSize:15,outline:"none",boxSizing:"border-box",fontWeight:500,
+              transition:"all .2s",
+            }}
+            onFocus={x=>{x.currentTarget.style.borderColor=kitColor;x.currentTarget.style.boxShadow=`0 0 0 3px ${kitColor}33`;}}
+            onBlur={x=>{x.currentTarget.style.borderColor=`${kitColor}66`;x.currentTarget.style.boxShadow="none";}}/>
           {err&&<div style={{fontSize:13,marginTop:8,padding:"8px 12px",borderRadius:10,background:"#5c1a1a",color:"#fca5a5",fontWeight:600,textAlign:"center"}}>⚠️ {err}</div>}
           <button onClick={()=>onLogin(e,p)||setErr("Hatalı giriş!")} style={{
             width:"100%",marginTop:12,padding:"14px",borderRadius:12,border:"none",
