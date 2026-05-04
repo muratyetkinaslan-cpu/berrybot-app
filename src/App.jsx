@@ -80,7 +80,21 @@ const KITS = {
 
 const getKitTheme = (kitId) => KITS[kitId]?.theme || KITS.berrybot.theme;
 const SL = { locked:"Kilitli", active:"Aktif", in_progress:"Devam Ediyor", pending_review:"Onay Bekliyor", approved:"Onaylandı", rejected:"Reddedildi" };
+// Theme object — colors are MUTATED at login based on selected kit
+// Base UI colors stay neutral; only orange/purple variants change per kit
 const T = { bg:"#1a1035", card:"#231845", input:"#15102a", dark:"#110d20", purple:"#6B3FA0", pl:"#9b6fd0", pd:"#4a2670", orange:"#F5922A", ol:"#ffb347", od:"#c96f10", border:"#3a2860", tp:"#f0e8ff", ts:"#a090c0", tm:"#6b5a90", ok:"#4ade80", err:"#f87171", warn:"#fbbf24", cyan:"#22d3ee" };
+
+// Apply kit theme — mutates T's color variants in place
+const applyKitTheme = (kitId) => {
+  const theme = KITS[kitId]?.theme;
+  if (!theme) return;
+  T.orange = theme.orange;
+  T.od = theme.od;
+  T.ol = theme.ol;
+  T.purple = theme.purple;
+  T.pl = theme.pl;
+  T.pd = theme.pd;
+};
 
 // ─── TASK IMAGE COMPONENT ───
 function TaskImage({ taskId, type = "gorsel", size = 60, fallbackEmoji = "📋", style = {} }) {
@@ -482,6 +496,25 @@ export default function App() {
       return stored;
     } catch { return null; }
   });
+  // Force re-render when theme mutates (since T is mutated in place, React doesn't auto-rerender)
+  const [themeVersion, setThemeVersion] = useState(0);
+
+  // Determine active kit:
+  //   - Students/parents: their assigned kit (user.kit)
+  //   - Admin/instructor: kit they entered through (selectedKit) — they may oversee multiple kits
+  //   - Fallback: berrybot
+  const isStudentLike = user?.role === "student" || user?.role === "parent";
+  const activeKit = (isStudentLike ? user?.kit : selectedKit) || selectedKit || user?.kit || "berrybot";
+
+  // Apply theme synchronously every render — ensures first paint is correct
+  applyKitTheme(activeKit);
+
+  // Trigger re-render when theme should change (covers edge cases)
+  useEffect(() => {
+    setThemeVersion(v => v + 1);
+    console.log("[BB-THEME] Applied:", activeKit, "T.orange=", T.orange, "T.purple=", T.purple);
+  }, [activeKit]);
+
   const handleKitSelect = (kitId) => {
     console.log("[BB-KIT] User selected:", kitId);
     try { localStorage.setItem("bb_selected_kit", kitId); } catch {}
@@ -493,7 +526,7 @@ export default function App() {
     setSelectedKit(null);
   };
 
-  console.log("[BB-RENDER] loading:", loading, "user:", user?.id, "kit:", selectedKit);
+  console.log("[BB-RENDER] loading:", loading, "user:", user?.id, "kit:", activeKit);
 
   if(loading)return<div style={{background:T.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:T.orange,fontSize:18}}>⏳ BerryBot LMS Yükleniyor...</div>;
   if(!user&&!selectedKit)return<KitSelector onSelect={handleKitSelect}/>;
