@@ -139,24 +139,38 @@ export async function submitTask(studentId, taskId, hasPhoto) {
 
 export async function approveTask(instructorId, studentId, taskId, note) {
   await updateStatus(studentId, taskId, { status: 'approved', approved_at: Date.now(), instructor_note: note || 'Onaylandı ✓' });
-  // Unlock next task — force active regardless of current status
-  const nextId = taskId + 1;
-  if (nextId <= 36) {
+
+  // Determine the student's kit
+  const { data: studentRow } = await supabase.from('bb_users')
+    .select('kit').eq('id', studentId).maybeSingle();
+  const kit = studentRow?.kit || 'berrybot';
+
+  // Find the next task_id for this kit (next higher than current, in active tasks)
+  let nextId = null;
+  if (kit === 'berrybot') {
+    // Hardcoded 36-task curriculum
+    if (taskId + 1 <= 36) nextId = taskId + 1;
+  } else {
+    // Tank/PicoBricks: look up next task_id from bb_tasks
+    const { data: nextTask } = await supabase.from('bb_tasks')
+      .select('task_id').eq('kit', kit).eq('active', true)
+      .gt('task_id', taskId).order('task_id').limit(1).maybeSingle();
+    if (nextTask) nextId = nextTask.task_id;
+  }
+
+  if (nextId !== null) {
     // First try update (task row should exist from seed)
     const { data } = await supabase.from('bb_progress')
       .update({ status: 'active', updated_at: new Date().toISOString() })
       .eq('student_id', studentId).eq('task_id', nextId)
-      .neq('status', 'approved') // don't overwrite already approved
-      .neq('status', 'in_progress') // don't overwrite in progress
-      .neq('status', 'pending_review') // don't overwrite pending
+      .neq('status', 'approved').neq('status', 'in_progress').neq('status', 'pending_review')
       .select();
-    // If no row was updated (row might not exist), insert it
     if (!data || data.length === 0) {
       await supabase.from('bb_progress')
-        .upsert({ student_id: studentId, task_id: nextId, status: 'active', updated_at: new Date().toISOString() }, { onConflict: 'student_id,task_id' })
+        .upsert({ student_id: studentId, task_id: nextId, status: 'active', kit, updated_at: new Date().toISOString() }, { onConflict: 'student_id,task_id' })
         .then(({ error }) => { if (error) console.warn('unlock next:', error.message); });
     }
-    console.log('🔓 Unlocked task', nextId, 'for', studentId, 'result:', data?.length);
+    console.log('🔓 Unlocked task', nextId, 'for', studentId, 'kit', kit);
   }
   addLog({ type: 'task_approved', userId: instructorId, targetUser: studentId, taskId, detail: `Görev ${taskId} onaylandı` });
 }
@@ -497,41 +511,49 @@ export async function upsertTask(t) {
     if (error) { console.error('upsertTask insert', error); return null; }
     addLog({ type: 'task_created', detail: `${t.kit} #${t.task_id}: ${t.title}` });
 
-    // Auto-seed progress rows for all students of this kit
-    // This is what makes the task actually appear on student MissionBoard
+    // Auto-seed progress rows for all students of this kit.
+    // Simple rule: in task_id order, the FIRST task that isn't approved becomes 'active',
+    // all later tasks become 'locked'. In-flight statuses (in_progress, pending_review,
+    // rejected) are preserved.
     try {
       const { data: kitStudents } = await supabase.from('bb_users')
         .select('id').eq('role', 'student').eq('kit', t.kit);
       if (kitStudents && kitStudents.length > 0) {
-        const rowsToInsert = [];
+        // All currently active tasks for this kit, sorted by task_id
+        const { data: allKitTasks } = await supabase.from('bb_tasks')
+          .select('task_id').eq('kit', t.kit).eq('active', true).order('task_id');
+        const taskIds = (allKitTasks || []).map(x => x.task_id);
+
+        const PRESERVE = new Set(['approved', 'in_progress', 'pending_review', 'rejected']);
+
         for (const s of kitStudents) {
-          // Get existing progress (excluding the task we're adding)
           const { data: existingProgress } = await supabase.from('bb_progress')
             .select('task_id, status').eq('student_id', s.id).eq('kit', t.kit);
-          const otherRows = (existingProgress || []).filter(p => p.task_id !== t.task_id);
-          // Status logic:
-          //  - If student has NO existing rows for this kit → this new task is the FIRST → active
-          //  - If all existing rows approved → this new one is also active (next in line)
-          //  - Otherwise → locked (waits for earlier ones)
-          let status;
-          if (otherRows.length === 0) {
-            status = 'active';
-          } else if (otherRows.every(p => p.status === 'approved')) {
-            status = 'active';
-          } else {
-            status = 'locked';
+          const progMap = new Map((existingProgress || []).map(p => [p.task_id, p.status]));
+
+          const newRows = [];
+          let activeAssigned = false;
+          for (const tid of taskIds) {
+            const cur = progMap.get(tid);
+            let status;
+            if (cur && PRESERVE.has(cur)) {
+              status = cur; // keep
+            } else if (!activeAssigned) {
+              status = 'active';
+              activeAssigned = true;
+            } else {
+              status = 'locked';
+            }
+            newRows.push({ student_id: s.id, task_id: tid, status, kit: t.kit });
           }
-          rowsToInsert.push({
-            student_id: s.id, task_id: t.task_id, status, kit: t.kit,
-          });
+
+          if (newRows.length > 0) {
+            const { error: progErr } = await supabase.from('bb_progress')
+              .upsert(newRows, { onConflict: 'student_id,task_id' });
+            if (progErr) console.error(`seed progress for ${s.id}:`, progErr);
+          }
         }
-        if (rowsToInsert.length > 0) {
-          // Upsert: if row exists, update status (covers case where student switched kits)
-          const { error: progErr } = await supabase.from('bb_progress')
-            .upsert(rowsToInsert, { onConflict: 'student_id,task_id' });
-          if (progErr) console.error('seed progress rows:', progErr);
-          else console.log(`Seeded progress for ${rowsToInsert.length} ${t.kit} students`);
-        }
+        console.log(`Re-seeded progress for ${kitStudents.length} ${t.kit} students`);
       }
     } catch (e) {
       console.error('auto-seed progress failed:', e);
