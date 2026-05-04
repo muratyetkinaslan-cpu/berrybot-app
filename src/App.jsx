@@ -471,16 +471,29 @@ export default function App() {
   const handleSaveLayout=(layouts)=>{saveLayout(layouts);};
 
   const [selectedKit, setSelectedKit] = useState(() => {
-    try { return localStorage.getItem("bb_selected_kit") || null; } catch { return null; }
+    try {
+      // ?reset URL parametresi varsa kit seçimini sıfırla
+      if (typeof window !== 'undefined' && window.location.search.includes('reset')) {
+        localStorage.removeItem("bb_selected_kit");
+        return null;
+      }
+      const stored = localStorage.getItem("bb_selected_kit") || null;
+      console.log("[BB-KIT] Stored kit:", stored);
+      return stored;
+    } catch { return null; }
   });
   const handleKitSelect = (kitId) => {
+    console.log("[BB-KIT] User selected:", kitId);
     try { localStorage.setItem("bb_selected_kit", kitId); } catch {}
     setSelectedKit(kitId);
   };
   const handleResetKit = () => {
+    console.log("[BB-KIT] Reset");
     try { localStorage.removeItem("bb_selected_kit"); } catch {}
     setSelectedKit(null);
   };
+
+  console.log("[BB-RENDER] loading:", loading, "user:", user?.id, "kit:", selectedKit);
 
   if(loading)return<div style={{background:T.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:T.orange,fontSize:18}}>⏳ BerryBot LMS Yükleniyor...</div>;
   if(!user&&!selectedKit)return<KitSelector onSelect={handleKitSelect}/>;
