@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useData, getLocalPhoto } from "./useData";
 import BerryBot3D from "./BerryBot3D";
+import TankRobot3D from "./TankRobot3D";
+import PicoBricks3D from "./PicoBricks3D";
 
 // ═══════════════════════════════════════════════════════════
 //  BerryBot LMS — Production (Supabase)
@@ -10,6 +12,73 @@ import BerryBot3D from "./BerryBot3D";
 
 const ROLES = { ADMIN:"admin", INSTRUCTOR:"instructor", STUDENT:"student", PARENT:"parent" };
 const TS = { LOCKED:"locked", ACTIVE:"active", IN_PROGRESS:"in_progress", PENDING:"pending_review", APPROVED:"approved", REJECTED:"rejected" };
+
+// ═══════════════════════════════════════════════════════════════
+// KIT SYSTEM — Multi-robot kit support
+// ═══════════════════════════════════════════════════════════════
+// KIT SYSTEM — Multi-robot kit support
+// ═══════════════════════════════════════════════════════════════
+const KITS = {
+  berrybot: {
+    id: "berrybot",
+    name: "BerryBot",
+    tagline: "Modüler Robotik Macera",
+    desc: "Ahşap gövdeli, sensör zengini eğitim robotu. RGB LED'den Sumo Robot'a tam paket.",
+    icon: "🍓",
+    primaryColor: "#FF8800",
+    accentColor: "#6B3FA0",
+    bgGradient: "linear-gradient(135deg,#0f0828,#2a1050,#1a0a3a)",
+    Component3D: BerryBot3D,
+    theme: {
+      orange: "#FF8800",
+      od: "#cc6a00",
+      ol: "#FFA940",
+      purple: "#6B3FA0",
+      pl: "#9B7FCB",
+      pd: "#4A2880",
+    },
+  },
+  tank: {
+    id: "tank",
+    name: "Tank Robot",
+    tagline: "Paletli Keşif Aracı",
+    desc: "Arazi çalışan paletli tank. Güçlü motorlar, ağır taşıma, mekanik mücadele.",
+    icon: "🪖",
+    primaryColor: "#4ade80",
+    accentColor: "#16a34a",
+    bgGradient: "linear-gradient(135deg,#0a1f15,#143e2a,#0f2e20)",
+    Component3D: TankRobot3D,
+    theme: {
+      orange: "#4ade80",   // green primary (was orange)
+      od: "#16a34a",
+      ol: "#86efac",
+      purple: "#1f6840",
+      pl: "#4ade80",
+      pd: "#0f4d2a",
+    },
+  },
+  picobricks: {
+    id: "picobricks",
+    name: "PicoBricks",
+    tagline: "Kart Bazlı Maker Kiti",
+    desc: "Modüler kart sistemi. Hızlı prototipleme, sensör + aktüatör maker projeleri.",
+    icon: "🧱",
+    primaryColor: "#fb923c",
+    accentColor: "#ea580c",
+    bgGradient: "linear-gradient(135deg,#2a1505,#3a1f08,#1f1004)",
+    Component3D: PicoBricks3D,
+    theme: {
+      orange: "#fb923c",
+      od: "#ea580c",
+      ol: "#fdba74",
+      purple: "#a16207",
+      pl: "#fbbf24",
+      pd: "#7c2d12",
+    },
+  },
+};
+
+const getKitTheme = (kitId) => KITS[kitId]?.theme || KITS.berrybot.theme;
 const SL = { locked:"Kilitli", active:"Aktif", in_progress:"Devam Ediyor", pending_review:"Onay Bekliyor", approved:"Onaylandı", rejected:"Reddedildi" };
 const T = { bg:"#1a1035", card:"#231845", input:"#15102a", dark:"#110d20", purple:"#6B3FA0", pl:"#9b6fd0", pd:"#4a2670", orange:"#F5922A", ol:"#ffb347", od:"#c96f10", border:"#3a2860", tp:"#f0e8ff", ts:"#a090c0", tm:"#6b5a90", ok:"#4ade80", err:"#f87171", warn:"#fbbf24", cyan:"#22d3ee" };
 
@@ -335,11 +404,12 @@ const NBtn=({a,o,children})=><button onClick={o} style={{fontSize:14,padding:"7p
 export default function App() {
   const data = useData();
   const { loading, currentUser: user, users, progress: prog, logs, classLayout,
-    practiceProg, homeworks, homeworkSubs, answerUnlocks,
+    practiceProg, homeworks, homeworkSubs, answerUnlocks, customTasks,
     login: doLogin, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh,
     recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
-    toggleAnswerUnlock } = data;
+    toggleAnswerUnlock,
+    saveCustomTask, removeCustomTask, uploadMedia } = data;
 
   const [page,setPage]=useState("dash");
   const [selS,setSelS]=useState(null);
@@ -400,8 +470,21 @@ export default function App() {
   const handleClearHelp=(sId)=>{clearHelp(sId);};
   const handleSaveLayout=(layouts)=>{saveLayout(layouts);};
 
+  const [selectedKit, setSelectedKit] = useState(() => {
+    try { return localStorage.getItem("bb_selected_kit") || null; } catch { return null; }
+  });
+  const handleKitSelect = (kitId) => {
+    try { localStorage.setItem("bb_selected_kit", kitId); } catch {}
+    setSelectedKit(kitId);
+  };
+  const handleResetKit = () => {
+    try { localStorage.removeItem("bb_selected_kit"); } catch {}
+    setSelectedKit(null);
+  };
+
   if(loading)return<div style={{background:T.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:T.orange,fontSize:18}}>⏳ BerryBot LMS Yükleniyor...</div>;
-  if(!user)return<LoginPage onLogin={handleLogin}/>;
+  if(!user&&!selectedKit)return<KitSelector onSelect={handleKitSelect}/>;
+  if(!user)return<LoginPage onLogin={handleLogin} kit={KITS[selectedKit]||KITS.berrybot} onChangeKit={handleResetKit}/>;
 
   const getXP=(sid)=>TASKS.filter(t=>prog[sid]?.[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
 
@@ -452,7 +535,7 @@ export default function App() {
           <span style={{fontSize:16,background:`linear-gradient(135deg,${T.purple},${T.pd})`,color:"#fff",padding:"6px 16px",borderRadius:10,fontWeight:900,letterSpacing:2,boxShadow:`0 3px 12px ${T.purple}77`,border:`2px solid ${T.pl}66`}}>LMS</span>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
+          {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="taskedit"} o={()=>nav("taskedit")}>📝 Görev Editörü</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.STUDENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>🗺️ Görev</NBtn><NBtn a={page==="practice"} o={()=>nav("practice")}>🧠 Practice</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn></>}
           {user.role===ROLES.PARENT&&null}
@@ -471,6 +554,7 @@ export default function App() {
         {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} onBack={()=>nav("dash")}/>}
         {user.role===ROLES.ADMIN&&page==="users"&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo}/>}
         {user.role===ROLES.ADMIN&&page==="audit"&&<AuditLog logs={logs} users={users}/>}
+        {user.role===ROLES.ADMIN&&page==="taskedit"&&<AdminTaskEditor customTasks={customTasks} onSave={saveCustomTask} onDelete={removeCustomTask} onUpload={uploadMedia}/>}
         {user.role===ROLES.ADMIN&&page==="tasks"&&<TaskBrowser showAns={false}/>}
 
         {/* ──── INSTRUCTOR ──── */}
@@ -497,15 +581,32 @@ export default function App() {
 // ═══════════════════════════════════════
 //  LOGIN
 // ═══════════════════════════════════════
-function LoginPage({onLogin}){
+function LoginPage({onLogin, kit, onChangeKit}){
   const[e,setE]=useState("");const[p,setP]=useState("");const[err,setErr]=useState("");
+  const kitColor = kit?.primaryColor || T.orange;
+  const kitAccent = kit?.accentColor || T.purple;
   return(<div style={{
-    background:`linear-gradient(135deg,#0f0828,#2a1050,#1a0a3a)`,
+    background: kit?.bgGradient || `linear-gradient(135deg,#0f0828,#2a1050,#1a0a3a)`,
     height:"100vh",width:"100vw",
     display:"flex",alignItems:"center",justifyContent:"center",
     position:"relative",overflow:"hidden",
     padding:"20px",boxSizing:"border-box",
+    transition:"background 0.6s ease",
   }}>
+    {/* Change kit button — top left */}
+    {onChangeKit && <button onClick={onChangeKit} style={{
+      position:"absolute",top:14,left:14,zIndex:10,
+      padding:"8px 14px",borderRadius:10,
+      background:"rgba(0,0,0,0.5)",
+      border:`1px solid ${kitColor}55`,
+      color:"#fff",fontSize:12,fontWeight:700,
+      cursor:"pointer",backdropFilter:"blur(8px)",
+      display:"flex",alignItems:"center",gap:6,
+    }}>
+      <span>{kit?.icon || "🤖"}</span>
+      <span>{kit?.name || "Kit"}</span>
+      <span style={{opacity:.6}}>↻ Değiştir</span>
+    </button>}
     <style>{`
       @keyframes float-bg { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(5deg)} }
       @keyframes star-blink { 0%,100%{opacity:.3} 50%{opacity:1} }
@@ -559,9 +660,21 @@ function LoginPage({onLogin}){
             filter:"blur(8px)",
             zIndex:1,
           }}/>
-          <div style={{position:"relative",zIndex:2,width:"100%"}}>
-            <BerryBot3D height={420} autoRotate={true} background="transparent" interactive={false}/>
+          <div className="robot-preview-wrapper" style={{position:"relative",zIndex:2,width:"100%",height:420,borderRadius:14,overflow:"hidden"}}>
+            {kit?.Component3D ? <kit.Component3D /> : <BerryBot3D height={420} autoRotate={true} background="transparent" interactive={false}/>}
           </div>
+          <style>{`
+            .robot-preview-wrapper { contain: layout size style paint; }
+            .robot-preview-wrapper > div,
+            .robot-preview-wrapper > div > div { height: 100% !important; min-height: 0 !important; max-height: 100% !important; }
+            .robot-preview-wrapper [class*="h-screen"] { height: 100% !important; min-height: 0 !important; }
+            .robot-preview-wrapper > div > div:first-child:has(button) { display: none !important; }
+            .robot-preview-wrapper button { display: none !important; }
+            .robot-preview-wrapper [class*="border-b"] { display: none !important; }
+            .robot-preview-wrapper [class*="px-6 py-4"] { display: none !important; }
+            .robot-preview-wrapper [class*="absolute top"] { display: none !important; }
+            .robot-preview-wrapper [class*="absolute bottom"] { display: none !important; }
+          `}</style>
         </div>
 
         {/* BerryBot logo image */}
@@ -4870,4 +4983,528 @@ function HomeworkSubCard({sub,student,onReview}){
       </div>
     </>}
   </div>);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KIT SELECTOR — İlk açılışta kit seçim ekranı
+// ═══════════════════════════════════════════════════════════════
+function KitSelector({ onSelect }) {
+  const [hovering, setHovering] = useState("berrybot");
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: KITS[hovering]?.bgGradient || KITS.berrybot.bgGradient,
+      transition: "background 0.6s ease",
+      padding: "20px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      position: "relative",
+      overflow: "hidden",
+    }}>
+      <style>{`
+        @keyframes ks-twinkle { 0%,100%{opacity:.3} 50%{opacity:1} }
+        @keyframes ks-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes ks-fade { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes ks-glow { 0%,100%{box-shadow:0 8px 32px var(--gc)55,0 0 0 1px var(--gc)33} 50%{box-shadow:0 12px 48px var(--gc)88,0 0 0 2px var(--gc)66} }
+        .ks-card { animation: ks-fade .6s ease-out backwards; transition: all .3s cubic-bezier(.34,1.56,.64,1); }
+        .ks-card:hover { transform: scale(1.04) translateY(-8px); }
+        .ks-card.active { animation: ks-glow 2s infinite, ks-fade .6s ease-out backwards; }
+        /* Constrain full-screen 3D components to fit card */
+        .robot-preview-wrapper { contain: layout size style paint; }
+        .robot-preview-wrapper > div,
+        .robot-preview-wrapper > div > div { height: 100% !important; min-height: 0 !important; max-height: 100% !important; }
+        .robot-preview-wrapper [class*="h-screen"] { height: 100% !important; min-height: 0 !important; }
+        /* Hide the original component's header bars and toolbars */
+        .robot-preview-wrapper > div > div:first-child:has(button) { display: none !important; }
+        .robot-preview-wrapper button { display: none !important; }
+        .robot-preview-wrapper [class*="border-b"] { display: none !important; }
+        .robot-preview-wrapper [class*="px-6 py-4"] { display: none !important; }
+        .robot-preview-wrapper [class*="absolute top"] { display: none !important; }
+        .robot-preview-wrapper [class*="absolute bottom"] { display: none !important; }
+      `}</style>
+
+      {/* Background stars */}
+      {[...Array(30)].map((_, i) => (
+        <div key={i} style={{
+          position: "absolute",
+          left: `${(i * 7 + 5) % 95}%`,
+          top: `${(i * 11 + 3) % 95}%`,
+          fontSize: `${8 + (i % 4) * 4}px`,
+          opacity: 0.3,
+          animation: `ks-twinkle ${2 + (i % 3)}s infinite`,
+          animationDelay: `${(i * 0.2) % 3}s`,
+          color: i % 4 === 0 ? "#fbbf24" : i % 4 === 1 ? "#a78bfa" : i % 4 === 2 ? "#22d3ee" : "#fff",
+          pointerEvents: "none",
+        }}>{i % 3 === 0 ? "✦" : "·"}</div>
+      ))}
+
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: 30, position: "relative", zIndex: 2 }}>
+        <div style={{
+          fontSize: 56,
+          fontWeight: 900,
+          background: "linear-gradient(135deg,#fff,#fbbf24,#fff)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          letterSpacing: 2,
+          marginBottom: 8,
+          filter: "drop-shadow(0 4px 20px #0008)",
+        }}>BerryBot LMS</div>
+        <div style={{ fontSize: 18, color: "#fbbf24", letterSpacing: 4, fontWeight: 700, textTransform: "uppercase" }}>
+          🚀 Maceran Hangi Robotla Başlasın?
+        </div>
+        <div style={{ fontSize: 13, color: "#fff8", marginTop: 6 }}>
+          Bir kit seç ve robotik dünyasının kapılarını arala
+        </div>
+      </div>
+
+      {/* Kit Cards */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
+        gap: 20,
+        width: "100%",
+        maxWidth: 1100,
+        position: "relative",
+        zIndex: 2,
+      }}>
+        {Object.values(KITS).map((kit, idx) => {
+          const Component3D = kit.Component3D;
+          const isActive = hovering === kit.id;
+          return (
+            <div
+              key={kit.id}
+              className={`ks-card ${isActive ? "active" : ""}`}
+              onMouseEnter={() => setHovering(kit.id)}
+              onClick={() => onSelect(kit.id)}
+              style={{
+                cursor: "pointer",
+                borderRadius: 24,
+                padding: 20,
+                background: `linear-gradient(135deg,${kit.primaryColor}22,${kit.accentColor}22,#1a0a3a99)`,
+                border: `3px solid ${kit.primaryColor}66`,
+                animationDelay: `${idx * 100}ms`,
+                position: "relative",
+                overflow: "hidden",
+                ["--gc"]: kit.primaryColor,
+              }}
+            >
+              {/* Decorative big icon */}
+              <div style={{
+                position: "absolute",
+                top: -10, right: -10,
+                fontSize: 100,
+                opacity: 0.08,
+                pointerEvents: "none",
+              }}>{kit.icon}</div>
+
+              {/* 3D Robot — wrapped to fit card */}
+              <div className="robot-preview-wrapper" style={{
+                height: 240,
+                marginBottom: 14,
+                position: "relative",
+                borderRadius: 14,
+                overflow: "hidden",
+                background: "rgba(0,0,0,0.35)",
+                border: `1px solid ${kit.primaryColor}33`,
+              }}>
+                <Component3D />
+              </div>
+
+              {/* Title */}
+              <div style={{
+                fontSize: 28,
+                fontWeight: 900,
+                color: "#fff",
+                marginBottom: 4,
+                textAlign: "center",
+                letterSpacing: .5,
+                textShadow: `0 0 20px ${kit.primaryColor}66`,
+              }}>{kit.icon} {kit.name}</div>
+
+              {/* Tagline */}
+              <div style={{
+                fontSize: 12,
+                color: kit.primaryColor,
+                fontWeight: 800,
+                letterSpacing: 2,
+                textAlign: "center",
+                textTransform: "uppercase",
+                marginBottom: 10,
+              }}>{kit.tagline}</div>
+
+              {/* Description */}
+              <div style={{
+                fontSize: 13,
+                color: "#fff9",
+                textAlign: "center",
+                lineHeight: 1.5,
+                marginBottom: 16,
+                minHeight: 40,
+              }}>{kit.desc}</div>
+
+              {/* Select button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); onSelect(kit.id); }}
+                style={{
+                  width: "100%",
+                  padding: "12px 20px",
+                  borderRadius: 12,
+                  border: "none",
+                  background: `linear-gradient(135deg,${kit.primaryColor},${kit.accentColor})`,
+                  color: "#fff",
+                  fontSize: 16,
+                  fontWeight: 900,
+                  cursor: "pointer",
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  boxShadow: `0 6px 20px ${kit.primaryColor}66`,
+                  transition: "transform .15s",
+                }}
+                onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.96)"}
+                onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+              >
+                ▶ Bu Kitle Devam Et
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        marginTop: 30,
+        fontSize: 12,
+        color: "#fff5",
+        textAlign: "center",
+        letterSpacing: 1,
+        position: "relative",
+        zIndex: 2,
+      }}>
+        💡 Seçimin admin tarafından sonradan değiştirilebilir
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN TASK EDITOR — Görev oluştur/düzenle/sil + medya yükle
+// ═══════════════════════════════════════════════════════════════
+function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload }) {
+  const [selKit, setSelKit] = useState("berrybot");
+  const [editing, setEditing] = useState(null); // task object or "new"
+  const [uploading, setUploading] = useState({ image: false, video: false, answer: false });
+
+  const kitTasks = customTasks.filter(t => t.kit === selKit).sort((a, b) => a.task_id - b.task_id);
+  const kitInfo = KITS[selKit];
+
+  const empty = {
+    kit: selKit, task_id: kitTasks.length + 1,
+    title: "", category: "", difficulty: 1, expected_min: 15, xp: 10, emoji: "📋",
+    description: "", answer: "",
+    learnings: [],
+    image_url: "", video_url: "", answer_image_url: "",
+    position: kitTasks.length,
+  };
+
+  const startEdit = (task) => setEditing(task ? { ...task, learnings: task.learnings || [] } : { ...empty, kit: selKit, task_id: kitTasks.length + 1, position: kitTasks.length });
+
+  const handleUpload = async (type, file) => {
+    if (!file || !editing) return;
+    setUploading(prev => ({ ...prev, [type]: true }));
+    try {
+      const url = await onUpload({ kit: editing.kit, taskId: editing.task_id, type, file });
+      if (url) {
+        const field = type === "image" ? "image_url" : type === "video" ? "video_url" : "answer_image_url";
+        setEditing(prev => ({ ...prev, [field]: url }));
+      }
+    } catch (e) {
+      alert("Yükleme hatası: " + e.message);
+    } finally {
+      setUploading(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const submit = async () => {
+    if (!editing.title.trim() || !editing.category.trim()) {
+      alert("Başlık ve kategori zorunlu");
+      return;
+    }
+    await onSave(editing);
+    setEditing(null);
+  };
+
+  // ─── EDITOR FORM ───
+  if (editing) {
+    return (
+      <div>
+        <button onClick={() => setEditing(null)} style={{
+          padding: "8px 16px", borderRadius: 10,
+          background: `${T.cyan}22`, color: T.cyan,
+          border: `2px solid ${T.cyan}44`, cursor: "pointer",
+          marginBottom: 14, fontWeight: 700,
+        }}>← Görevlere Dön</button>
+
+        <div style={{
+          padding: 20, borderRadius: 18,
+          background: `linear-gradient(135deg,${kitInfo.primaryColor}22,${T.card})`,
+          border: `2px solid ${kitInfo.primaryColor}55`,
+          marginBottom: 14,
+        }}>
+          <div style={{ fontSize: 12, color: kitInfo.primaryColor, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>
+            {kitInfo.icon} {kitInfo.name}
+          </div>
+          <h2 style={{ margin: 0, fontSize: 22, color: T.tp }}>
+            {editing.id ? `Görev #${editing.task_id} Düzenle` : "Yeni Görev Oluştur"}
+          </h2>
+        </div>
+
+        {/* Form fields */}
+        <div style={{ display: "grid", gap: 14 }}>
+          {/* Basic info */}
+          <div style={{ padding: 18, borderRadius: 14, background: T.card, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 11, color: T.tm, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>📝 Temel Bilgiler</div>
+            <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 100px", gap: 8, marginBottom: 10 }}>
+              <input value={editing.task_id} onChange={e => setEditing({ ...editing, task_id: parseInt(e.target.value) || 1 })} type="number" min={1} placeholder="ID" style={inputStyle} />
+              <input value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} placeholder="Görev Başlığı" style={inputStyle} />
+              <input value={editing.emoji} onChange={e => setEditing({ ...editing, emoji: e.target.value })} placeholder="📋" maxLength={4} style={{ ...inputStyle, textAlign: "center", fontSize: 22 }} />
+            </div>
+            <input value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} placeholder="Kategori (örn: RGB LED, Motor, Sumo)" style={{ ...inputStyle, marginBottom: 10 }} />
+            <textarea value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} placeholder="Görev açıklaması — öğrenci ne yapacak?" rows={3} style={{ ...inputStyle, resize: "vertical", marginBottom: 10 }} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              <div>
+                <div style={{ fontSize: 10, color: T.tm, fontWeight: 700, marginBottom: 4 }}>🎯 ZORLUK (1-5)</div>
+                <input value={editing.difficulty} onChange={e => setEditing({ ...editing, difficulty: Math.max(1, Math.min(5, parseInt(e.target.value) || 1)) })} type="number" min={1} max={5} style={inputStyle} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.tm, fontWeight: 700, marginBottom: 4 }}>⏱ HEDEF SÜRE (DK)</div>
+                <input value={editing.expected_min} onChange={e => setEditing({ ...editing, expected_min: parseInt(e.target.value) || 15 })} type="number" min={1} style={inputStyle} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: T.tm, fontWeight: 700, marginBottom: 4 }}>⚡ XP ÖDÜLÜ</div>
+                <input value={editing.xp} onChange={e => setEditing({ ...editing, xp: parseInt(e.target.value) || 10 })} type="number" min={1} style={inputStyle} />
+              </div>
+            </div>
+          </div>
+
+          {/* Learnings */}
+          <div style={{ padding: 18, borderRadius: 14, background: T.card, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 11, color: T.pl, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>📚 Kazanımlar (her satır = 1 yetkinlik)</div>
+            <textarea
+              value={(editing.learnings || []).join("\n")}
+              onChange={e => setEditing({ ...editing, learnings: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
+              placeholder={"RGB renk sistemi\nPin çıkışı kontrolü\nTemel blok kod"}
+              rows={4}
+              style={{ ...inputStyle, fontFamily: "monospace", fontSize: 13, resize: "vertical" }}
+            />
+          </div>
+
+          {/* Media uploads */}
+          <div style={{ padding: 18, borderRadius: 14, background: T.card, border: `1px solid ${T.border}` }}>
+            <div style={{ fontSize: 11, color: T.cyan, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>🎬 Medya (Görev Görseli + Çözüm Videosu + Cevap Anahtarı)</div>
+
+            <MediaUploader
+              label="📷 Görev Görseli"
+              accept="image/*"
+              currentUrl={editing.image_url}
+              onUpload={f => handleUpload("image", f)}
+              onClear={() => setEditing({ ...editing, image_url: "" })}
+              uploading={uploading.image}
+              color={T.orange}
+              isVideo={false}
+            />
+
+            <MediaUploader
+              label="▶️ Çözüm Videosu"
+              accept="video/mp4,video/webm"
+              currentUrl={editing.video_url}
+              onUpload={f => handleUpload("video", f)}
+              onClear={() => setEditing({ ...editing, video_url: "" })}
+              uploading={uploading.video}
+              color={T.err}
+              isVideo={true}
+            />
+
+            <MediaUploader
+              label="🗝️ Cevap Anahtarı (Görsel)"
+              accept="image/*"
+              currentUrl={editing.answer_image_url}
+              onUpload={f => handleUpload("answer", f)}
+              onClear={() => setEditing({ ...editing, answer_image_url: "" })}
+              uploading={uploading.answer}
+              color={T.ok}
+              isVideo={false}
+            />
+          </div>
+
+          {/* Submit */}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={submit} style={{
+              flex: 1, padding: "14px", borderRadius: 12, border: "none",
+              background: `linear-gradient(135deg,${T.ok},#22a55a)`,
+              color: "#fff", fontSize: 16, fontWeight: 900, cursor: "pointer",
+              boxShadow: `0 4px 16px ${T.ok}66`,
+            }}>✓ {editing.id ? "Güncelle" : "Görev Oluştur"}</button>
+            {editing.id && <button onClick={() => { if (confirm("Görevi silmek istediğine emin misin?")) { onDelete(editing.id); setEditing(null); } }} style={{
+              padding: "14px 24px", borderRadius: 12, border: `2px solid ${T.err}66`,
+              background: `${T.err}22`, color: T.err, fontWeight: 800, cursor: "pointer",
+            }}>🗑 Sil</button>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── LIST VIEW ───
+  return (
+    <div>
+      <div style={{
+        marginBottom: 14, padding: 18, borderRadius: 18,
+        background: `linear-gradient(135deg,${kitInfo.primaryColor}22,${T.purple}22,${T.card})`,
+        border: `2px solid ${kitInfo.primaryColor}55`,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 42 }}>{kitInfo.icon}</div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <h2 style={{ margin: 0, fontSize: 22, color: T.tp, fontWeight: 900 }}>Görev Editörü</h2>
+            <div style={{ fontSize: 13, color: T.ts }}>Kit görevlerini ekle, düzenle, görsel/video yükle</div>
+          </div>
+          <div style={{ padding: "8px 14px", borderRadius: 10, background: `${kitInfo.primaryColor}22`, border: `1px solid ${kitInfo.primaryColor}55`, fontSize: 13, color: kitInfo.primaryColor, fontWeight: 800 }}>
+            {kitTasks.length} görev
+          </div>
+        </div>
+      </div>
+
+      {/* Kit selector */}
+      <div style={{ marginBottom: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {Object.values(KITS).map(k => (
+          <button key={k.id} onClick={() => setSelKit(k.id)} style={{
+            padding: "10px 18px", borderRadius: 12,
+            border: `2px solid ${selKit === k.id ? k.primaryColor : T.border}`,
+            background: selKit === k.id ? `${k.primaryColor}22` : T.dark,
+            color: selKit === k.id ? k.primaryColor : T.ts,
+            cursor: "pointer", fontWeight: 800, fontSize: 14,
+            display: "inline-flex", alignItems: "center", gap: 8,
+            transition: "all .15s",
+          }}>
+            <span style={{ fontSize: 20 }}>{k.icon}</span>
+            <span>{k.name}</span>
+            <span style={{ fontSize: 11, padding: "1px 7px", borderRadius: 6, background: selKit === k.id ? k.primaryColor + "33" : T.border, opacity: .8 }}>
+              {customTasks.filter(t => t.kit === k.id).length}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Add new task button */}
+      <button onClick={() => startEdit(null)} style={{
+        width: "100%", padding: 16, borderRadius: 14,
+        border: `2px dashed ${kitInfo.primaryColor}66`,
+        background: `${kitInfo.primaryColor}11`,
+        color: kitInfo.primaryColor,
+        fontSize: 15, fontWeight: 800, cursor: "pointer",
+        marginBottom: 14,
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+      }}>
+        ➕ Yeni Görev Oluştur
+      </button>
+
+      {/* Task list */}
+      {kitTasks.length === 0 ? (
+        <div style={{ padding: 50, textAlign: "center", borderRadius: 16, background: T.card, border: `1px solid ${T.border}` }}>
+          <div style={{ fontSize: 48, opacity: .4, marginBottom: 8 }}>📋</div>
+          <div style={{ fontSize: 15, color: T.ts, fontWeight: 600 }}>Bu kit için henüz görev yok</div>
+          <div style={{ fontSize: 12, color: T.tm, marginTop: 4 }}>Yukarıdaki butonla ekle</div>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gap: 8 }}>
+          {kitTasks.map(t => (
+            <div key={t.id} onClick={() => startEdit(t)} style={{
+              padding: 12, borderRadius: 12, cursor: "pointer",
+              background: T.card,
+              border: `1px solid ${T.border}`,
+              display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+              transition: "transform .15s",
+            }} onMouseOver={e => e.currentTarget.style.transform = "translateX(4px)"} onMouseOut={e => e.currentTarget.style.transform = "translateX(0)"}>
+              <span style={{ fontSize: 11, fontFamily: "monospace", color: T.tm, fontWeight: 700, minWidth: 30 }}>#{t.task_id}</span>
+              <span style={{ fontSize: 24 }}>{t.emoji}</span>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.tp, marginBottom: 2 }}>{t.title}</div>
+                <div style={{ fontSize: 11, color: T.ts, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <span style={{ padding: "1px 7px", borderRadius: 5, background: T.purple + "22", color: T.pl, fontWeight: 600 }}>{t.category}</span>
+                  <span style={{ color: T.warn, fontWeight: 700 }}>+{t.xp} XP</span>
+                  <span style={{ color: T.cyan }}>⏱ {t.expected_min}dk</span>
+                  <span>{"★".repeat(t.difficulty)}</span>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {t.image_url && <span title="Görsel var" style={{ fontSize: 16 }}>📷</span>}
+                {t.video_url && <span title="Video var" style={{ fontSize: 16 }}>▶️</span>}
+                {t.answer_image_url && <span title="Cevap var" style={{ fontSize: 16 }}>🗝️</span>}
+              </div>
+              <span style={{ fontSize: 16, color: T.tm }}>▶</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Helper: shared input style ───
+const inputStyle = {
+  width: "100%",
+  padding: "10px 14px",
+  borderRadius: 10,
+  border: `1px solid ${T.border}`,
+  background: T.dark,
+  color: T.tp,
+  fontSize: 14,
+  outline: "none",
+  boxSizing: "border-box",
+  fontFamily: "inherit",
+};
+
+// ─── Helper: media upload component ───
+function MediaUploader({ label, accept, currentUrl, onUpload, onClear, uploading, color, isVideo }) {
+  return (
+    <div style={{ marginBottom: 12, padding: 12, borderRadius: 10, background: T.dark, border: `1px solid ${color}33` }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8, flexWrap: "wrap", gap: 6 }}>
+        <span style={{ fontSize: 13, fontWeight: 800, color }}>{label}</span>
+        {currentUrl && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: T.ok + "33", color: T.ok, fontWeight: 700 }}>✓ Yüklü</span>}
+      </div>
+
+      {currentUrl && (
+        <div style={{ marginBottom: 8, borderRadius: 8, overflow: "hidden", border: `1px solid ${color}44`, background: "#000" }}>
+          {isVideo ? (
+            <video src={currentUrl} controls style={{ width: "100%", maxHeight: 200, display: "block" }} />
+          ) : (
+            <img src={currentUrl} alt="" style={{ width: "100%", maxHeight: 200, objectFit: "contain", display: "block", background: T.dark }} />
+          )}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <label style={{
+          flex: 1, minWidth: 140,
+          padding: "10px 14px", borderRadius: 8,
+          border: `2px dashed ${color}55`,
+          background: `${color}11`, color, cursor: "pointer",
+          fontWeight: 700, fontSize: 13,
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+        }}>
+          {uploading ? "⏳ Yükleniyor..." : currentUrl ? `📤 Değiştir` : `📤 Yükle`}
+          <input type="file" accept={accept} onChange={e => onUpload(e.target.files?.[0])} disabled={uploading} style={{ display: "none" }} />
+        </label>
+        {currentUrl && <button onClick={onClear} style={{
+          padding: "10px 16px", borderRadius: 8,
+          border: `1px solid ${T.err}55`, background: "transparent",
+          color: T.err, cursor: "pointer", fontWeight: 700, fontSize: 13,
+        }}>✕ Kaldır</button>}
+      </div>
+    </div>
+  );
 }

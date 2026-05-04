@@ -53,19 +53,23 @@ export function useData() {
   const [homeworks, setHomeworks] = useState([]);
   const [homeworkSubs, setHomeworkSubs] = useState([]);
   const [answerUnlocks, setAnswerUnlocks] = useState([]);
+  const [customTasks, setCustomTasks] = useState([]);
+  const [customTasks, setCustomTasks] = useState([]); // all kits, admin can see all
 
   // SMART LOAD: students fetch only their 36 rows, admin/instructor fetch all (paginated)
   const loadAll = useCallback(async (user) => {
     const u = user || currentUser;
     try {
       if (u?.role === 'student') {
-        const [sp, m, pp, hw, hs, au] = await Promise.all([
+        const studentKit = u.kit || 'berrybot';
+        const [sp, m, pp, hw, hs, au, ct] = await Promise.all([
           db.getStudentProgress(u.id),
           db.getAllMeta(),
           db.fetchPracticeProgress(u.id),
           db.fetchHomework(),
           db.fetchHomeworkSubmissions(),
           db.fetchAnswerUnlocks(u.id),
+          db.fetchCustomTasks(studentKit),
         ]);
         setProgress(prev => ({ ...prev, [u.id]: sp }));
         setMeta(m);
@@ -73,6 +77,7 @@ export function useData() {
         setHomeworks(hw);
         setHomeworkSubs(hs.filter(s => s.student_id === u.id));
         setAnswerUnlocks(au);
+        setCustomTasks(ct);
       } else if (u?.role === 'parent' && u.childId) {
         const [sp, m, l, hw, hs] = await Promise.all([
           db.getStudentProgress(u.childId),
@@ -88,14 +93,16 @@ export function useData() {
         setHomeworkSubs(hs.filter(s => s.student_id === u.childId));
       } else {
         // Admin/instructor: fetch everything
-        const [us, p, m, l, cl, hw, hs, au] = await Promise.all([
+        const [us, p, m, l, cl, hw, hs, au, ct] = await Promise.all([
           db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
           db.fetchHomework(), db.fetchHomeworkSubmissions(),
           db.fetchAnswerUnlocks(),
+          db.fetchCustomTasks(),
         ]);
         setUsers(us); setProgress(p); setMeta(m); setLogs(l);
         setHomeworks(hw); setHomeworkSubs(hs);
         setAnswerUnlocks(au);
+        setCustomTasks(ct);
         if (cl.length > 0) setClassLayout(cl);
       }
     } catch (e) { console.error('loadAll:', e); }
@@ -345,12 +352,33 @@ export function useData() {
     setAnswerUnlocks(au);
   }, [currentUser]);
 
+  const saveCustomTask = useCallback(async (taskData) => {
+    if (!currentUser) return null;
+    const id = await db.upsertTask(taskData);
+    const ct = await db.fetchCustomTasks();
+    setCustomTasks(ct);
+    return id;
+  }, [currentUser]);
+
+  const removeCustomTask = useCallback(async (id) => {
+    if (!currentUser) return;
+    await db.deleteTask(id);
+    const ct = await db.fetchCustomTasks();
+    setCustomTasks(ct);
+  }, [currentUser]);
+
+  const uploadMedia = useCallback(async ({ kit, taskId, type, file }) => {
+    if (!currentUser) return null;
+    return await db.uploadTaskMedia({ kit, taskId, type, file });
+  }, [currentUser]);
+
   return {
     loading, currentUser, users, progress: merged, logs, classLayout,
-    practiceProg, homeworks, homeworkSubs, answerUnlocks,
+    practiceProg, homeworks, homeworkSubs, answerUnlocks, customTasks,
     login, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh: loadAll,
     recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
     toggleAnswerUnlock,
+    saveCustomTask, removeCustomTask, uploadMedia,
   };
 }

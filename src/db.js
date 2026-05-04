@@ -422,3 +422,137 @@ export async function lockAnswer({ studentId, taskId, instructorId }) {
     .eq('student_id', studentId).eq('task_id', taskId);
   addLog({ type: 'answer_locked', userId: instructorId, targetUser: studentId, taskId, detail: `Görev ${taskId} cevap anahtarı kilitlendi` });
 }
+
+// ═══════════════════════════════════════════════════════════════
+// KIT SYSTEM
+// ═══════════════════════════════════════════════════════════════
+export async function setUserKit(userId, kit) {
+  const { error } = await supabase.from('bb_users').update({ kit }).eq('id', userId);
+  if (error) console.error('setUserKit', error);
+  addLog({ type: 'kit_changed', userId, detail: `Kit değiştirildi: ${kit}` });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOM TASKS — admin-managed
+// ═══════════════════════════════════════════════════════════════
+export async function fetchCustomTasks(kit) {
+  const q = kit
+    ? supabase.from('bb_tasks').select('*').eq('kit', kit).eq('active', true).order('task_id')
+    : supabase.from('bb_tasks').select('*').eq('active', true).order('task_id');
+  const { data, error } = await q;
+  if (error) { console.error('fetchCustomTasks', error); return []; }
+  return data || [];
+}
+
+export async function upsertTask({ kit, task_id, title, category, difficulty, expected_min, xp, emoji, description, answer, learnings, image_url, video_url, answer_image_url, position }) {
+  const now = Date.now();
+  const { data: existing } = await supabase.from('bb_tasks')
+    .select('id').eq('kit', kit).eq('task_id', task_id).maybeSingle();
+  if (existing) {
+    await supabase.from('bb_tasks').update({
+      title, category, difficulty, expected_min, xp, emoji, description, answer,
+      learnings: learnings || [],
+      image_url, video_url, answer_image_url, position,
+      updated_at: now,
+    }).eq('id', existing.id);
+    addLog({ type: 'task_updated', detail: `${kit} #${task_id}: ${title}` });
+    return existing.id;
+  } else {
+    const { data, error } = await supabase.from('bb_tasks').insert({
+      kit, task_id, title, category, difficulty, expected_min, xp, emoji, description, answer,
+      learnings: learnings || [],
+      image_url, video_url, answer_image_url, position,
+      created_at: now, updated_at: now,
+    }).select().single();
+    if (error) { console.error('upsertTask', error); return null; }
+    addLog({ type: 'task_created', detail: `${kit} #${task_id}: ${title}` });
+    return data.id;
+  }
+}
+
+export async function deleteTask(id) {
+  await supabase.from('bb_tasks').update({ active: false }).eq('id', id);
+  addLog({ type: 'task_deleted', detail: `Task #${id} deleted` });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MEDIA UPLOAD via Supabase Storage
+// ═══════════════════════════════════════════════════════════════
+export async function uploadTaskMedia({ kit, taskId, type, file }) {
+  // type: "image" | "video" | "answer"
+  const ext = file.name.split('.').pop();
+  const path = `${kit}/${taskId}/${type}.${ext}`;
+  const { error } = await supabase.storage.from('task-media').upload(path, file, { upsert: true, cacheControl: '3600' });
+  if (error) { console.error('uploadMedia', error); return null; }
+  const { data } = supabase.storage.from('task-media').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function deleteTaskMedia({ kit, taskId, type, ext = 'jpg' }) {
+  const path = `${kit}/${taskId}/${type}.${ext}`;
+  await supabase.storage.from('task-media').remove([path]);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KIT SYSTEM
+// ═══════════════════════════════════════════════════════════════
+export async function setUserKit(userId, kit) {
+  await supabase.from('bb_users').update({ kit }).eq('id', userId);
+  addLog({ type: 'kit_changed', userId, detail: `Kit: ${kit}` });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOM TASKS — admin yönetir
+// ═══════════════════════════════════════════════════════════════
+export async function fetchCustomTasks(kit) {
+  const q = kit
+    ? supabase.from('bb_tasks').select('*').eq('kit', kit).eq('active', true).order('task_id')
+    : supabase.from('bb_tasks').select('*').eq('active', true).order('task_id');
+  const { data, error } = await q;
+  if (error) { console.error('fetchCustomTasks', error); return []; }
+  return data || [];
+}
+
+export async function upsertTask(t) {
+  const now = Date.now();
+  const { data: existing } = await supabase.from('bb_tasks')
+    .select('id').eq('kit', t.kit).eq('task_id', t.task_id).maybeSingle();
+  const payload = {
+    title: t.title, category: t.category, difficulty: t.difficulty,
+    expected_min: t.expected_min, xp: t.xp, emoji: t.emoji,
+    description: t.description, answer: t.answer,
+    learnings: t.learnings || [],
+    image_url: t.image_url, video_url: t.video_url, answer_image_url: t.answer_image_url,
+    position: t.position, updated_at: now,
+  };
+  if (existing) {
+    const { error } = await supabase.from('bb_tasks').update(payload).eq('id', existing.id);
+    if (error) console.error('upsertTask update', error);
+    addLog({ type: 'task_updated', detail: `${t.kit} #${t.task_id}` });
+    return existing.id;
+  } else {
+    const { data, error } = await supabase.from('bb_tasks').insert({
+      ...payload, kit: t.kit, task_id: t.task_id, created_at: now,
+    }).select().single();
+    if (error) { console.error('upsertTask insert', error); return null; }
+    addLog({ type: 'task_created', detail: `${t.kit} #${t.task_id}: ${t.title}` });
+    return data.id;
+  }
+}
+
+export async function deleteTask(id) {
+  await supabase.from('bb_tasks').update({ active: false }).eq('id', id);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MEDIA UPLOAD — Supabase Storage
+// ═══════════════════════════════════════════════════════════════
+export async function uploadTaskMedia({ kit, taskId, type, file }) {
+  // type: "image" | "video" | "answer"
+  const ext = file.name.split('.').pop();
+  const path = `${kit}/${taskId}/${type}.${ext}`;
+  const { error } = await supabase.storage.from('task-media').upload(path, file, { upsert: true, cacheControl: '3600' });
+  if (error) { console.error('upload', error); throw error; }
+  const { data } = supabase.storage.from('task-media').getPublicUrl(path);
+  return data.publicUrl;
+}
