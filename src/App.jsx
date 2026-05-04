@@ -5590,11 +5590,19 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
   const [editing, setEditing] = useState(null); // task object or "new"
   const [uploading, setUploading] = useState({ image: false, video: false, answer: false });
   const [importing, setImporting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // When kit selector changes, force a refresh so list is always fresh
+  // Refresh once when editor mounts (ensures fresh data)
   useEffect(() => {
     if (onRefresh) onRefresh();
-  }, [selKit]);
+  }, []); // empty deps — only on mount
+
+  const handleManualRefresh = async () => {
+    if (!onRefresh) return;
+    setRefreshing(true);
+    try { await onRefresh(); }
+    finally { setRefreshing(false); }
+  };
 
   // Merge: customTasks (from DB) override hardcoded TASKS for BerryBot kit
   // For Tank/PicoBricks, only show customTasks
@@ -5824,7 +5832,7 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
       </div>
 
       {/* Kit selector */}
-      <div style={{ marginBottom: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div style={{ marginBottom: 14, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         {Object.values(KITS).map(k => (
           <button key={k.id} onClick={() => { setSelKit(k.id); setEditing(null); }} style={{
             padding: "10px 18px", borderRadius: 12,
@@ -5842,6 +5850,21 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
             </span>
           </button>
         ))}
+        <button
+          onClick={handleManualRefresh}
+          disabled={refreshing}
+          title="Listeyi yenile"
+          style={{
+            marginLeft: "auto",
+            padding: "10px 14px", borderRadius: 10,
+            border: `1px solid ${T.border}`,
+            background: T.dark, color: T.ts,
+            cursor: refreshing ? "wait" : "pointer", fontSize: 13, fontWeight: 700,
+            display: "inline-flex", alignItems: "center", gap: 6,
+          }}
+        >
+          {refreshing ? "⏳ Yenileniyor..." : "🔄 Yenile"}
+        </button>
       </div>
 
       {/* Add new task button */}
