@@ -17,7 +17,7 @@ export default function PicoBricks3D({
     if (!container) return;
 
     let W = container.clientWidth || 680;
-    const H = height;
+    let H = container.clientHeight || height || 520;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, W / H, 0.1, 100);
@@ -188,8 +188,10 @@ export default function PicoBricks3D({
 
     // ------------------- BOARD ROOT (UPRIGHT/VERTICAL) -------------------
     const board = new THREE.Group();
-    // Make board vertical (face camera directly) instead of horizontal/lying flat
-    board.rotation.x = -Math.PI / 2 + 0.08; // tilt slightly forward for depth
+    // VERTICAL: stand the board upright with COMPONENTS facing camera
+    board.rotation.x = Math.PI / 2 - 0.15; // flipped — components/modules face viewer
+    board.rotation.z = 0;
+    board.position.y = 0.5; // lift slightly so power LED visible at bottom
     scene.add(board);
 
     // ------------------- PCB BASE -------------------
@@ -479,6 +481,7 @@ export default function PicoBricks3D({
     };
     const onResize = () => {
       W = container.clientWidth || 680;
+      H = container.clientHeight || height || 520;
       renderer.setSize(W, H);
       camera.aspect = W / H;
       camera.updateProjectionMatrix();
@@ -491,6 +494,12 @@ export default function PicoBricks3D({
       container.addEventListener("wheel", onWheel, { passive: false });
     }
     window.addEventListener("resize", onResize);
+
+    // ResizeObserver — react to container size changes
+    const ro = new ResizeObserver(() => onResize());
+    ro.observe(container);
+    // Trigger initial sizing after layout
+    setTimeout(onResize, 0);
 
     // ------------------- LOOP -------------------
     let animId;
@@ -544,6 +553,7 @@ export default function PicoBricks3D({
         container.removeEventListener("wheel", onWheel);
       }
       window.removeEventListener("resize", onResize);
+      ro.disconnect();
       if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
       renderer.dispose();
       pcbSilkTex.dispose();
@@ -565,7 +575,8 @@ export default function PicoBricks3D({
       className={className}
       style={{
         width: "100%",
-        height: `${height}px`,
+        height: "100%",
+        minHeight: 200,
         position: "relative",
         cursor: interactive ? "grab" : "default",
         userSelect: "none",

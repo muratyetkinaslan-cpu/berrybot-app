@@ -27,7 +27,7 @@ export default function TankRobot3D({ interactive = true } = {}) {
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
-    const W0 = mount.clientWidth, H0 = mount.clientHeight;
+    const W0 = mount.clientWidth || 800, H0 = mount.clientHeight || 600;
 
     // ============================================================
     //  SCENE / CAMERA / RENDERER
@@ -821,12 +821,15 @@ export default function TankRobot3D({ interactive = true } = {}) {
     //  RESIZE
     // ============================================================
     const onResize = () => {
-      const w = mount.clientWidth, h = mount.clientHeight;
+      const w = mount.clientWidth || 800, h = mount.clientHeight || 600;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
     window.addEventListener("resize", onResize);
+    const ro = new ResizeObserver(() => onResize());
+    ro.observe(mount);
+    setTimeout(onResize, 0);
 
     // ============================================================
     //  CLEANUP
@@ -834,6 +837,7 @@ export default function TankRobot3D({ interactive = true } = {}) {
     return () => {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", onResize);
+      ro.disconnect();
       if (interactive) {
         renderer.domElement.removeEventListener("mousedown", md);
         window.removeEventListener("mousemove", mm);

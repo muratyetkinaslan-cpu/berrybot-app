@@ -5060,18 +5060,32 @@ function KitSelector({ onSelect }) {
         .ks-corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
 
         /* Lock 3D viewers — no UI chrome, no interactivity */
-        .ks-3d-locked > div { height: 100% !important; min-height: 0 !important; max-height: 100% !important; width: 100% !important; }
-        .ks-3d-locked > div > div { height: 100% !important; min-height: 0 !important; }
-        .ks-3d-locked [class*="h-screen"] { height: 100% !important; min-height: 0 !important; }
+        .ks-3d-locked { display: flex !important; }
+        .ks-3d-locked > div { height: 100% !important; min-height: 0 !important; max-height: 100% !important; width: 100% !important; flex: 1 !important; display: flex !important; flex-direction: column !important; background: transparent !important; }
+        .ks-3d-locked > div > div { min-height: 0 !important; flex: 1 !important; }
+        .ks-3d-locked [class*="h-screen"] { height: 100% !important; min-height: 0 !important; background: transparent !important; }
+        /* Strip Tailwind backgrounds inside 3D wrappers */
+        .ks-3d-locked [class*="bg-gradient"] { background: transparent !important; }
+        .ks-3d-locked [class*="bg-slate"] { background: transparent !important; }
+        .ks-3d-locked [class*="bg-gray"] { background: transparent !important; }
+        .ks-3d-locked [class*="bg-black"] { background: transparent !important; }
+        /* Hide UI chrome */
         .ks-3d-locked button { display: none !important; }
         .ks-3d-locked input { display: none !important; }
         .ks-3d-locked label { display: none !important; }
         .ks-3d-locked [class*="border-b"] { display: none !important; }
         .ks-3d-locked [class*="border-t"] { display: none !important; }
         .ks-3d-locked [class*="px-6 py-4"] { display: none !important; }
-        .ks-3d-locked [class*="absolute top"] { display: none !important; }
-        .ks-3d-locked [class*="absolute bottom"] { display: none !important; }
-        .ks-3d-locked canvas { pointer-events: none !important; }
+        .ks-3d-locked [class*="absolute top-4"] { display: none !important; }
+        .ks-3d-locked [class*="absolute bottom-4"] { display: none !important; }
+        /* Canvas: visible, fills container, vibrant */
+        .ks-3d-locked canvas {
+          pointer-events: none !important;
+          display: block !important;
+          width: 100% !important;
+          height: 100% !important;
+          filter: contrast(1.15) saturate(1.4) brightness(1.1);
+        }
 
         /* Scan line */
         .ks-scanline {
@@ -5225,7 +5239,7 @@ function KitSelector({ onSelect }) {
                 minHeight: 0,
                 margin: "clamp(4px, 0.8vh, 8px)",
                 overflow: "hidden",
-                background: `radial-gradient(ellipse at center,${kit.primaryColor}22,transparent 70%)`,
+                background: kit.id === "berrybot" ? `radial-gradient(ellipse at center,#6B3FA055 0%,#2a1050 50%,#0f0828 100%)` : kit.id === "tank" ? `radial-gradient(ellipse at center,#16a34a44 0%,#0a1f15 50%,#000 100%)` : `radial-gradient(ellipse at center,#ea580c44 0%,#2a1505 50%,#000 100%)`,
               }}>
                 {/* Targeting crosshair */}
                 {isHovered && <svg style={{
