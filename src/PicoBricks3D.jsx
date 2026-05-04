@@ -95,23 +95,8 @@ export default function PicoBricks3D({
     const pcbSilkTex = makeCanvasTex(TEX_W, TEX_H, (ctx, w, h) => {
       ctx.fillStyle = "#16161c";
       ctx.fillRect(0, 0, w, h);
-
       ctx.fillStyle = "rgba(184,144,40,0.6)";
       [w * 0.30, w * 0.70].forEach((x) => ctx.fillRect(x - 1, h * 0.06, 2, h * 0.88));
-
-      ctx.strokeStyle = "rgba(180,180,160,0.35)";
-      ctx.lineWidth = 2;
-      const drawSlot = (x, y, sw, sh) => ctx.strokeRect(x - sw/2, y - sh/2, sw, sh);
-      const rowY = [h*0.115, h*0.295, h*0.475, h*0.655, h*0.835];
-      const sw = w*0.20, sh = h*0.135;
-      rowY.forEach((y) => {
-        drawSlot(w*0.155, y, sw, sh);
-        drawSlot(w*0.845, y, sw, sh);
-      });
-
-      ctx.strokeRect(w*0.5 - w*0.06, h*0.05, w*0.12, h*0.42);
-      ctx.strokeRect(w*0.5 - w*0.16, h*0.55, w*0.32, h*0.36);
-
       ctx.fillStyle = "rgba(245,210,50,0.95)";
       ctx.font = "bold 22px monospace";
       const vLabel = (txt, x, y) => {
@@ -131,59 +116,17 @@ export default function PicoBricks3D({
       vLabel("BUZZER", w*0.96, h*0.55);
       vLabel("LDR", w*0.96, h*0.71);
       vLabel("POTENTIOMETER", w*0.96, h*0.92);
-
-      ctx.fillStyle = SILK;
-      ctx.font = "bold 16px monospace";
-      const gpLeft = ["I2C: 0x3C", "GP6", "GP7 / GP10", "GP11", "GP12"];
-      const gpRight = ["GP21 GP22", "TX:GP0  RX:GP1", "GP20", "GP27", "GP26"];
-      gpLeft.forEach((t, i) => ctx.fillText(t, w*0.275, h*0.115 + i*h*0.18));
-      gpRight.forEach((t, i) => {
-        ctx.textAlign = "right";
-        ctx.fillText(t, w*0.725, h*0.115 + i*h*0.18);
-      });
-      ctx.textAlign = "left";
-
-      ctx.font = "bold 14px monospace";
-      ctx.fillStyle = SILK_DIM;
-      ctx.fillText("SDA GP4", w*0.43, h*0.16);
-      ctx.fillText("SCL GP5", w*0.43, h*0.20);
-      ctx.fillText("RX-GP1", w*0.43, h*0.30);
-      ctx.fillText("TX-GP0", w*0.43, h*0.34);
-
-      ctx.fillStyle = SILK;
-      ctx.font = "bold 18px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("RELAY BOARD GP12", w*0.5, h*0.50);
-      ctx.fillText("LDR GP27", w*0.5, h*0.535);
-
-      ctx.font = "bold 28px monospace";
-      ctx.fillText("PROTOBOARD", w*0.5, h*0.62);
-
       ctx.font = "bold 32px monospace";
+      ctx.textAlign = "center";
+      ctx.fillStyle = SILK;
+      ctx.fillText("PROTOBOARD", w*0.5, h*0.62);
       ctx.fillText("Hello World", w*0.55, h*0.965);
-
-      const rx = w*0.42, ry = h*0.94;
-      ctx.fillStyle = SILK;
-      ctx.fillRect(rx, ry, 28, 22);
-      ctx.fillRect(rx-3, ry+22, 34, 18);
-      ctx.fillRect(rx-7, ry+30, 4, 10);
-      ctx.fillRect(rx+34, ry+30, 4, 10);
-      ctx.fillStyle = "#16161c";
-      ctx.fillRect(rx+5, ry+6, 5, 5);
-      ctx.fillRect(rx+18, ry+6, 5, 5);
-      ctx.fillStyle = SILK;
-      ctx.fillRect(rx+6, ry-6, 2, 8);
-      ctx.fillRect(rx+22, ry-6, 2, 8);
-      ctx.beginPath(); ctx.arc(rx+7, ry-7, 3, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(rx+23, ry-7, 3, 0, Math.PI*2); ctx.fill();
-
       ctx.textAlign = "left";
       ctx.font = "bold 18px monospace";
       ctx.fillStyle = SILK_DIM;
       ctx.fillText("◢ picobricks", w*0.04, h*0.05);
     });
 
-    // OLED screen (animated)
     const oledCanvas = document.createElement("canvas");
     oledCanvas.width = 256; oledCanvas.height = 128;
     const oledCtx = oledCanvas.getContext("2d");
@@ -211,10 +154,6 @@ export default function PicoBricks3D({
       c.fillRect(18, 96, barW, 8);
       c.strokeStyle = "#67f0ff";
       c.strokeRect(18, 96, 220, 8);
-      if (Math.floor(t * 2) % 2 === 0) {
-        c.fillStyle = "#ffffff";
-        c.fillRect(228, 22, 10, 14);
-      }
       oledTex.needsUpdate = true;
     };
     drawOLED(0);
@@ -228,71 +167,8 @@ export default function PicoBricks3D({
       ctx.fillRect(0, 0, w, h);
     });
 
-    const dhtTex = makeCanvasTex(256, 256, (ctx, w, h) => {
-      ctx.fillStyle = "#4ea4d4";
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "#235a82";
-      const step = 22;
-      for (let y = step; y < h; y += step)
-        for (let x = step; x < w; x += step) {
-          ctx.beginPath();
-          ctx.arc(x, y, 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-    });
-
-    const protoTex = makeCanvasTex(1024, 768, (ctx, w, h) => {
-      ctx.fillStyle = "#f2efe6";
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "#1a1a1a";
-      const cols = 22, rows = 16;
-      const padX = 60, padY = 60;
-      const sx = (w - padX*2) / (cols - 1);
-      const sy = (h - padY*2) / (rows - 1);
-      for (let i = 0; i < cols; i++)
-        for (let j = 0; j < rows; j++) {
-          ctx.beginPath();
-          ctx.arc(padX + i*sx, padY + j*sy, 4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      ctx.fillStyle = "rgba(180,140,60,0.18)";
-      for (let j = 0; j < rows; j++) {
-        const y = padY + j * sy;
-        ctx.fillRect(padX - 14, y - 1, w - padX*2 + 28, 2);
-      }
-    });
-
-    const picoTex = makeCanvasTex(512, 1100, (ctx, w, h) => {
-      ctx.fillStyle = "#0d4a37";
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "rgba(240,240,235,0.9)";
-      ctx.font = "bold 22px monospace";
-      ctx.textAlign = "center";
-      ctx.fillText("Raspberry Pi Pico W", w/2, h*0.66);
-      ctx.font = "bold 14px monospace";
-      ctx.fillText("©2022", w/2, h*0.69);
-      ctx.font = "bold 11px monospace";
-      ctx.fillStyle = "rgba(240,240,235,0.7)";
-      const leftLabels = ["GP0","GP1","GND","GP2","GP3","GP4","GP5","GND","GP6","GP7","GP8","GP9","GND","GP10","GP11","GP12","GP13","GND","GP14","GP15"];
-      const rightLabels = ["VBUS","VSYS","GND","3V3_EN","3V3","ADC_VR","AGND","GP28","GP27","GP26","RUN","GP22","GND","GP21","GP20","GP19","GP18","GND","GP17","GP16"];
-      leftLabels.forEach((t, i) => {
-        const y = 38 + i * (h - 80) / leftLabels.length;
-        ctx.textAlign = "left";
-        ctx.fillText(t, 14, y);
-        ctx.textAlign = "right";
-        ctx.fillText(rightLabels[i], w - 14, y);
-      });
-      ctx.fillStyle = "rgba(240,240,235,0.5)";
-      ctx.textAlign = "center";
-      ctx.font = "bold 10px monospace";
-      ctx.fillText("BOOTSEL", w/2, h*0.16);
-    });
-
-    // ------------------- MATERIALS -------------------
     const matPCBTop = new THREE.MeshStandardMaterial({ color: 0xffffff, map: pcbSilkTex, roughness: 0.6, metalness: 0.25 });
     const matPCBSide = new THREE.MeshStandardMaterial({ color: 0x14141a, roughness: 0.7, metalness: 0.2 });
-    const matPicoTop = new THREE.MeshStandardMaterial({ color: 0xffffff, map: picoTex, roughness: 0.55, metalness: 0.3 });
-    const matPicoSide = new THREE.MeshStandardMaterial({ color: 0x0c4029, roughness: 0.55, metalness: 0.3 });
     const matModuleWhite = new THREE.MeshStandardMaterial({ color: 0xeeeae0, roughness: 0.78 });
     const matJST = new THREE.MeshStandardMaterial({ color: 0xefefe6, roughness: 0.55 });
     const matGold = new THREE.MeshStandardMaterial({ color: 0xd9a93a, roughness: 0.28, metalness: 0.95 });
@@ -310,9 +186,10 @@ export default function PicoBricks3D({
       return s;
     };
 
-    // ------------------- BOARD ROOT -------------------
+    // ------------------- BOARD ROOT (UPRIGHT/VERTICAL) -------------------
     const board = new THREE.Group();
-    board.rotation.x = -0.08;
+    // Make board vertical (face camera directly) instead of horizontal/lying flat
+    board.rotation.x = -Math.PI / 2 + 0.08; // tilt slightly forward for depth
     scene.add(board);
 
     // ------------------- PCB BASE -------------------
@@ -349,210 +226,42 @@ export default function PicoBricks3D({
       uv.needsUpdate = true;
     }
 
-    [
-      [-pcbW/2 + 0.4,  pcbH/2 - 0.4],
-      [ pcbW/2 - 0.4,  pcbH/2 - 0.4],
-      [-pcbW/2 + 0.4, -pcbH/2 + 0.4],
-      [ pcbW/2 - 0.4, -pcbH/2 + 0.4],
-    ].forEach(([x, z]) => {
-      const ring = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.17, 0.17, 0.21, 28),
-        new THREE.MeshStandardMaterial({ color: 0x707070, metalness: 0.85, roughness: 0.3 })
-      );
-      ring.position.set(x, 0.015, -z);
-      ring.castShadow = true;
-      board.add(ring);
-      const hole = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.085, 0.085, 0.32, 24),
-        new THREE.MeshBasicMaterial({ color: 0x000000 })
-      );
-      hole.position.set(x, 0.025, -z);
-      board.add(hole);
-    });
-
     const anim = {};
-
-    // ------------------- RASPBERRY PI PICO W -------------------
-    const buildPicoW = () => {
-      const g = new THREE.Group();
-
-      const picoBoxGeo = new THREE.BoxGeometry(0.95, 0.085, 2.20);
-      const picoBoxMats = [matPicoSide, matPicoSide, matPicoTop, matPicoSide, matPicoSide, matPicoSide];
-      const picoBoard = new THREE.Mesh(picoBoxGeo, picoBoxMats);
-      picoBoard.position.y = 0.0425;
-      picoBoard.castShadow = true; picoBoard.receiveShadow = true;
-      g.add(picoBoard);
-
-      const rp = new THREE.Mesh(
-        new THREE.BoxGeometry(0.42, 0.05, 0.42),
-        new THREE.MeshStandardMaterial({ color: 0x101015, roughness: 0.45, metalness: 0.15 })
-      );
-      rp.position.set(0.05, 0.111, -0.05);
-      rp.castShadow = true;
-      g.add(rp);
-      const dot = new THREE.Mesh(
-        new THREE.CircleGeometry(0.018, 16),
-        new THREE.MeshStandardMaterial({ color: 0xeeeeee })
-      );
-      dot.rotation.x = -Math.PI / 2;
-      dot.position.set(-0.13, 0.137, -0.22);
-      g.add(dot);
-
-      const wifi = new THREE.Mesh(
-        new THREE.BoxGeometry(0.36, 0.06, 0.42),
-        new THREE.MeshStandardMaterial({ color: 0xc8c8c8, metalness: 0.85, roughness: 0.3 })
-      );
-      wifi.position.set(0, 0.116, 0.55);
-      wifi.castShadow = true;
-      g.add(wifi);
-      const ant = new THREE.Mesh(
-        new THREE.BoxGeometry(0.28, 0.005, 0.32),
-        new THREE.MeshStandardMaterial({ color: 0xd9a93a, metalness: 0.9, roughness: 0.3 })
-      );
-      ant.position.set(0, 0.118, 0.94);
-      g.add(ant);
-
-      const usb = new THREE.Mesh(
-        new THREE.BoxGeometry(0.46, 0.18, 0.30),
-        new THREE.MeshStandardMaterial({ color: 0xb8b8b8, metalness: 0.85, roughness: 0.3 })
-      );
-      usb.position.set(0, 0.135, -1.04);
-      usb.castShadow = true;
-      g.add(usb);
-      const usbHole = new THREE.Mesh(
-        new THREE.BoxGeometry(0.34, 0.10, 0.05),
-        new THREE.MeshBasicMaterial({ color: 0x222222 })
-      );
-      usbHole.position.set(0, 0.135, -1.21);
-      g.add(usbHole);
-
-      const boot = new THREE.Mesh(
-        new THREE.BoxGeometry(0.10, 0.04, 0.10),
-        new THREE.MeshStandardMaterial({ color: 0xeeeeee })
-      );
-      boot.position.set(-0.20, 0.105, -0.55);
-      g.add(boot);
-
-      [[-0.32, 0.78], [0.32, 0.78], [-0.32, -0.78]].forEach(([x, z]) => {
-        const tp = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.025, 0.025, 0.02, 12), matSilver
-        );
-        tp.position.set(x, 0.097, z);
-        g.add(tp);
-      });
-
-      const pinGeo = new THREE.BoxGeometry(0.055, 0.075, 0.055);
-      const pinMesh = new THREE.InstancedMesh(pinGeo, matGold, 40);
-      const m4 = new THREE.Matrix4();
-      let k = 0;
-      for (let i = 0; i < 20; i++) {
-        const z = -0.95 + i * 0.10;
-        m4.makeTranslation(-0.43, 0.117, z); pinMesh.setMatrixAt(k++, m4);
-        m4.makeTranslation( 0.43, 0.117, z); pinMesh.setMatrixAt(k++, m4);
-      }
-      pinMesh.count = k;
-      pinMesh.instanceMatrix.needsUpdate = true;
-      pinMesh.castShadow = true;
-      g.add(pinMesh);
-
-      const stripL = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.03, 1.95), matChip);
-      stripL.position.set(-0.43, 0.10, 0);
-      g.add(stripL);
-      const stripR = stripL.clone();
-      stripR.position.x = 0.43;
-      g.add(stripR);
-
-      const act = new THREE.Mesh(
-        new THREE.BoxGeometry(0.05, 0.03, 0.05),
-        new THREE.MeshStandardMaterial({
-          color: 0x88ffaa, emissive: 0x33ff66, emissiveIntensity: 1.5,
-        })
-      );
-      act.position.set(-0.18, 0.105, 0.85);
-      g.add(act);
-      const actGlow = glowSprite(0x33ff66, 0.55, 0.7);
-      actGlow.position.set(-0.18, 0.13, 0.85);
-      g.add(actGlow);
-      anim.activityLed = act;
-      anim.activityGlow = actGlow;
-
-      for (let i = 0; i < 3; i++) {
-        const dp = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.07, 0.05), matGold);
-        dp.position.set(-0.10 + i * 0.10, 0.117, 1.06);
-        g.add(dp);
-      }
-
-      g.position.set(0, 0.05, -1.30);
-      return g;
-    };
-    board.add(buildPicoW());
 
     // ------------------- MODULE FACTORY -------------------
     function moduleBase(jstSide) {
       const g = new THREE.Group();
       const sx = jstSide === "right" ? 1 : -1;
-
       const base = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.07, 1.05), matModuleWhite);
       base.position.y = 0.035;
       base.castShadow = true; base.receiveShadow = true;
       g.add(base);
-
       const jst = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.20, 0.24), matJST);
       jst.position.set(0.55 * sx, 0.14, 0);
-      jst.castShadow = true;
       g.add(jst);
-      const slot = new THREE.Mesh(
-        new THREE.BoxGeometry(0.30, 0.13, 0.10),
-        new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6 })
-      );
-      slot.position.set(0.55 * sx - sx * 0.12, 0.155, 0);
-      g.add(slot);
-      for (let i = 0; i < 4; i++) {
-        const pin = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.06, 0.02), matGold);
-        pin.position.set(0.55 * sx - sx * 0.07, 0.16, -0.08 + i * 0.053);
-        g.add(pin);
-      }
-
-      const screwBody = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.10, 0.10, 0.07, 18),
-        new THREE.MeshStandardMaterial({ color: 0xb5b5b5, metalness: 0.7, roughness: 0.3 })
-      );
-      screwBody.position.set(-0.55 * sx, 0.07, 0);
-      g.add(screwBody);
-      const screwSlot = new THREE.Mesh(
-        new THREE.BoxGeometry(0.12, 0.005, 0.025),
-        new THREE.MeshStandardMaterial({ color: 0x444444 })
-      );
-      screwSlot.position.set(-0.55 * sx, 0.108, 0);
-      g.add(screwSlot);
-
       return g;
     }
 
     const leftX = -2.8, rightX = 2.8;
     const rowZ = [-2.40, -1.20, 0.0, 1.20, 2.40];
 
-    // ------------------- LEFT MODULES -------------------
-    // 1. OLED
+    // OLED
     {
       const m = moduleBase("right");
       m.position.set(leftX, 0, rowZ[0]);
       board.add(m);
-
       const dispPcb = new THREE.Mesh(
         new THREE.BoxGeometry(1.05, 0.04, 0.55),
         new THREE.MeshStandardMaterial({ color: 0x1c4a85, metalness: 0.5, roughness: 0.4 })
       );
       dispPcb.position.set(-0.10, 0.09, 0);
       m.add(dispPcb);
-
       const bezel = new THREE.Mesh(
         new THREE.BoxGeometry(0.95, 0.045, 0.46),
         new THREE.MeshStandardMaterial({ color: 0x0a0a0e, roughness: 0.5 })
       );
       bezel.position.set(-0.10, 0.115, 0);
       m.add(bezel);
-
       const glass = new THREE.Mesh(
         new THREE.PlaneGeometry(0.85, 0.40),
         new THREE.MeshStandardMaterial({
@@ -563,27 +272,13 @@ export default function PicoBricks3D({
       glass.rotation.x = -Math.PI / 2;
       glass.position.set(-0.10, 0.139, 0);
       m.add(glass);
-
-      for (let i = 0; i < 4; i++) {
-        const pin = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.10, 0.04), matGold);
-        pin.position.set(-0.42 + i * 0.10, 0.125, -0.34);
-        m.add(pin);
-      }
-      const pinHeader = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.06, 0.08), matChip);
-      pinHeader.position.set(-0.27, 0.10, -0.34);
-      m.add(pinHeader);
-
-      const chip = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 0.12), matChip);
-      chip.position.set(-0.10, 0.115, 0.24);
-      m.add(chip);
     }
 
-    // 2. RGB LED
+    // RGB LED
     {
       const m = moduleBase("right");
       m.position.set(leftX, 0, rowZ[1]);
       board.add(m);
-
       const housing = new THREE.Mesh(
         new THREE.BoxGeometry(0.50, 0.10, 0.50),
         new THREE.MeshStandardMaterial({ color: 0xf5f5ed, roughness: 0.6 })
@@ -604,27 +299,13 @@ export default function PicoBricks3D({
       m.add(ledGlow);
       anim.rgbLed = led;
       anim.rgbGlow = ledGlow;
-
-      const cap = new THREE.Mesh(
-        new THREE.BoxGeometry(0.10, 0.05, 0.06),
-        new THREE.MeshStandardMaterial({ color: 0x8a6a40, roughness: 0.5 })
-      );
-      cap.position.set(0.10, 0.10, 0);
-      m.add(cap);
     }
 
-    // 3. LED + Button
+    // LED + Button
     {
       const m = moduleBase("right");
       m.position.set(leftX, 0, rowZ[2]);
       board.add(m);
-
-      const ledBase = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.08, 0.085, 0.05, 24),
-        new THREE.MeshStandardMaterial({ color: 0x880000 })
-      );
-      ledBase.position.set(-0.45, 0.095, 0);
-      m.add(ledBase);
       const led = new THREE.Mesh(
         new THREE.SphereGeometry(0.085, 22, 22, 0, Math.PI*2, 0, Math.PI * 0.55),
         new THREE.MeshStandardMaterial({
@@ -639,172 +320,71 @@ export default function PicoBricks3D({
       m.add(ledGlow);
       anim.redLed = led;
       anim.redGlow = ledGlow;
-
-      const btnHousing = new THREE.Mesh(
-        new THREE.BoxGeometry(0.36, 0.18, 0.36),
-        new THREE.MeshStandardMaterial({ color: 0xf5f5ed, roughness: 0.5 })
-      );
-      btnHousing.position.set(0.05, 0.16, 0);
-      m.add(btnHousing);
-      [[-0.16,-0.16],[0.16,-0.16],[-0.16,0.16],[0.16,0.16]].forEach(([dx, dz]) => {
-        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.04), matSilver);
-        leg.position.set(0.05 + dx, 0.10, dz);
-        m.add(leg);
-      });
       const cap = new THREE.Mesh(
         new THREE.CylinderGeometry(0.10, 0.10, 0.10, 24),
         new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.55 })
       );
       cap.position.set(0.05, 0.30, 0);
       m.add(cap);
-      const res = new THREE.Mesh(
-        new THREE.BoxGeometry(0.10, 0.04, 0.04),
-        new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
-      );
-      res.position.set(-0.45, 0.085, -0.30);
-      m.add(res);
     }
 
-    // 4. DHT11
+    // DHT11
     {
       const m = moduleBase("right");
       m.position.set(leftX, 0, rowZ[3]);
       board.add(m);
-
       const body = new THREE.Mesh(
         new THREE.BoxGeometry(0.55, 0.18, 0.78),
-        new THREE.MeshStandardMaterial({ map: dhtTex, color: 0xffffff, roughness: 0.7 })
+        new THREE.MeshStandardMaterial({ color: 0x4ea4d4, roughness: 0.7 })
       );
       body.position.set(0.0, 0.16, 0);
       m.add(body);
-
-      for (let i = 0; i < 4; i++) {
-        const lead = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.06, 0.02), matSilver);
-        lead.position.set(-0.18 + i * 0.12, 0.10, -0.42);
-        m.add(lead);
-      }
-
-      const res = new THREE.Mesh(
-        new THREE.BoxGeometry(0.10, 0.04, 0.04),
-        new THREE.MeshStandardMaterial({ color: 0xeeddaa })
-      );
-      res.position.set(0.40, 0.08, 0);
-      m.add(res);
     }
 
-    // 5. Relay
+    // Relay
     {
       const m = moduleBase("right");
       m.position.set(leftX, 0, rowZ[4]);
       board.add(m);
-
       const relay = new THREE.Mesh(
         new THREE.BoxGeometry(0.78, 0.36, 0.62),
         new THREE.MeshStandardMaterial({ color: 0x111114, roughness: 0.45 })
       );
       relay.position.set(0.15, 0.23, 0);
       m.add(relay);
-      const label = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.50, 0.20),
-        new THREE.MeshStandardMaterial({ color: 0x232328 })
-      );
-      label.rotation.x = -Math.PI / 2;
-      label.position.set(0.15, 0.412, 0);
-      m.add(label);
-
       const term = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.26, 0.42), matGreenTerm);
       term.position.set(-0.45, 0.18, 0);
       m.add(term);
-      for (let i = 0; i < 3; i++) {
-        const s = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.04, 14), matSilver);
-        s.position.set(-0.45, 0.32, -0.13 + i * 0.13);
-        m.add(s);
-        const slot = new THREE.Mesh(
-          new THREE.BoxGeometry(0.07, 0.003, 0.018),
-          new THREE.MeshStandardMaterial({ color: 0x222222 })
-        );
-        slot.position.set(-0.45, 0.342, -0.13 + i * 0.13);
-        m.add(slot);
-      }
-      const sLed = new THREE.Mesh(
-        new THREE.SphereGeometry(0.04, 12, 12),
-        new THREE.MeshStandardMaterial({ color: 0xff4400, emissive: 0xff4400, emissiveIntensity: 1.2 })
-      );
-      sLed.position.set(-0.10, 0.10, -0.40);
-      m.add(sLed);
     }
 
-    // ------------------- RIGHT MODULES -------------------
-    // 6. Motor Driver
+    // Motor Driver
     {
       const m = moduleBase("left");
       m.position.set(rightX, 0, rowZ[0]);
       board.add(m);
-
       [-0.20, 0.20].forEach((zo) => {
         const chip = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.06, 0.30), matChip);
         chip.position.set(-0.10, 0.10, zo);
         m.add(chip);
-        const dot = new THREE.Mesh(
-          new THREE.CircleGeometry(0.012, 12),
-          new THREE.MeshStandardMaterial({ color: 0xeeeeee })
-        );
-        dot.rotation.x = -Math.PI / 2;
-        dot.position.set(-0.21, 0.131, zo - 0.10);
-        m.add(dot);
       });
       [-0.25, 0.25].forEach((zo) => {
         const t = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.24, 0.40), matGreenTerm);
         t.position.set(0.42, 0.17, zo);
         m.add(t);
-        const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.03, 14), matSilver);
-        sc.position.set(0.42, 0.30, zo);
-        m.add(sc);
       });
-      const cap = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.06, 0.10, 18),
-        new THREE.MeshStandardMaterial({ color: 0x111111 })
-      );
-      cap.position.set(0.10, 0.12, 0.40);
-      m.add(cap);
     }
 
-    // 7. Wireless + IR
+    // Wireless+IR
     {
       const m = moduleBase("left");
       m.position.set(rightX, 0, rowZ[1]);
       board.add(m);
-
       const shield = new THREE.Mesh(
         new THREE.BoxGeometry(0.78, 0.10, 0.55),
         new THREE.MeshStandardMaterial({ color: 0xb8b8b8, metalness: 0.85, roughness: 0.3 })
       );
       shield.position.set(0.05, 0.115, -0.18);
       m.add(shield);
-      for (let i = 0; i < 4; i++) {
-        const line = new THREE.Mesh(
-          new THREE.BoxGeometry(0.65, 0.005, 0.015),
-          new THREE.MeshStandardMaterial({ color: 0x666666 })
-        );
-        line.position.set(0.05, 0.171, -0.34 + i * 0.10);
-        m.add(line);
-      }
-      const antenna = new THREE.Mesh(
-        new THREE.BoxGeometry(0.25, 0.005, 0.32),
-        new THREE.MeshStandardMaterial({ color: 0xd9a93a, metalness: 0.9, roughness: 0.3 })
-      );
-      antenna.position.set(0.45, 0.073, -0.18);
-      m.add(antenna);
-
-      const irBase = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.06, 0.12), matSilver);
-      irBase.position.set(-0.10, 0.10, 0.30);
-      m.add(irBase);
-      const irDome = new THREE.Mesh(
-        new THREE.SphereGeometry(0.08, 22, 16, 0, Math.PI*2, 0, Math.PI*0.55),
-        new THREE.MeshStandardMaterial({ color: 0x0e0e12, roughness: 0.45 })
-      );
-      irDome.position.set(-0.10, 0.13, 0.30);
-      m.add(irDome);
       const irLed = new THREE.Mesh(
         new THREE.SphereGeometry(0.025, 12, 12),
         new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xff3333, emissiveIntensity: 0.8 })
@@ -814,7 +394,7 @@ export default function PicoBricks3D({
       anim.irLed = irLed;
     }
 
-    // 8. Buzzer
+    // Buzzer
     {
       const m = moduleBase("left");
       m.position.set(rightX, 0, rowZ[2]);
@@ -825,27 +405,10 @@ export default function PicoBricks3D({
       );
       can.position.set(-0.05, 0.20, 0);
       m.add(can);
-      const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.32, 18), matChip);
-      hole.position.set(-0.05, 0.20, 0);
-      m.add(hole);
-      const plus = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.15, 0.04),
-        new THREE.MeshStandardMaterial({ color: 0xeeeeee })
-      );
-      plus.rotation.x = -Math.PI / 2;
-      plus.position.set(0.18, 0.351, 0);
-      m.add(plus);
-      const plus2 = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.04, 0.15),
-        new THREE.MeshStandardMaterial({ color: 0xeeeeee })
-      );
-      plus2.rotation.x = -Math.PI / 2;
-      plus2.position.set(0.18, 0.351, 0);
-      m.add(plus2);
       anim.buzzer = can;
     }
 
-    // 9. LDR
+    // LDR
     {
       const m = moduleBase("left");
       m.position.set(rightX, 0, rowZ[3]);
@@ -856,157 +419,29 @@ export default function PicoBricks3D({
       );
       body.position.set(-0.05, 0.13, 0);
       m.add(body);
-      for (let i = 0; i < 5; i++) {
-        const line = new THREE.Mesh(
-          new THREE.TorusGeometry(0.04 + i * 0.025, 0.008, 6, 24),
-          new THREE.MeshStandardMaterial({ color: 0x222222 })
-        );
-        line.rotation.x = Math.PI / 2;
-        line.position.set(-0.05, 0.185, 0);
-        m.add(line);
-      }
-      [-0.10, 0.10].forEach((dx) => {
-        const lead = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.02), matSilver);
-        lead.position.set(-0.05 + dx, 0.10, 0.22);
-        m.add(lead);
-      });
     }
 
-    // 10. Potentiometer
+    // Potentiometer
     {
       const m = moduleBase("left");
       m.position.set(rightX, 0, rowZ[4]);
       board.add(m);
-
       const baseBody = new THREE.Mesh(
         new THREE.BoxGeometry(0.5, 0.15, 0.5),
         new THREE.MeshStandardMaterial({ color: 0x1c5dad, roughness: 0.5 })
       );
       baseBody.position.set(-0.05, 0.14, 0);
       m.add(baseBody);
-
-      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.10, 18), matSilver);
-      shaft.position.set(-0.05, 0.27, 0);
-      m.add(shaft);
-
       const knob = new THREE.Mesh(
         new THREE.CylinderGeometry(0.20, 0.22, 0.13, 32),
         new THREE.MeshStandardMaterial({ color: 0x3a3a3e, metalness: 0.55, roughness: 0.4 })
       );
       knob.position.set(-0.05, 0.36, 0);
       m.add(knob);
-      const notch = new THREE.Mesh(
-        new THREE.BoxGeometry(0.04, 0.025, 0.18),
-        new THREE.MeshStandardMaterial({ color: 0xffffff })
-      );
-      notch.position.set(0, 0.075, -0.06);
-      knob.add(notch);
       anim.potKnob = knob;
     }
 
-    // ------------------- PROTOBOARD -------------------
-    {
-      const proto = new THREE.Mesh(
-        new THREE.BoxGeometry(2.85, 0.08, 1.95),
-        new THREE.MeshStandardMaterial({ map: protoTex, roughness: 0.7 })
-      );
-      proto.position.set(0, 0.04, 1.65);
-      proto.receiveShadow = true; proto.castShadow = true;
-      board.add(proto);
-    }
-
-    // ------------------- SERVO MOTOR -------------------
-    const servo = new THREE.Group();
-    {
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.55, 0.50, 0.30),
-        new THREE.MeshStandardMaterial({ color: 0x2a64c8, roughness: 0.4 })
-      );
-      body.position.y = 0.25;
-      body.castShadow = true;
-      servo.add(body);
-      const top = new THREE.Mesh(
-        new THREE.BoxGeometry(0.30, 0.08, 0.30),
-        new THREE.MeshStandardMaterial({ color: 0x2a64c8, roughness: 0.4 })
-      );
-      top.position.set(0.20, 0.54, 0);
-      servo.add(top);
-      [[-0.40, 0],[0.55, 0]].forEach(([dx]) => {
-        const tab = new THREE.Mesh(
-          new THREE.BoxGeometry(0.20, 0.05, 0.30),
-          new THREE.MeshStandardMaterial({ color: 0x2a64c8 })
-        );
-        tab.position.set(dx, 0.30, 0);
-        servo.add(tab);
-        const sh = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.04, 0.04, 0.06, 14),
-          new THREE.MeshBasicMaterial({ color: 0x111111 })
-        );
-        sh.rotation.x = Math.PI / 2;
-        sh.position.set(dx, 0.30, 0);
-        servo.add(sh);
-      });
-      const gear = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.10, 0.10, 0.08, 24),
-        new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.4 })
-      );
-      gear.position.set(-0.10, 0.62, 0);
-      servo.add(gear);
-
-      const toothGeo = new THREE.BoxGeometry(0.018, 0.06, 0.05);
-      const toothMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee });
-      const teeth = new THREE.InstancedMesh(toothGeo, toothMat, 12);
-      const M = new THREE.Matrix4();
-      for (let i = 0; i < 12; i++) {
-        const a = (i / 12) * Math.PI * 2;
-        M.makeRotationY(a);
-        M.setPosition(-0.10 + Math.cos(a) * 0.105, 0.625, Math.sin(a) * 0.105);
-        teeth.setMatrixAt(i, M);
-      }
-      teeth.instanceMatrix.needsUpdate = true;
-      servo.add(teeth);
-
-      const arm = new THREE.Group();
-      const armBar = new THREE.Mesh(
-        new THREE.BoxGeometry(0.55, 0.04, 0.06),
-        new THREE.MeshStandardMaterial({ color: 0xf5f5ed, roughness: 0.5 })
-      );
-      armBar.position.x = 0.20;
-      arm.add(armBar);
-      const armHub = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.07, 0.05, 18),
-        new THREE.MeshStandardMaterial({ color: 0xf5f5ed })
-      );
-      arm.add(armHub);
-      for (let i = 0; i < 4; i++) {
-        const h = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.012, 0.012, 0.06, 10),
-          new THREE.MeshBasicMaterial({ color: 0x111111 })
-        );
-        h.position.set(0.10 + i * 0.10, 0, 0);
-        arm.add(h);
-      }
-      arm.position.set(-0.10, 0.68, 0);
-      servo.add(arm);
-      anim.servoArm = arm;
-
-      ["#a02020", "#3a2a18", "#d49830"].forEach((col, i) => {
-        const wire = new THREE.Mesh(
-          new THREE.TorusGeometry(0.55, 0.025, 6, 24, Math.PI * 0.55),
-          new THREE.MeshStandardMaterial({ color: col, roughness: 0.6 })
-        );
-        wire.rotation.set(Math.PI / 2, 0, Math.PI * 0.45);
-        wire.position.set(-0.20, 0.20, -0.20 + i * 0.04);
-        servo.add(wire);
-      });
-
-      servo.position.set(-1.15, 0.08, 1.20);
-      servo.scale.set(0.85, 0.85, 0.85);
-      servo.rotation.y = -0.4;
-    }
-    board.add(servo);
-
-    // ------------------- POWER LED -------------------
+    // Power LED
     const powerLed = new THREE.Mesh(
       new THREE.BoxGeometry(0.07, 0.04, 0.07),
       new THREE.MeshStandardMaterial({
@@ -1028,11 +463,7 @@ export default function PicoBricks3D({
       dragging = true; lastX = e.clientX; lastY = e.clientY;
       container.style.cursor = "grabbing"; spinning = false;
     };
-    const onMouseUp = () => {
-      if (!interactive) return;
-      dragging = false;
-      container.style.cursor = "grab";
-    };
+    const onMouseUp = () => { if (!interactive) return; dragging = false; container.style.cursor = "grab"; };
     const onMouseMove = (e) => {
       if (!interactive || !dragging) return;
       camTheta -= (e.clientX - lastX) * 0.008;
@@ -1041,25 +472,11 @@ export default function PicoBricks3D({
       updateCam();
     };
     const onWheel = (e) => {
+      if (!interactive) return;
       e.preventDefault();
       camR = Math.max(7, Math.min(22, camR + e.deltaY * 0.012));
       updateCam();
     };
-    const onTouchStart = (e) => {
-      if (e.touches.length === 1) {
-        dragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
-        spinning = false;
-      }
-    };
-    const onTouchMove = (e) => {
-      if (!dragging || e.touches.length !== 1) return;
-      e.preventDefault();
-      camTheta -= (e.touches[0].clientX - lastX) * 0.008;
-      camPhi = Math.max(-0.2, Math.min(1.4, camPhi + (e.touches[0].clientY - lastY) * 0.006));
-      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
-      updateCam();
-    };
-    const onTouchEnd = () => { dragging = false; };
     const onResize = () => {
       W = container.clientWidth || 680;
       renderer.setSize(W, H);
@@ -1067,14 +484,11 @@ export default function PicoBricks3D({
       camera.updateProjectionMatrix();
     };
 
-    container.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mouseup", onMouseUp);
-    window.addEventListener("mousemove", onMouseMove);
     if (interactive) {
+      container.addEventListener("mousedown", onMouseDown);
+      window.addEventListener("mouseup", onMouseUp);
+      window.addEventListener("mousemove", onMouseMove);
       container.addEventListener("wheel", onWheel, { passive: false });
-      container.addEventListener("touchstart", onTouchStart, { passive: true });
-      container.addEventListener("touchmove", onTouchMove, { passive: false });
-      container.addEventListener("touchend", onTouchEnd);
     }
     window.addEventListener("resize", onResize);
 
@@ -1083,7 +497,8 @@ export default function PicoBricks3D({
     const clock = new THREE.Clock();
     const loop = () => {
       const t = clock.getElapsedTime();
-      if (spinning) { camTheta += 0.004; updateCam(); }
+      // Subtle floating only — NO rotation, board stays vertical/upright
+      board.position.y = Math.sin(t * 0.6) * 0.08;
 
       if (anim.rgbLed) {
         const hue = (t * 0.22) % 1;
@@ -1091,11 +506,6 @@ export default function PicoBricks3D({
         anim.rgbLed.material.color.copy(c);
         anim.rgbLed.material.emissive.copy(c);
         anim.rgbGlow.material.color.copy(c);
-      }
-      if (anim.activityLed) {
-        const v = 0.45 + (Math.sin(t * 5.5) + 1) * 0.6;
-        anim.activityLed.material.emissiveIntensity = v;
-        anim.activityGlow.material.opacity = 0.4 + v * 0.25;
       }
       if (anim.redLed) {
         const v = 0.6 + (Math.sin(t * 2.7) + 1) * 0.7;
@@ -1115,9 +525,6 @@ export default function PicoBricks3D({
       if (anim.potKnob) {
         anim.potKnob.rotation.y = Math.sin(t * 0.55) * 1.0;
       }
-      if (anim.servoArm) {
-        anim.servoArm.rotation.y = Math.sin(t * 1.1) * 0.9;
-      }
       if (anim.irLed) {
         const blink = (Math.sin(t * 3.2) + Math.sin(t * 7.8)) * 0.5 + 0.5;
         anim.irLed.material.emissiveIntensity = 0.3 + blink * 1.4;
@@ -1130,14 +537,11 @@ export default function PicoBricks3D({
 
     return () => {
       cancelAnimationFrame(animId);
-      container.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("mouseup", onMouseUp);
-      window.removeEventListener("mousemove", onMouseMove);
       if (interactive) {
+        container.removeEventListener("mousedown", onMouseDown);
+        window.removeEventListener("mouseup", onMouseUp);
+        window.removeEventListener("mousemove", onMouseMove);
         container.removeEventListener("wheel", onWheel);
-        container.removeEventListener("touchstart", onTouchStart);
-        container.removeEventListener("touchmove", onTouchMove);
-        container.removeEventListener("touchend", onTouchEnd);
       }
       window.removeEventListener("resize", onResize);
       if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
@@ -1145,9 +549,6 @@ export default function PicoBricks3D({
       pcbSilkTex.dispose();
       oledTex.dispose();
       glowTex.dispose();
-      dhtTex.dispose();
-      protoTex.dispose();
-      picoTex.dispose();
       scene.traverse((obj) => {
         if (obj.geometry) obj.geometry.dispose();
         if (obj.material) {

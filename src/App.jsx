@@ -3,6 +3,7 @@ import { useData, getLocalPhoto } from "./useData";
 import BerryBot3D from "./BerryBot3D";
 import TankRobot3D from "./TankRobot3D";
 import PicoBricks3D from "./PicoBricks3D";
+import Robot3DPreview from "./Robot3DPreview";
 
 // ═══════════════════════════════════════════════════════════
 //  BerryBot LMS — Production (Supabase)
@@ -5010,11 +5011,13 @@ function HomeworkSubCard({sub,student,onReview}){
 // ═══════════════════════════════════════════════════════════════
 // KIT SELECTOR — 3 kit yan yana, tek ekran responsive
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// KIT SELECTOR — Uzay savaşı temalı, oyun benzeri seçim ekranı
+// ═══════════════════════════════════════════════════════════════
 function KitSelector({ onSelect }) {
   const [hovered, setHovered] = useState(null);
   const kits = Object.values(KITS);
 
-  // Logo file mapping (handle picobrick/picobricks naming variants)
   const logoFor = (kitId) => {
     if (kitId === "picobricks") return "/logos/picobricks.png";
     return `/logos/${kitId}.png`;
@@ -5022,30 +5025,40 @@ function KitSelector({ onSelect }) {
 
   return (
     <div style={{
-      height: "100vh",
-      width: "100vw",
-      background: "linear-gradient(135deg,#0a0518,#1a0a3a,#0a0518)",
-      display: "flex",
-      flexDirection: "column",
-      position: "fixed",
-      inset: 0,
-      overflow: "hidden",
+      height: "100vh", width: "100vw",
+      background: "radial-gradient(ellipse at 50% 30%,#1a1448 0%,#0a0820 50%,#000 100%)",
+      display: "flex", flexDirection: "column",
+      position: "fixed", inset: 0, overflow: "hidden",
       padding: "clamp(8px, 1.5vh, 18px) clamp(8px, 1.5vw, 18px)",
       boxSizing: "border-box",
+      fontFamily: "'Orbitron','Audiowide',system-ui,sans-serif",
     }}>
       <style>{`
-        @keyframes ks-twinkle { 0%,100%{opacity:.15} 50%{opacity:.7} }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        @keyframes ks-star { 0%,100%{opacity:.2;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
         @keyframes ks-fade { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes ks-glow { 0%,100%{box-shadow:0 0 24px var(--gc),0 0 0 1px var(--gc)} 50%{box-shadow:0 0 40px var(--gc),0 0 0 2px var(--gc)} }
-        @keyframes ks-shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+        @keyframes ks-glow-pulse { 0%,100%{box-shadow:0 0 24px var(--gc),0 0 48px var(--gc),0 0 0 1px var(--gc)} 50%{box-shadow:0 0 40px var(--gc),0 0 80px var(--gc),0 0 0 2px var(--gc)} }
+        @keyframes ks-scan { 0%{transform:translateY(-100%)} 100%{transform:translateY(100vh)} }
+        @keyframes ks-flicker { 0%,100%{opacity:1} 50%{opacity:.7} }
+        @keyframes ks-title-glow { 0%,100%{text-shadow:0 0 20px #00d4ff,0 0 40px #00d4ff88} 50%{text-shadow:0 0 30px #00d4ff,0 0 60px #00d4ff} }
+        @keyframes ks-warp { from{transform:translateY(100vh) scale(0.3);opacity:0} to{transform:translateY(-20vh) scale(1.5);opacity:1} }
+        @keyframes ks-orbit-line { 0%{stroke-dashoffset:1000} 100%{stroke-dashoffset:0} }
 
         .ks-card {
-          animation: ks-fade .6s ease-out backwards;
-          transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .3s;
+          animation: ks-fade .8s ease-out backwards;
+          transition: transform .35s cubic-bezier(.34,1.56,.64,1), border-color .3s, box-shadow .3s;
           cursor: pointer;
+          position: relative;
         }
-        .ks-card:hover { transform: translateY(-6px) scale(1.02); }
-        .ks-card.hovered { animation: ks-glow 2s infinite; }
+        .ks-card:hover { transform: translateY(-8px) scale(1.02); }
+        .ks-card.hovered { animation: ks-glow-pulse 2s infinite, ks-fade .8s ease-out backwards; }
+
+        /* Animated corner brackets — futuristic UI */
+        .ks-corner { position: absolute; width: 22px; height: 22px; border: 2px solid var(--gc); pointer-events: none; }
+        .ks-corner.tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+        .ks-corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+        .ks-corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+        .ks-corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
 
         /* Lock 3D viewers — no UI chrome, no interactivity */
         .ks-3d-locked > div { height: 100% !important; min-height: 0 !important; max-height: 100% !important; width: 100% !important; }
@@ -5061,28 +5074,55 @@ function KitSelector({ onSelect }) {
         .ks-3d-locked [class*="absolute bottom"] { display: none !important; }
         .ks-3d-locked canvas { pointer-events: none !important; }
 
+        /* Scan line */
+        .ks-scanline {
+          position: absolute; left: 0; right: 0; height: 2px;
+          background: linear-gradient(90deg,transparent,#00d4ff66,transparent);
+          animation: ks-scan 4s linear infinite;
+          pointer-events: none; z-index: 1;
+        }
+
         @media (max-width: 880px) {
           .ks-grid { grid-template-columns: 1fr !important; gap: 8px !important; overflow-y: auto !important; }
-          .ks-card { min-height: 180px !important; }
         }
       `}</style>
 
-      {/* Background twinkles */}
-      {[...Array(28)].map((_, i) => (
+      {/* Background — twinkling stars */}
+      {[...Array(80)].map((_, i) => (
         <div key={i} style={{
           position: "absolute",
-          left: `${(i * 7 + 5) % 95}%`,
-          top: `${(i * 11 + 3) % 95}%`,
-          fontSize: 6 + (i % 3) * 3,
-          opacity: 0.25,
-          animation: `ks-twinkle ${2 + (i % 3)}s infinite`,
-          animationDelay: `${(i * 0.2) % 3}s`,
-          color: "#fff",
+          left: `${(i * 7 + 5) % 100}%`,
+          top: `${(i * 13 + 3) % 100}%`,
+          width: 1 + (i % 3),
+          height: 1 + (i % 3),
+          borderRadius: "50%",
+          background: i % 5 === 0 ? "#00d4ff" : i % 7 === 0 ? "#ff44aa" : "#fff",
+          opacity: 0.3 + (i % 5) * 0.1,
+          animation: `ks-star ${1.5 + (i % 4)}s infinite`,
+          animationDelay: `${(i * 0.13) % 4}s`,
           pointerEvents: "none",
-        }}>·</div>
+          boxShadow: i % 5 === 0 ? "0 0 4px #00d4ff" : "none",
+        }} />
       ))}
 
-      {/* TOP — title compact */}
+      {/* Warp speed lines (occasional shooting stars) */}
+      {[...Array(6)].map((_, i) => (
+        <div key={`warp-${i}`} style={{
+          position: "absolute",
+          left: `${15 + i * 14}%`,
+          width: 2, height: 60,
+          background: "linear-gradient(180deg,transparent,#00d4ff,#fff,#00d4ff,transparent)",
+          animation: `ks-warp ${2 + i * 0.8}s infinite`,
+          animationDelay: `${i * 0.5}s`,
+          pointerEvents: "none",
+          opacity: 0.6,
+        }} />
+      ))}
+
+      {/* Scan line overlay */}
+      <div className="ks-scanline" />
+
+      {/* TOP — title with sci-fi style */}
       <div style={{
         flexShrink: 0,
         textAlign: "center",
@@ -5091,13 +5131,22 @@ function KitSelector({ onSelect }) {
         zIndex: 5,
       }}>
         <div style={{
-          fontSize: "clamp(14px, 2.2vw, 22px)",
-          fontWeight: 900,
-          color: "#fbbf24",
-          letterSpacing: "clamp(2px, 0.8vw, 6px)",
+          fontSize: "clamp(11px, 1.2vw, 14px)",
+          fontWeight: 700,
+          color: "#00d4ff",
+          letterSpacing: "clamp(3px, 1vw, 8px)",
           textTransform: "uppercase",
-          textShadow: "0 2px 12px #fbbf2466",
-        }}>🚀 Kitini Seç, Maceraya Başla</div>
+          opacity: 0.7,
+          marginBottom: 4,
+        }}>// MISSION CONTROL — KIT SELECTION</div>
+        <div style={{
+          fontSize: "clamp(18px, 2.6vw, 30px)",
+          fontWeight: 900,
+          color: "#fff",
+          letterSpacing: "clamp(2px, 0.6vw, 4px)",
+          textTransform: "uppercase",
+          animation: "ks-title-glow 3s ease-in-out infinite",
+        }}>⟨ Kitini Seç · Maceraya Başla ⟩</div>
       </div>
 
       {/* GRID — 3 cards side by side */}
@@ -5122,73 +5171,117 @@ function KitSelector({ onSelect }) {
               onClick={() => onSelect(kit.id)}
               style={{
                 position: "relative",
-                borderRadius: "clamp(12px, 1.5vw, 18px)",
-                background: `linear-gradient(135deg,${kit.primaryColor}22,${kit.accentColor}22,#0a0518cc)`,
-                border: `2px solid ${kit.primaryColor}66`,
-                animationDelay: `${idx * 100}ms`,
+                borderRadius: 4,
+                background: `
+                  linear-gradient(135deg,${kit.primaryColor}15,${kit.accentColor}15),
+                  linear-gradient(180deg,#0a0820cc,#000c)
+                `,
+                border: `1px solid ${kit.primaryColor}66`,
+                animationDelay: `${idx * 150}ms`,
                 ["--gc"]: kit.primaryColor + "88",
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
                 minHeight: 0,
+                clipPath: "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
               }}
             >
-              {/* Decorative big icon backdrop */}
-              <div style={{
-                position: "absolute",
-                top: -20, right: -20,
-                fontSize: "clamp(80px, 10vw, 130px)",
-                opacity: 0.06,
-                pointerEvents: "none",
-                filter: "blur(1px)",
-              }}>{kit.icon}</div>
+              {/* Corner brackets */}
+              <div className="ks-corner tl" />
+              <div className="ks-corner tr" />
+              <div className="ks-corner bl" />
+              <div className="ks-corner br" />
 
-              {/* 3D MODEL — flexible height */}
+              {/* Top bar — kit ID style */}
+              <div style={{
+                flexShrink: 0,
+                padding: "clamp(6px, 1vh, 10px) clamp(20px, 2.5vw, 28px)",
+                fontSize: "clamp(9px, 0.9vw, 11px)",
+                color: kit.primaryColor,
+                fontWeight: 700,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderBottom: `1px solid ${kit.primaryColor}33`,
+                background: `${kit.primaryColor}08`,
+              }}>
+                <span>UNIT-0{idx + 1}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <span style={{
+                    width: 6, height: 6, borderRadius: "50%",
+                    background: kit.primaryColor,
+                    boxShadow: `0 0 8px ${kit.primaryColor}`,
+                    animation: "ks-flicker 1.5s infinite",
+                  }} />
+                  ONLINE
+                </span>
+              </div>
+
+              {/* 3D MODEL */}
               <div className="ks-3d-locked" style={{
                 flex: 1,
                 position: "relative",
                 minHeight: 0,
-                margin: "clamp(6px, 1vh, 12px)",
-                borderRadius: "clamp(8px, 1vw, 14px)",
+                margin: "clamp(4px, 0.8vh, 8px)",
                 overflow: "hidden",
                 background: `radial-gradient(ellipse at center,${kit.primaryColor}22,transparent 70%)`,
               }}>
+                {/* Targeting crosshair */}
+                {isHovered && <svg style={{
+                  position: "absolute", top: "50%", left: "50%",
+                  transform: "translate(-50%,-50%)",
+                  width: "60%", height: "60%",
+                  pointerEvents: "none", zIndex: 2,
+                  opacity: 0.4,
+                }} viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" stroke={kit.primaryColor} strokeWidth="0.3" fill="none" strokeDasharray="2,3" />
+                  <circle cx="50" cy="50" r="30" stroke={kit.primaryColor} strokeWidth="0.3" fill="none" strokeDasharray="1,2" />
+                  <line x1="50" y1="0" x2="50" y2="15" stroke={kit.primaryColor} strokeWidth="0.5" />
+                  <line x1="50" y1="85" x2="50" y2="100" stroke={kit.primaryColor} strokeWidth="0.5" />
+                  <line x1="0" y1="50" x2="15" y2="50" stroke={kit.primaryColor} strokeWidth="0.5" />
+                  <line x1="85" y1="50" x2="100" y2="50" stroke={kit.primaryColor} strokeWidth="0.5" />
+                </svg>}
+
                 {/* Glowing platform */}
                 <div style={{
                   position: "absolute",
-                  bottom: "10%",
+                  bottom: "12%",
                   left: "50%",
                   transform: "translateX(-50%)",
-                  width: "60%",
-                  height: 12,
+                  width: "70%",
+                  height: 14,
                   borderRadius: "50%",
-                  background: `radial-gradient(ellipse,${kit.primaryColor}99,${kit.primaryColor}22 60%,transparent 80%)`,
-                  filter: "blur(6px)",
+                  background: `radial-gradient(ellipse,${kit.primaryColor}cc,${kit.primaryColor}33 60%,transparent 80%)`,
+                  filter: "blur(8px)",
                   zIndex: 1,
                   pointerEvents: "none",
                 }} />
-                <kit.Component3D />
+                <kit.Component3D interactive={false} />
               </div>
 
-              {/* LOGO + tagline + CTA */}
+              {/* LOGO + CTA bottom */}
               <div style={{
                 flexShrink: 0,
-                padding: "clamp(8px, 1.2vh, 14px)",
+                padding: "clamp(8px, 1.4vh, 14px) clamp(12px, 1.8vw, 20px)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: "clamp(4px, 0.8vh, 8px)",
+                gap: "clamp(6px, 1vh, 10px)",
+                borderTop: `1px solid ${kit.primaryColor}33`,
+                background: `${kit.primaryColor}08`,
               }}>
                 {/* LOGO */}
                 <img
                   src={logoFor(kit.id)}
                   alt={kit.name}
                   style={{
-                    height: "clamp(28px, 5vh, 48px)",
+                    height: "clamp(28px, 5vh, 46px)",
                     width: "auto",
                     maxWidth: "85%",
                     objectFit: "contain",
-                    filter: `drop-shadow(0 0 14px ${kit.primaryColor}aa) drop-shadow(0 2px 8px #000)`,
+                    filter: `drop-shadow(0 0 12px ${kit.primaryColor}cc) drop-shadow(0 2px 6px #000)`,
                   }}
                   onError={(e) => {
                     e.currentTarget.style.display = "none";
@@ -5197,41 +5290,37 @@ function KitSelector({ onSelect }) {
                 />
                 <div style={{
                   display: "none",
-                  fontSize: "clamp(18px, 2.5vw, 28px)",
-                  fontWeight: 900,
-                  color: "#fff",
+                  fontSize: "clamp(16px, 2.2vw, 24px)",
+                  fontWeight: 900, color: "#fff",
                   textShadow: `0 0 20px ${kit.primaryColor}`,
                 }}>{kit.icon} {kit.name}</div>
 
-                {/* Tagline */}
-                <div style={{
-                  fontSize: "clamp(9px, 1vw, 12px)",
-                  color: kit.primaryColor,
-                  fontWeight: 800,
-                  letterSpacing: "clamp(1px, 0.4vw, 3px)",
-                  textTransform: "uppercase",
-                  textAlign: "center",
-                }}>{kit.tagline}</div>
-
-                {/* CTA button */}
+                {/* CTA */}
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(kit.id); }}
                   style={{
                     width: "100%",
-                    padding: "clamp(8px, 1.4vh, 12px) clamp(12px, 1.6vw, 18px)",
-                    borderRadius: 10,
-                    border: "none",
-                    background: `linear-gradient(135deg,${kit.primaryColor},${kit.accentColor})`,
+                    padding: "clamp(8px, 1.3vh, 11px) clamp(12px, 1.6vw, 18px)",
+                    borderRadius: 2,
+                    border: `1px solid ${kit.primaryColor}`,
+                    background: `linear-gradient(135deg,${kit.primaryColor}33,transparent)`,
                     color: "#fff",
-                    fontSize: "clamp(11px, 1.3vw, 14px)",
-                    fontWeight: 900,
+                    fontSize: "clamp(10px, 1.1vw, 12px)",
+                    fontWeight: 800,
                     cursor: "pointer",
-                    letterSpacing: "clamp(0.5px, 0.2vw, 1.5px)",
+                    letterSpacing: "clamp(1px, 0.3vw, 2px)",
                     textTransform: "uppercase",
-                    boxShadow: `0 4px 14px ${kit.primaryColor}66`,
-                    marginTop: 2,
+                    fontFamily: "inherit",
+                    boxShadow: `0 0 12px ${kit.primaryColor}66, inset 0 0 12px ${kit.primaryColor}22`,
+                    transition: "all .15s",
                   }}
-                >▶ Maceraya Başla</button>
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = `linear-gradient(135deg,${kit.primaryColor}66,${kit.primaryColor}22)`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = `linear-gradient(135deg,${kit.primaryColor}33,transparent)`;
+                  }}
+                >▶ DEPLOY UNIT</button>
               </div>
             </div>
           );
@@ -5252,19 +5341,19 @@ function KitSelector({ onSelect }) {
       }}>
         <div style={{
           fontSize: 9,
-          color: "#fff8",
-          letterSpacing: 3,
+          color: "#00d4ff99",
+          letterSpacing: 4,
           fontWeight: 700,
           textTransform: "uppercase",
-        }}>Destekçilerimiz</div>
+        }}>// PARTNERS</div>
         <div style={{
           padding: "clamp(4px, 0.8vh, 8px) clamp(10px, 1.2vw, 14px)",
-          borderRadius: 10,
+          borderRadius: 6,
           background: "rgba(255,255,255,0.95)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.5)",
+          boxShadow: "0 2px 10px rgba(0,212,255,0.3)",
           height: "clamp(28px, 4vh, 40px)",
         }}>
           <img src="/logos/robogpt.png" alt="RoboGPT"
@@ -5272,12 +5361,12 @@ function KitSelector({ onSelect }) {
         </div>
         <div style={{
           padding: "clamp(4px, 0.8vh, 8px) clamp(10px, 1.2vw, 14px)",
-          borderRadius: 10,
+          borderRadius: 6,
           background: "rgba(255,255,255,0.95)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.5)",
+          boxShadow: "0 2px 10px rgba(0,212,255,0.3)",
           height: "clamp(28px, 4vh, 40px)",
         }}>
           <img src="/logos/robotistan.png" alt="Robotistan"
