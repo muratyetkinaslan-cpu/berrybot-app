@@ -550,10 +550,19 @@ export default function App() {
     const k = u?.kit || "berrybot";
     if (k === "berrybot") return TASKS;
     return (customTasks || []).filter(t => t.kit === k).map(t => ({
-      id: t.task_id, title: t.title, cat: t.category, diff: t.difficulty,
-      expectedMin: t.expected_min, xp: t.xp, img: t.emoji,
-      desc: t.description, answer: t.answer, learnings: t.learnings || [],
-      image_url: t.image_url, video_url: t.video_url, answer_image_url: t.answer_image_url,
+      id: t.task_id,
+      title: t.title || "Görev",
+      cat: t.category || "Genel",
+      diff: t.difficulty || 1,
+      expectedMin: t.expected_min || 15,
+      xp: t.xp || 10,
+      img: t.emoji || "📋",
+      desc: t.description || "",
+      answer: t.answer || "",
+      learnings: t.learnings || [],
+      image_url: t.image_url || "",
+      video_url: t.video_url || "",
+      answer_image_url: t.answer_image_url || "",
     }));
   };
   const getXP=(sid)=>{
@@ -1176,18 +1185,18 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks}){
     // Tank/PicoBricks: only what admin has created
     return (customTasks || []).filter(t => t.kit === userKit).map(t => ({
       id: t.task_id,
-      title: t.title,
-      cat: t.category,
-      diff: t.difficulty,
-      expectedMin: t.expected_min,
-      xp: t.xp,
-      img: t.emoji,
-      desc: t.description,
-      answer: t.answer,
+      title: t.title || "Görev",
+      cat: t.category || "Genel",
+      diff: t.difficulty || 1,
+      expectedMin: t.expected_min || 15,
+      xp: t.xp || 10,
+      img: t.emoji || "📋",
+      desc: t.description || "",
+      answer: t.answer || "",
       learnings: t.learnings || [],
-      image_url: t.image_url,
-      video_url: t.video_url,
-      answer_image_url: t.answer_image_url,
+      image_url: t.image_url || "",
+      video_url: t.video_url || "",
+      answer_image_url: t.answer_image_url || "",
     }));
   })();
 
@@ -1282,7 +1291,7 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks}){
     const x=PAD_X+i*NODE_GAP;
     // Sine wave between 100-380 y range
     const y=MAP_HEIGHT/2+Math.sin(i*0.55)*150;
-    return{x,y,task:t,theme:catThemes[t.cat]||{c:T.orange,icon:"🎯",scene:"⭐"}};
+    return{x,y,task:t,theme:catThemes[t.cat]||{c:T.orange,bg:"#1a0e3a",icon:"🎯",scene:"⭐"}};
   });
   const totalWidth=PAD_X*2+kitTasks.length*NODE_GAP;
 
@@ -1291,12 +1300,12 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks}){
   let curCat=null,zStart=0;
   positions.forEach((p,i)=>{
     if(p.task.cat!==curCat){
-      if(curCat)zones.push({cat:curCat,startX:zStart,endX:positions[i-1].x+NODE_GAP/2,theme:catThemes[curCat]});
+      if(curCat)zones.push({cat:curCat,startX:zStart,endX:positions[i-1].x+NODE_GAP/2,theme:catThemes[curCat]||{c:T.orange,bg:"#1a0e3a",icon:"🎯",scene:"⭐"}});
       curCat=p.task.cat;
       zStart=p.x-NODE_GAP/2;
     }
   });
-  if(curCat)zones.push({cat:curCat,startX:zStart,endX:positions[kitTasks.length-1].x+NODE_GAP/2,theme:catThemes[curCat]});
+  if(curCat)zones.push({cat:curCat,startX:zStart,endX:positions[kitTasks.length-1].x+NODE_GAP/2,theme:catThemes[curCat]||{c:T.orange,bg:"#1a0e3a",icon:"🎯",scene:"⭐"}});
 
   // Auto-scroll to current task on mount
   const mapRef=useRef(null);
