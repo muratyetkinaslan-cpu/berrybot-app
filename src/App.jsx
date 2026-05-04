@@ -98,12 +98,15 @@ const applyKitTheme = (kitId) => {
 };
 
 // ─── TASK IMAGE COMPONENT ───
-function TaskImage({ taskId, type = "gorsel", size = 60, fallbackEmoji = "📋", style = {}, customUrl = null }) {
+function TaskImage({ taskId, type = "gorsel", size = 60, fallbackEmoji = "📋", style = {}, customUrl = null, kit = "berrybot" }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  // Custom URL (from customTasks.image_url) takes priority, else fall back to public/tasks
-  const src = customUrl || `/tasks/gorev_${taskId}/${type}.jpg`;
-  if (error || (!customUrl && !taskId)) {
+  // Priority: customUrl > public/tasks fallback (BerryBot only) > emoji
+  const src = customUrl
+    ? customUrl
+    : (kit === "berrybot" ? `/tasks/gorev_${taskId}/${type}.jpg` : null);
+
+  if (!src || error) {
     return (
       <div style={{
         width: size, height: size, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
@@ -127,11 +130,13 @@ function TaskImage({ taskId, type = "gorsel", size = 60, fallbackEmoji = "📋",
   );
 }
 
-function AnswerImage({ taskId, customUrl = null }) {
+function AnswerImage({ taskId, customUrl = null, kit = "berrybot" }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const src = customUrl || `/tasks/gorev_${taskId}/cevap.jpg`;
-  if (error) return null;
+  const src = customUrl
+    ? customUrl
+    : (kit === "berrybot" ? `/tasks/gorev_${taskId}/cevap.jpg` : null);
+  if (!src || error) return null;
   return (
     <div style={{ marginTop: 6, borderRadius: 8, overflow: "hidden", border: `1px solid ${T.purple}44`, maxWidth: 400 }}>
       <img src={src} alt={`Cevap ${taskId}`} onLoad={() => setLoaded(true)} onError={() => setError(true)}
@@ -1746,7 +1751,7 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks}){
                   clipPath:"polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)",
                   display:"flex",alignItems:"center",justifyContent:"center",
                 }}>
-                  <TaskImage taskId={t.id} type="gorsel" size={64} fallbackEmoji={t.img} style={{borderRadius:"50%",width:64,height:64,objectFit:"cover"}}/>
+                  <TaskImage taskId={t.id} type="gorsel" size={64} fallbackEmoji={t.img} kit={userKit} customUrl={t.image_url} style={{borderRadius:"50%",width:64,height:64,objectFit:"cover"}}/>
                 </div>
 
                 {/* Number badge */}
@@ -1932,9 +1937,14 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
   const[answerError,setAnswerError]=useState(false);
   const[answerZoom,setAnswerZoom]=useState(false);
   const tp=prog[user.id]?.[t.id]||{};
-  const imgSrc=`/tasks/gorev_${t.id}/gorsel.jpg`;
-  const videoSrc=`/tasks/gorev_${t.id}/cozum.mp4`;
-  const answerSrc=`/tasks/gorev_${t.id}/cevap.jpg`;
+  const userKit = user.kit || "berrybot";
+  // Priority: custom URL from admin → BerryBot legacy /tasks folder (only for berrybot kit) → empty
+  const imgSrc = t.image_url || (userKit === "berrybot" ? `/tasks/gorev_${t.id}/gorsel.jpg` : "");
+  const videoSrc = t.video_url || (userKit === "berrybot" ? `/tasks/gorev_${t.id}/cozum.mp4` : "");
+  const answerSrc = t.answer_image_url || (userKit === "berrybot" ? `/tasks/gorev_${t.id}/cevap.jpg` : "");
+  const hasImg = !!imgSrc;
+  const hasVideo = !!videoSrc;
+  const hasAnswer = !!answerSrc;
   const hasHelp=prog[user.id]?.helpRequest;
   // Cevap anahtarı SADECE eğitmen kilidi açtığında erişilebilir (onay yetmiyor!)
   const answerUnlocked=answerUnlocks.some(au=>au.student_id===user.id&&au.task_id===t.id);
@@ -2195,7 +2205,13 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
         </div>
 
         {/* IMAGE TAB */}
-        {mediaTab==="image"&&(!imgError ? (
+        {mediaTab==="image"&&((!hasImg||imgError) ? (
+          <div style={{width:"100%",height:360,background:`linear-gradient(135deg,${theme.c}30,${T.dark})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}}>
+            <span style={{fontSize:108}}>{t.img}</span>
+            <span style={{fontSize:14,color:T.tm}}>{t.image_url ? "Görsel yüklenemedi" : "Görsel henüz eklenmedi"}</span>
+            <span style={{fontSize:12,color:T.tm}}>Görev #{t.id}</span>
+          </div>
+        ) : (
           <div onClick={()=>imgLoaded&&setImgZoom(true)} style={{width:"100%",maxHeight:520,minHeight:360,background:T.dark,position:"relative",cursor:imgLoaded?"zoom-in":"default",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
             <img src={imgSrc} alt={`Görev ${t.id}`} onLoad={()=>setImgLoaded(true)} onError={()=>setImgError(true)}
               style={{width:"100%",height:"auto",maxHeight:520,objectFit:"contain",background:T.dark,opacity:imgLoaded?1:0,transition:"opacity .3s"}}/>
@@ -2205,15 +2221,18 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
             </div>}
             {imgLoaded&&<div style={{position:"absolute",bottom:14,right:14,fontSize:12,color:T.ts,background:"#000a",padding:"5px 14px",borderRadius:8,backdropFilter:"blur(4px)"}}>🔍 Büyütmek için tıkla</div>}
           </div>
-        ) : (
-          <div style={{width:"100%",height:360,background:`linear-gradient(135deg,${theme.c}30,${T.dark})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}}>
-            <span style={{fontSize:108}}>{t.img}</span>
-            <span style={{fontSize:14,color:T.tm}}>Görev #{t.id}</span>
-          </div>
         ))}
 
         {/* VIDEO TAB */}
-        {mediaTab==="video"&&(!videoError?(
+        {mediaTab==="video"&&((!hasVideo||videoError)?(
+          <div style={{padding:60,textAlign:"center",background:T.dark}}>
+            <div style={{fontSize:64,opacity:.4,marginBottom:12}}>🎬</div>
+            <div style={{fontSize:17,fontWeight:700,color:T.ts,marginBottom:8}}>Çözüm videosu henüz yüklenmemiş</div>
+            <div style={{fontSize:13,color:T.tm,maxWidth:340,margin:"0 auto",lineHeight:1.5}}>
+              Bu görevin video çözümü yakında eklenecek. Şimdilik görseli ve açıklamayı kullanarak çözmeyi dene!
+            </div>
+          </div>
+        ):(
           <div style={{position:"relative",background:"#000"}}>
             <video
               key={videoSrc}
@@ -2235,17 +2254,9 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
             }}>
               <span style={{fontSize:18}}>💡</span>
               <span style={{fontSize:14,color:T.tp,fontWeight:600,flex:1,minWidth:160}}>
-                Önce videoyu izle, sonra robotunu PicoBricks IDE'de programla.
+                Önce videoyu izle, sonra robotunu programla.
               </span>
               {videoEnded&&<span style={{fontSize:12,padding:"3px 10px",borderRadius:8,background:T.ok+"33",color:T.ok,fontWeight:800}}>✓ İzlendi</span>}
-            </div>
-          </div>
-        ):(
-          <div style={{padding:60,textAlign:"center",background:T.dark}}>
-            <div style={{fontSize:64,opacity:.4,marginBottom:12}}>🎬</div>
-            <div style={{fontSize:17,fontWeight:700,color:T.ts,marginBottom:8}}>Çözüm videosu henüz yüklenmemiş</div>
-            <div style={{fontSize:13,color:T.tm,maxWidth:340,margin:"0 auto",lineHeight:1.5}}>
-              Bu görevin video çözümü yakında eklenecek. Şimdilik görseli ve açıklamayı kullanarak çözmeyi dene!
             </div>
           </div>
         ))}
@@ -5604,13 +5615,53 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
     finally { setRefreshing(false); }
   };
 
-  // Each kit shows ONLY its own admin-added tasks from bb_tasks (DB).
-  // BerryBot's 36 hardcoded defaults are NOT auto-imported here — they live in TASKS array
-  // and are used by MissionBoard for backwards compatibility.
-  // To customize a default, admin can manually create a task with same task_id (1-36) for berrybot.
-  const kitTasks = customTasks
-    .filter(t => (t.kit || "berrybot") === selKit)
-    .sort((a, b) => a.task_id - b.task_id);
+  // Each kit shows ONLY its own tasks:
+  //  - BerryBot: 36 hardcoded TASKS as templates + custom DB additions
+  //  - Tank/PicoBricks: only customTasks from DB (no defaults)
+  const kitTasks = (() => {
+    const dbTasks = customTasks
+      .filter(t => (t.kit || "berrybot") === selKit)
+      .sort((a, b) => a.task_id - b.task_id);
+
+    // For non-berrybot kits, show only DB-saved tasks (clean slate)
+    if (selKit !== "berrybot") {
+      return dbTasks;
+    }
+
+    // BerryBot: show 36 hardcoded TASKS, replaced with DB version where it exists
+    const dbMap = new Map(dbTasks.map(t => [t.task_id, t]));
+    const merged = [];
+    for (const t of TASKS) {
+      const fromDb = dbMap.get(t.id);
+      if (fromDb) {
+        merged.push(fromDb);
+      } else {
+        // Show TASKS-array entry as a "template" (not yet saved to DB)
+        merged.push({
+          id: null,
+          kit: "berrybot",
+          task_id: t.id,
+          title: t.title,
+          category: t.cat,
+          difficulty: t.diff,
+          expected_min: t.expectedMin,
+          xp: t.xp,
+          emoji: t.img,
+          description: t.desc || "",
+          answer: t.answer || "",
+          learnings: t.learnings || [],
+          image_url: "",
+          video_url: "",
+          answer_image_url: "",
+          position: t.id - 1,
+          _isDefault: true,
+        });
+      }
+    }
+    // Add any DB tasks beyond the 36 defaults
+    dbTasks.filter(t => t.task_id > TASKS.length).forEach(t => merged.push(t));
+    return merged;
+  })();
 
   const kitInfo = KITS[selKit];
 
@@ -5727,6 +5778,19 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
 
         {/* Form fields */}
         <div style={{ display: "grid", gap: 14 }}>
+          {/* Kit selector — explicit and visible */}
+          <div style={{ padding: 12, borderRadius: 10, background: T.dark, border: `2px solid ${kitInfo.primaryColor}88` }}>
+            <div style={{ fontSize: 11, color: kitInfo.primaryColor, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>🎯 KİT (görev hangi kit için?)</div>
+            <select
+              value={editing.kit}
+              onChange={e => setEditing({ ...editing, kit: e.target.value })}
+              style={{ ...inputStyle, fontWeight: 700, fontSize: 16, color: KITS[editing.kit]?.primaryColor || T.tp, borderColor: KITS[editing.kit]?.primaryColor || T.border }}
+            >
+              <option value="berrybot">🍓 BerryBot</option>
+              <option value="tank">🪖 Tank Robot</option>
+              <option value="picobricks">🧱 PicoBricks</option>
+            </select>
+          </div>
           {/* Basic info */}
           <div style={{ padding: 18, borderRadius: 14, background: T.card, border: `1px solid ${T.border}` }}>
             <div style={{ fontSize: 11, color: T.tm, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>📝 Temel Bilgiler</div>
@@ -5899,18 +5963,31 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
         </div>
       ) : (
           <div style={{ display: "grid", gap: 8 }}>
-            {kitTasks.map(t => (
+            {selKit === "berrybot" && kitTasks.some(t => t._isDefault) && (
+              <div style={{ padding: 12, borderRadius: 10, background: `${T.cyan}15`, border: `1px solid ${T.cyan}44`, fontSize: 12, color: T.cyan, display: "flex", gap: 8, alignItems: "center" }}>
+                <span style={{ fontSize: 18 }}>ℹ️</span>
+                <span><strong>ŞABLON</strong> etiketli görevler kod içindeki orijinal BerryBot müfredatı. Tıklayıp düzenle/medya ekle → DB'ye kalıcı kaydedilir.</span>
+              </div>
+            )}
+            {kitTasks.map(t => {
+              const isDefault = t._isDefault === true;
+              return (
               <div key={`${t.kit}-${t.task_id}`} onClick={() => startEdit(t)} style={{
                 padding: 12, borderRadius: 12, cursor: "pointer",
-                background: T.card,
-                border: `1px solid ${T.border}`,
+                background: isDefault ? T.dark + "88" : T.card,
+                border: `1px solid ${isDefault ? T.border + "55" : T.border}`,
+                opacity: isDefault ? 0.7 : 1,
                 display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
-                transition: "transform .15s",
-              }} onMouseOver={e => e.currentTarget.style.transform = "translateX(4px)"} onMouseOut={e => e.currentTarget.style.transform = "translateX(0)"}>
+                transition: "transform .15s, opacity .15s",
+              }} onMouseOver={e => { e.currentTarget.style.transform = "translateX(4px)"; e.currentTarget.style.opacity = 1; }} onMouseOut={e => { e.currentTarget.style.transform = "translateX(0)"; e.currentTarget.style.opacity = isDefault ? 0.7 : 1; }}>
                 <span style={{ fontSize: 11, fontFamily: "monospace", color: T.tm, fontWeight: 700, minWidth: 30 }}>#{t.task_id}</span>
                 <span style={{ fontSize: 24 }}>{t.emoji}</span>
                 <div style={{ flex: 1, minWidth: 180 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: T.tp, marginBottom: 2 }}>{t.title}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: T.tp, marginBottom: 2, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                    {t.title}
+                    {isDefault && <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 4, background: T.tm + "33", color: T.tm, fontWeight: 700, letterSpacing: 1 }}>ŞABLON</span>}
+                    {!isDefault && t.id && <span style={{ fontSize: 9, padding: "1px 6px", borderRadius: 4, background: T.ok + "33", color: T.ok, fontWeight: 700, letterSpacing: 1 }}>KAYITLI</span>}
+                  </div>
                   <div style={{ fontSize: 11, color: T.ts, display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <span style={{ padding: "1px 7px", borderRadius: 5, background: T.purple + "22", color: T.pl, fontWeight: 600 }}>{t.category}</span>
                     <span style={{ color: T.warn, fontWeight: 700 }}>+{t.xp} XP</span>
@@ -5925,7 +6002,8 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
                 </div>
                 <span style={{ fontSize: 16, color: T.tm }}>▶</span>
               </div>
-            ))}
+            );
+            })}
           </div>
       )}
     </div>
