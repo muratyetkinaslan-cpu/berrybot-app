@@ -634,9 +634,9 @@ export default function App() {
         {/* ──── ADMIN ──── */}
         {user.role===ROLES.ADMIN&&page==="dash"&&<AdminClassroom users={users} prog={prog} classLayout={classLayout} saveLayout={handleSaveLayout} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sd");}}/>}
         {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} onBack={()=>nav("dash")}/>}
-        {user.role===ROLES.ADMIN&&page==="users"&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo}/>}
+        {user.role===ROLES.ADMIN&&page==="users"&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo} onRefresh={refresh}/>}
         {user.role===ROLES.ADMIN&&page==="audit"&&<AuditLog logs={logs} users={users}/>}
-        {user.role===ROLES.ADMIN&&page==="taskedit"&&<AdminTaskEditor customTasks={customTasks} onSave={saveCustomTask} onDelete={removeCustomTask} onUpload={uploadMedia}/>}
+        {user.role===ROLES.ADMIN&&page==="taskedit"&&<AdminTaskEditor customTasks={customTasks} onSave={saveCustomTask} onDelete={removeCustomTask} onUpload={uploadMedia} onRefresh={refresh}/>}
         {user.role===ROLES.ADMIN&&page==="tasks"&&<TaskBrowser showAns={false}/>}
 
         {/* ──── INSTRUCTOR ──── */}
@@ -1597,28 +1597,32 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks}){
         })()}
 
         {/* CATEGORY ZONE BANDS — vertical color stripes */}
-        {zones.map((z,i)=>(
+        {zones.map((z,i)=>{
+          const tc = z.theme?.c || T.orange;
+          const ti = z.theme?.icon || "🎯";
+          const ts = z.theme?.scene || "⭐";
+          return (
           <div key={`zone${i}`} style={{
             position:"absolute",
             left:`${z.startX}px`,
             top:0,bottom:0,
             width:`${z.endX-z.startX}px`,
-            background:`linear-gradient(180deg,${z.theme.c}11,transparent 30%,transparent 70%,${z.theme.c}11)`,
+            background:`linear-gradient(180deg,${tc}11,transparent 30%,transparent 70%,${tc}11)`,
             pointerEvents:"none",
-            borderLeft:i>0?`2px dashed ${z.theme.c}44`:"none",
+            borderLeft:i>0?`2px dashed ${tc}44`:"none",
           }}>
             {/* Zone label at top */}
             <div style={{
               position:"absolute",top:14,left:"50%",transform:"translateX(-50%)",
               padding:"6px 16px",borderRadius:20,
-              background:`linear-gradient(135deg,${z.theme.c},${z.theme.c}cc)`,
+              background:`linear-gradient(135deg,${tc},${tc}cc)`,
               color:"#fff",fontSize:13,fontWeight:900,
               letterSpacing:1,textTransform:"uppercase",
-              boxShadow:`0 4px 14px ${z.theme.c}88`,
+              boxShadow:`0 4px 14px ${tc}88`,
               whiteSpace:"nowrap",
               border:"2px solid #fff2",
             }}>
-              <span style={{marginRight:6}}>{z.theme.icon}</span>{z.cat}
+              <span style={{marginRight:6}}>{ti}</span>{z.cat}
             </div>
             {/* Decorative scene element */}
             <div style={{
@@ -1626,9 +1630,10 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks}){
               fontSize:60,opacity:.12,
               animation:"mb-bob 4s infinite ease-in-out",
               pointerEvents:"none",
-            }}>{z.theme.scene}</div>
+            }}>{ts}</div>
           </div>
-        ))}
+          );
+        })}
 
         {/* SVG WAVY PATH */}
         <svg style={{position:"absolute",inset:0,width:"100%",height:"100%",pointerEvents:"none"}} viewBox={`0 0 ${totalWidth} ${MAP_HEIGHT}`} preserveAspectRatio="none">
@@ -1876,17 +1881,19 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks}){
           const ct=kitTasks.filter(t=>t.cat===z.cat);
           const cd=ct.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
           const done=cd===ct.length;
+          const tc = z.theme?.c || T.orange;
+          const ti = z.theme?.icon || "🎯";
           return(
             <button key={i} onClick={()=>{
               if(mapRef.current)mapRef.current.scrollTo({left:Math.max(0,z.startX-100),behavior:"smooth"});
             }} style={{
               padding:"6px 12px",borderRadius:10,
-              border:`2px solid ${z.theme.c}55`,
-              background:`${z.theme.c}15`,color:z.theme.c,
+              border:`2px solid ${tc}55`,
+              background:`${tc}15`,color:tc,
               cursor:"pointer",fontSize:12,fontWeight:700,
               display:"flex",alignItems:"center",gap:6,
             }}>
-              <span>{z.theme.icon}</span>
+              <span>{ti}</span>
               <span>{z.cat}</span>
               <span style={{fontSize:10,opacity:.8}}>{cd}/{ct.length}</span>
               {done&&<span>✓</span>}
@@ -3125,7 +3132,7 @@ function AuditLog({logs,users}){
 // ═══════════════════════════════════════
 //  ADMIN: USER MANAGER
 // ═══════════════════════════════════════
-function UserManager({users,prog,onAddUser,onSetProgress}){
+function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
   const[showForm,setShowForm]=useState(false);
   const[name,setName]=useState("");const[email,setEmail]=useState("");const[pw,setPw]=useState("");
   const[role,setRole]=useState("student");const[grup,setGrup]=useState("Büyük");
@@ -3297,9 +3304,10 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
                 onChange={async (ev)=>{
                   const newKit=ev.target.value;
                   if(newKit===studentKit)return;
-                  if(!confirm(`${u.name} için kiti ${kitInfo.name} → ${KITS[newKit].name} olarak değiştirilsin mi?\n\n⚠️ Mevcut görev ilerlemesi kit değişikliğinden etkilenebilir.`))return;
+                  if(!confirm(`${u.name} için kiti ${kitInfo.name} → ${KITS[newKit].name} olarak değiştirilsin mi?\n\n⚠️ Mevcut görev ilerlemesi sıfırlanacak ve yeni kit'in görevleri atanacak.`))return;
                   await db.setUserKit(u.id,newKit);
-                  alert(`✓ ${u.name} kiti ${KITS[newKit].name} olarak değiştirildi. Sayfayı yenile.`);
+                  if(onRefresh)await onRefresh();
+                  alert(`✓ ${u.name} kiti ${KITS[newKit].name} olarak değiştirildi.`);
                 }}
                 title="Kit değiştir"
                 style={{
@@ -5577,16 +5585,22 @@ function KitSelector({ onSelect }) {
   );
 }
 
-function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload }) {
+function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh }) {
   const [selKit, setSelKit] = useState("berrybot");
   const [editing, setEditing] = useState(null); // task object or "new"
   const [uploading, setUploading] = useState({ image: false, video: false, answer: false });
   const [importing, setImporting] = useState(false);
 
+  // When kit selector changes, force a refresh so list is always fresh
+  useEffect(() => {
+    if (onRefresh) onRefresh();
+  }, [selKit]);
+
   // Merge: customTasks (from DB) override hardcoded TASKS for BerryBot kit
   // For Tank/PicoBricks, only show customTasks
   const kitTasks = (() => {
-    const dbTasks = customTasks.filter(t => t.kit === selKit);
+    // Defensive: filter only matching kit, treat missing kit as berrybot (legacy)
+    const dbTasks = customTasks.filter(t => (t.kit || "berrybot") === selKit);
     if (selKit !== "berrybot") {
       return dbTasks.sort((a, b) => a.task_id - b.task_id);
     }
@@ -5812,7 +5826,7 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload }) {
       {/* Kit selector */}
       <div style={{ marginBottom: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
         {Object.values(KITS).map(k => (
-          <button key={k.id} onClick={() => setSelKit(k.id)} style={{
+          <button key={k.id} onClick={() => { setSelKit(k.id); setEditing(null); }} style={{
             padding: "10px 18px", borderRadius: 12,
             border: `2px solid ${selKit === k.id ? k.primaryColor : T.border}`,
             background: selKit === k.id ? `${k.primaryColor}22` : T.dark,
@@ -5824,7 +5838,7 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload }) {
             <span style={{ fontSize: 20 }}>{k.icon}</span>
             <span>{k.name}</span>
             <span style={{ fontSize: 11, padding: "1px 7px", borderRadius: 6, background: selKit === k.id ? k.primaryColor + "33" : T.border, opacity: .8 }}>
-              {customTasks.filter(t => t.kit === k.id).length}
+              {customTasks.filter(t => (t.kit || "berrybot") === k.id).length}
             </span>
           </button>
         ))}
