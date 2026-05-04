@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useData, getLocalPhoto } from "./useData";
+import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
 import TankRobot3D from "./TankRobot3D";
 import PicoBricks3D from "./PicoBricks3D";
@@ -471,7 +472,18 @@ export default function App() {
 
   const handleLogin=async(e,p)=>{
     const u=await doLogin(e,p);
-    if(u){setPage("dash");return true;}
+    if(u){
+      // Kit gate: if student/parent has explicit kit assigned, must match selected kit
+      const explicitKit = u.kit;  // null means kit not yet assigned (legacy account)
+      if ((u.role === 'student' || u.role === 'parent') && explicitKit && selectedKit && selectedKit !== explicitKit) {
+        const kitName = KITS[explicitKit]?.name || explicitKit;
+        notify(`Bu hesap ${kitName} kitine atanmış. Lütfen ${kitName} ekranından giriş yap.`, "err");
+        await logout();
+        return false;
+      }
+      setPage("dash");
+      return true;
+    }
     return false;
   };
 
@@ -532,7 +544,21 @@ export default function App() {
   if(!user&&!selectedKit)return<KitSelector onSelect={handleKitSelect}/>;
   if(!user)return<LoginPage onLogin={handleLogin} kit={KITS[selectedKit]||KITS.berrybot} onChangeKit={handleResetKit}/>;
 
-  const getXP=(sid)=>TASKS.filter(t=>prog[sid]?.[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
+  // Kit-aware task list helper — returns the correct task array for a given student
+  const getTasksForUser = (u) => {
+    const k = u?.kit || "berrybot";
+    if (k === "berrybot") return TASKS;
+    return (customTasks || []).filter(t => t.kit === k).map(t => ({
+      id: t.task_id, title: t.title, cat: t.category, diff: t.difficulty,
+      expectedMin: t.expected_min, xp: t.xp, img: t.emoji,
+      desc: t.description, answer: t.answer, learnings: t.learnings || [],
+      image_url: t.image_url, video_url: t.video_url, answer_image_url: t.answer_image_url,
+    }));
+  };
+  const getXP=(sid)=>{
+    const u=users.find(x=>x.id===sid);const tasks=getTasksForUser(u);
+    return tasks.filter(t=>prog[sid]?.[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
+  };
 
   return(
     <div style={{background:T.bg,minHeight:"100vh",fontFamily:"'Segoe UI',system-ui,sans-serif",color:T.tp}}>
@@ -612,7 +638,7 @@ export default function App() {
         {user.role===ROLES.INSTRUCTOR&&page==="hw"&&<InstructorHomework user={user} users={users} homeworks={homeworks} subs={homeworkSubs} onAdd={addHomework} onDel={removeHomework} onReview={reviewHw}/>}
 
         {/* ──── STUDENT ──── */}
-        {user.role===ROLES.STUDENT&&page==="dash"&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)}/>}
+        {user.role===ROLES.STUDENT&&page==="dash"&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)} customTasks={customTasks}/>}
         {user.role===ROLES.STUDENT&&page==="dash"&&selT&&<StudentTaskView user={user} task={selT} prog={prog} answerUnlocks={answerUnlocks} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
         {user.role===ROLES.STUDENT&&page==="practice"&&<PracticeView user={user} practiceProg={practiceProg} onAnswer={recordPractice}/>}
         {user.role===ROLES.STUDENT&&page==="hw"&&<StudentHomework user={user} homeworks={homeworks} subs={homeworkSubs} onSubmit={sendHomework}/>}
@@ -1136,13 +1162,61 @@ function AdminClassroom({users,prog,classLayout,saveLayout,onClearHelp,onSel}){
 //  STUDENT: MISSION BOARD (GAME STYLE)
 // ═══════════════════════════════════════
 // ═══════════════════════════════════════
-function MissionBoard({user,prog,onSel,onHelp}){
+function MissionBoard({user,prog,onSel,onHelp,customTasks}){
+  const userKit = user.kit || "berrybot";
+
+  // Kit-aware task list:
+  //  - BerryBot: hardcoded TASKS array (36 görev) + any custom additions
+  //  - Tank/PicoBricks: only customTasks (admin-managed, may be empty)
+  const kitTasks = (() => {
+    if (userKit === "berrybot") {
+      return TASKS;  // 36 hardcoded BerryBot missions
+    }
+    // Tank/PicoBricks: only what admin has created
+    return (customTasks || []).filter(t => t.kit === userKit).map(t => ({
+      id: t.task_id,
+      title: t.title,
+      cat: t.category,
+      diff: t.difficulty,
+      expectedMin: t.expected_min,
+      xp: t.xp,
+      img: t.emoji,
+      desc: t.description,
+      answer: t.answer,
+      learnings: t.learnings || [],
+      image_url: t.image_url,
+      video_url: t.video_url,
+      answer_image_url: t.answer_image_url,
+    }));
+  })();
+
   const sp=prog[user.id]||{};
-  const xp=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
+  const xp=kitTasks.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
   const lv=getLevel(xp);const nlv=getNextLevel(xp);
-  const cnt=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
+  const cnt=kitTasks.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
   const lvProgress=nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100;
   const hasHelp=prog[user.id]?.helpRequest;
+
+  // Empty state for Tank/PicoBricks when admin hasn't added tasks yet
+  if (kitTasks.length === 0) {
+    return (
+      <div style={{padding:"60px 20px",textAlign:"center",maxWidth:600,margin:"0 auto"}}>
+        <div style={{fontSize:80,marginBottom:20,opacity:0.5}}>{KITS[userKit]?.icon || "🤖"}</div>
+        <h1 style={{fontSize:28,color:T.tp,marginBottom:10,fontWeight:900}}>
+          {KITS[userKit]?.name || "Bu Kit"} İçin Henüz Görev Yok
+        </h1>
+        <div style={{fontSize:15,color:T.ts,lineHeight:1.6,marginBottom:24}}>
+          Eğitmenlerin yakında bu kit için heyecan verici görevler eklemesini bekleyelim.
+          <br/>O zamana kadar pratik soruları çözebilir ya da ödevlerini kontrol edebilirsin.
+        </div>
+        <div style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap"}}>
+          <div style={{padding:"14px 24px",borderRadius:14,background:T.card,border:`2px solid ${T.cyan}44`,color:T.cyan,fontWeight:700}}>
+            🎯 Hazırlık Aşaması
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ═══ Inspirational quotes from tech/science legends — rotate every 8s ═══
   const QUOTES=[
@@ -1203,13 +1277,13 @@ function MissionBoard({user,prog,onSel,onHelp}){
   const NODE_GAP=170;
   const MAP_HEIGHT=480;
   const PAD_X=80;
-  const positions=TASKS.map((t,i)=>{
+  const positions=kitTasks.map((t,i)=>{
     const x=PAD_X+i*NODE_GAP;
     // Sine wave between 100-380 y range
     const y=MAP_HEIGHT/2+Math.sin(i*0.55)*150;
     return{x,y,task:t,theme:catThemes[t.cat]||{c:T.orange,icon:"🎯",scene:"⭐"}};
   });
-  const totalWidth=PAD_X*2+TASKS.length*NODE_GAP;
+  const totalWidth=PAD_X*2+kitTasks.length*NODE_GAP;
 
   // Find category zones (start/end x positions)
   const zones=[];
@@ -1221,14 +1295,14 @@ function MissionBoard({user,prog,onSel,onHelp}){
       zStart=p.x-NODE_GAP/2;
     }
   });
-  if(curCat)zones.push({cat:curCat,startX:zStart,endX:positions[TASKS.length-1].x+NODE_GAP/2,theme:catThemes[curCat]});
+  if(curCat)zones.push({cat:curCat,startX:zStart,endX:positions[kitTasks.length-1].x+NODE_GAP/2,theme:catThemes[curCat]});
 
   // Auto-scroll to current task on mount
   const mapRef=useRef(null);
   useEffect(()=>{
     if(!mapRef.current)return;
     // Find first non-locked, non-approved task (active/in_progress/pending)
-    const currentIdx=TASKS.findIndex(t=>{const s=sp[t.id]?.status;return s===TS.ACTIVE||s===TS.IN_PROGRESS||s===TS.PENDING;});
+    const currentIdx=kitTasks.findIndex(t=>{const s=sp[t.id]?.status;return s===TS.ACTIVE||s===TS.IN_PROGRESS||s===TS.PENDING;});
     const targetIdx=currentIdx>=0?currentIdx:0;
     const targetX=positions[targetIdx].x-mapRef.current.clientWidth/2+50;
     mapRef.current.scrollTo({left:Math.max(0,targetX),behavior:"smooth"});
@@ -1789,7 +1863,7 @@ function MissionBoard({user,prog,onSel,onHelp}){
       <div style={{fontSize:11,color:T.tm,fontWeight:700,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>📍 Hızlı Atlama</div>
       <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
         {zones.map((z,i)=>{
-          const ct=TASKS.filter(t=>t.cat===z.cat);
+          const ct=kitTasks.filter(t=>t.cat===z.cat);
           const cd=ct.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
           const done=cd===ct.length;
           return(
@@ -3046,6 +3120,7 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
   const[name,setName]=useState("");const[email,setEmail]=useState("");const[pw,setPw]=useState("");
   const[role,setRole]=useState("student");const[grup,setGrup]=useState("Büyük");
   const[childId,setChildId]=useState("");
+  const[kit,setKit]=useState("berrybot");
   const[busy,setBusy]=useState(false);const[msg,setMsg]=useState(null);
   // Progress setter
   const[selStudent,setSelStudent]=useState(null);
@@ -3057,7 +3132,7 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
     if(!name.trim()||!email.trim()||!pw.trim()){setMsg("Tüm alanları doldur!");return;}
     if(role==="parent"&&!childId){setMsg("Veli için çocuk seçmelisiniz!");return;}
     setBusy(true);setMsg(null);
-    const u=await onAddUser({name:name.trim(),email:email.trim(),password:pw.trim(),role,grup,childId:role==="parent"?childId:null});
+    const u=await onAddUser({name:name.trim(),email:email.trim(),password:pw.trim(),role,grup,childId:role==="parent"?childId:null,kit:role==="student"?kit:null});
     setBusy(false);
     if(u){setMsg("✓ Kullanıcı oluşturuldu!");setName("");setEmail("");setPw("");setChildId("");}
     else setMsg("Hata! Email zaten kayıtlı olabilir.");
@@ -3105,6 +3180,11 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
         </select>
         {role==="student"&&<select value={grup} onChange={e=>setGrup(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none"}}>
           <option value="Büyük">Büyük</option><option value="Kids">Kids</option>
+        </select>}
+        {role==="student"&&<select value={kit} onChange={e=>setKit(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`2px solid ${KITS[kit]?.primaryColor||T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",fontWeight:700,gridColumn:"span 2"}}>
+          <option value="berrybot">🍓 BerryBot</option>
+          <option value="tank">🪖 Tank Robot</option>
+          <option value="picobricks">🧱 PicoBricks</option>
         </select>}
         {role==="parent"&&<select value={childId} onChange={e=>setChildId(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",gridColumn:"span 2"}}>
           <option value="">Çocuk seç...</option>
@@ -3194,12 +3274,35 @@ function UserManager({users,prog,onAddUser,onSetProgress}){
       <div style={{maxHeight:500,overflowY:"auto"}}>
         {students.map((u,i)=>{
           const cnt=getApprovedCount(u.id);const pct=Math.round(cnt/36*100);
-          return(<div key={u.id} style={{padding:"8px 0",borderBottom:`1px solid ${T.border}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
+          const studentKit = u.kit || "berrybot";
+          const kitInfo = KITS[studentKit] || KITS.berrybot;
+          return(<div key={u.id} style={{padding:"8px 0",borderBottom:`1px solid ${T.border}22`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,flex:"1 1 200px",minWidth:0}}>
               <span style={{fontSize:13,color:T.tm,width:28,textAlign:"right"}}>{i+1}.</span>
-              <div><div style={{fontSize:14,fontWeight:600}}>{u.name}</div><div style={{fontSize:12,color:T.tm}}>{u.email}</div></div>
+              <div style={{minWidth:0}}><div style={{fontSize:14,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.name}</div><div style={{fontSize:12,color:T.tm,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{u.email}</div></div>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+              <select
+                value={studentKit}
+                onChange={async (ev)=>{
+                  const newKit=ev.target.value;
+                  if(newKit===studentKit)return;
+                  if(!confirm(`${u.name} için kiti ${kitInfo.name} → ${KITS[newKit].name} olarak değiştirilsin mi?\n\n⚠️ Mevcut görev ilerlemesi kit değişikliğinden etkilenebilir.`))return;
+                  await db.setUserKit(u.id,newKit);
+                  alert(`✓ ${u.name} kiti ${KITS[newKit].name} olarak değiştirildi. Sayfayı yenile.`);
+                }}
+                title="Kit değiştir"
+                style={{
+                  fontSize:11,padding:"4px 8px",borderRadius:6,
+                  border:`2px solid ${kitInfo.primaryColor}88`,
+                  background:`${kitInfo.primaryColor}15`,
+                  color:kitInfo.primaryColor,fontWeight:800,outline:"none",cursor:"pointer",
+                }}
+              >
+                <option value="berrybot">🍓 BerryBot</option>
+                <option value="tank">🪖 Tank</option>
+                <option value="picobricks">🧱 PicoBricks</option>
+              </select>
               <span style={{fontSize:13,color:T.orange,fontWeight:600}}>{cnt}/36</span>
               <div style={{width:50,height:5,borderRadius:3,background:T.border,overflow:"hidden"}}><div style={{height:"100%",background:T.orange,width:`${pct}%`}}/></div>
               <span style={{fontSize:12,padding:"2px 8px",borderRadius:4,background:u.grup==="Kids"?T.cyan+"20":T.orange+"20",color:u.grup==="Kids"?T.cyan:T.orange}}>{u.grup||"Büyük"}</span>

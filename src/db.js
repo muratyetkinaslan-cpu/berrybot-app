@@ -23,17 +23,22 @@ export async function getUsers() {
 
 export async function createUser(userData) {
   const id = `${userData.role}_${Date.now()}`;
+  const kit = userData.kit || 'berrybot';
   const { data, error } = await supabase.from('bb_users').insert({
     id, name: userData.name, email: userData.email, password: userData.password,
     role: userData.role, instructor_id: userData.instructorId || null,
     child_id: userData.childId || null,
     grup: userData.grup || 'Büyük',
+    kit: userData.role === 'student' ? kit : null,
   }).select().single();
   if (error) { console.error('createUser:', error); return null; }
   if (userData.role === 'student') {
-    const rows = [];
-    for (let i = 1; i <= 36; i++) rows.push({ student_id: id, task_id: i, status: i === 1 ? 'active' : 'locked' });
-    await supabase.from('bb_progress').insert(rows);
+    // Only seed initial 36 progress rows for BerryBot — others start with no tasks
+    if (kit === 'berrybot') {
+      const rows = [];
+      for (let i = 1; i <= 36; i++) rows.push({ student_id: id, task_id: i, status: i === 1 ? 'active' : 'locked', kit });
+      await supabase.from('bb_progress').insert(rows);
+    }
     await supabase.from('bb_student_meta').insert({ student_id: id, online: false, last_seen: 0 });
   }
   return data;
