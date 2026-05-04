@@ -3,6 +3,7 @@ import { useData, getLocalPhoto } from "./useData";
 import BerryBot3D from "./BerryBot3D";
 import TankRobot3D from "./TankRobot3D";
 import PicoBricks3D from "./PicoBricks3D";
+import Robot3DPreview from "./Robot3DPreview";
 
 // ═══════════════════════════════════════════════════════════
 //  BerryBot LMS — Production (Supabase)
@@ -5001,211 +5002,169 @@ function HomeworkSubCard({sub,student,onReview}){
 // ═══════════════════════════════════════════════════════════════
 // KIT SELECTOR — İlk açılışta kit seçim ekranı
 // ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// KIT SELECTOR — Minimalist premium kit picker
+// ═══════════════════════════════════════════════════════════════
 function KitSelector({ onSelect }) {
-  const [hovering, setHovering] = useState("berrybot");
+  const [hovering, setHovering] = useState(null);
+  const activeKit = hovering || "berrybot";
+  const activeColor = KITS[activeKit]?.primaryColor || "#FF8800";
 
   return (
     <div style={{
       minHeight: "100vh",
-      background: KITS[hovering]?.bgGradient || KITS.berrybot.bgGradient,
-      transition: "background 0.6s ease",
-      padding: "20px",
+      background: "#0a0518",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
+      padding: "20px",
       position: "relative",
       overflow: "hidden",
     }}>
       <style>{`
-        @keyframes ks-twinkle { 0%,100%{opacity:.3} 50%{opacity:1} }
-        @keyframes ks-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-        @keyframes ks-fade { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes ks-glow { 0%,100%{box-shadow:0 8px 32px var(--gc)55,0 0 0 1px var(--gc)33} 50%{box-shadow:0 12px 48px var(--gc)88,0 0 0 2px var(--gc)66} }
-        .ks-card { animation: ks-fade .6s ease-out backwards; transition: all .3s cubic-bezier(.34,1.56,.64,1); }
-        .ks-card:hover { transform: scale(1.04) translateY(-8px); }
-        .ks-card.active { animation: ks-glow 2s infinite, ks-fade .6s ease-out backwards; }
-        /* Constrain full-screen 3D components to fit card */
-        .robot-preview-wrapper { contain: layout size style paint; }
-        .robot-preview-wrapper > div,
-        .robot-preview-wrapper > div > div { height: 100% !important; min-height: 0 !important; max-height: 100% !important; }
-        .robot-preview-wrapper [class*="h-screen"] { height: 100% !important; min-height: 0 !important; }
-        /* Hide the original component's header bars and toolbars */
-        .robot-preview-wrapper > div > div:first-child:has(button) { display: none !important; }
-        .robot-preview-wrapper button { display: none !important; }
-        .robot-preview-wrapper [class*="border-b"] { display: none !important; }
-        .robot-preview-wrapper [class*="px-6 py-4"] { display: none !important; }
-        .robot-preview-wrapper [class*="absolute top"] { display: none !important; }
-        .robot-preview-wrapper [class*="absolute bottom"] { display: none !important; }
+        @keyframes ks-fade-in { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes ks-glow-bg { 0%,100%{opacity:.3} 50%{opacity:.5} }
+        .ks-card { animation: ks-fade-in .6s ease-out backwards; transition: transform .35s cubic-bezier(.34,1.56,.64,1), border-color .25s, box-shadow .25s; }
+        .ks-card:hover { transform: translateY(-8px); }
       `}</style>
 
-      {/* Background stars */}
-      {[...Array(30)].map((_, i) => (
-        <div key={i} style={{
-          position: "absolute",
-          left: `${(i * 7 + 5) % 95}%`,
-          top: `${(i * 11 + 3) % 95}%`,
-          fontSize: `${8 + (i % 4) * 4}px`,
-          opacity: 0.3,
-          animation: `ks-twinkle ${2 + (i % 3)}s infinite`,
-          animationDelay: `${(i * 0.2) % 3}s`,
-          color: i % 4 === 0 ? "#fbbf24" : i % 4 === 1 ? "#a78bfa" : i % 4 === 2 ? "#22d3ee" : "#fff",
-          pointerEvents: "none",
-        }}>{i % 3 === 0 ? "✦" : "·"}</div>
-      ))}
-
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: 30, position: "relative", zIndex: 2 }}>
-        <div style={{
-          fontSize: 56,
-          fontWeight: 900,
-          background: "linear-gradient(135deg,#fff,#fbbf24,#fff)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          letterSpacing: 2,
-          marginBottom: 8,
-          filter: "drop-shadow(0 4px 20px #0008)",
-        }}>BerryBot LMS</div>
-        <div style={{ fontSize: 18, color: "#fbbf24", letterSpacing: 4, fontWeight: 700, textTransform: "uppercase" }}>
-          🚀 Maceran Hangi Robotla Başlasın?
-        </div>
-        <div style={{ fontSize: 13, color: "#fff8", marginTop: 6 }}>
-          Bir kit seç ve robotik dünyasının kapılarını arala
-        </div>
-      </div>
-
-      {/* Kit Cards */}
+      {/* Animated color glow following hover */}
       <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
-        gap: 20,
-        width: "100%",
-        maxWidth: 1100,
+        position: "absolute",
+        inset: 0,
+        background: `radial-gradient(circle at 50% 50%, ${activeColor}22, transparent 60%)`,
+        transition: "background .8s ease",
+        pointerEvents: "none",
+        animation: "ks-glow-bg 4s ease-in-out infinite",
+      }}/>
+
+      {/* Subtle grid */}
+      <div style={{
+        position: "absolute", inset: 0, opacity: .08, pointerEvents: "none",
+        backgroundImage: `linear-gradient(${activeColor}66 1px, transparent 1px), linear-gradient(90deg, ${activeColor}66 1px, transparent 1px)`,
+        backgroundSize: "40px 40px",
+        transition: "background-image .8s ease",
+      }}/>
+
+      {/* Minimal header — just one line */}
+      <div style={{
+        textAlign: "center",
+        marginBottom: 32,
         position: "relative",
         zIndex: 2,
       }}>
+        <div style={{
+          fontSize: 12,
+          color: "#fff8",
+          letterSpacing: 6,
+          fontWeight: 600,
+          textTransform: "uppercase",
+          marginBottom: 10,
+        }}>BerryBot LMS</div>
+        <h1 style={{
+          fontSize: 38,
+          fontWeight: 200,
+          color: "#fff",
+          margin: 0,
+          letterSpacing: -1,
+        }}>
+          Robotunu Seç
+        </h1>
+      </div>
+
+      {/* Kit cards — 3 large premium tiles */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 320px))",
+        gap: 20,
+        position: "relative",
+        zIndex: 2,
+        justifyContent: "center",
+        width: "100%",
+        maxWidth: 1100,
+      }}>
         {Object.values(KITS).map((kit, idx) => {
-          const Component3D = kit.Component3D;
-          const isActive = hovering === kit.id;
+          const isHover = hovering === kit.id;
           return (
             <div
               key={kit.id}
-              className={`ks-card ${isActive ? "active" : ""}`}
+              className="ks-card"
               onMouseEnter={() => setHovering(kit.id)}
+              onMouseLeave={() => setHovering(null)}
               onClick={() => onSelect(kit.id)}
               style={{
                 cursor: "pointer",
-                borderRadius: 24,
-                padding: 20,
-                background: `linear-gradient(135deg,${kit.primaryColor}22,${kit.accentColor}22,#1a0a3a99)`,
-                border: `3px solid ${kit.primaryColor}66`,
-                animationDelay: `${idx * 100}ms`,
-                position: "relative",
+                borderRadius: 20,
+                padding: 0,
+                background: "rgba(255,255,255,0.03)",
+                border: `1px solid ${isHover ? kit.primaryColor + "88" : "rgba(255,255,255,0.08)"}`,
+                animationDelay: `${idx * 80}ms`,
                 overflow: "hidden",
-                ["--gc"]: kit.primaryColor,
+                backdropFilter: "blur(10px)",
+                boxShadow: isHover ? `0 20px 60px ${kit.primaryColor}44, 0 0 0 1px ${kit.primaryColor}33` : "0 8px 24px rgba(0,0,0,0.3)",
               }}
             >
-              {/* Decorative big icon */}
+              {/* 3D model — clean, no UI overlays */}
               <div style={{
-                position: "absolute",
-                top: -10, right: -10,
-                fontSize: 100,
-                opacity: 0.08,
-                pointerEvents: "none",
-              }}>{kit.icon}</div>
-
-              {/* 3D Robot — wrapped to fit card */}
-              <div className="robot-preview-wrapper" style={{
-                height: 240,
-                marginBottom: 14,
+                height: 280,
                 position: "relative",
-                borderRadius: 14,
-                overflow: "hidden",
-                background: "rgba(0,0,0,0.35)",
-                border: `1px solid ${kit.primaryColor}33`,
+                background: `radial-gradient(ellipse at 50% 70%, ${kit.primaryColor}22, transparent 70%)`,
+                borderBottom: `1px solid rgba(255,255,255,0.06)`,
               }}>
-                <Component3D />
+                <Robot3DPreview kitId={kit.id} />
               </div>
 
-              {/* Title */}
-              <div style={{
-                fontSize: 28,
-                fontWeight: 900,
-                color: "#fff",
-                marginBottom: 4,
-                textAlign: "center",
-                letterSpacing: .5,
-                textShadow: `0 0 20px ${kit.primaryColor}66`,
-              }}>{kit.icon} {kit.name}</div>
-
-              {/* Tagline */}
-              <div style={{
-                fontSize: 12,
-                color: kit.primaryColor,
-                fontWeight: 800,
-                letterSpacing: 2,
-                textAlign: "center",
-                textTransform: "uppercase",
-                marginBottom: 10,
-              }}>{kit.tagline}</div>
-
-              {/* Description */}
-              <div style={{
-                fontSize: 13,
-                color: "#fff9",
-                textAlign: "center",
-                lineHeight: 1.5,
-                marginBottom: 16,
-                minHeight: 40,
-              }}>{kit.desc}</div>
-
-              {/* Select button */}
-              <button
-                onClick={(e) => { e.stopPropagation(); onSelect(kit.id); }}
-                style={{
-                  width: "100%",
-                  padding: "12px 20px",
-                  borderRadius: 12,
-                  border: "none",
-                  background: `linear-gradient(135deg,${kit.primaryColor},${kit.accentColor})`,
+              {/* Content — minimal */}
+              <div style={{ padding: "18px 20px 20px" }}>
+                <div style={{
+                  fontSize: 22,
+                  fontWeight: 700,
                   color: "#fff",
-                  fontSize: 16,
-                  fontWeight: 900,
-                  cursor: "pointer",
-                  letterSpacing: 1,
+                  marginBottom: 4,
+                  letterSpacing: -0.3,
+                }}>
+                  {kit.name}
+                </div>
+                <div style={{
+                  fontSize: 12,
+                  color: kit.primaryColor,
+                  fontWeight: 500,
+                  letterSpacing: 1.5,
                   textTransform: "uppercase",
-                  boxShadow: `0 6px 20px ${kit.primaryColor}66`,
-                  transition: "transform .15s",
-                }}
-                onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.96)"}
-                onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
-              >
-                ▶ Bu Kitle Devam Et
-              </button>
+                  marginBottom: 16,
+                }}>
+                  {kit.tagline}
+                </div>
+
+                {/* Single CTA button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onSelect(kit.id); }}
+                  style={{
+                    width: "100%",
+                    padding: "12px",
+                    borderRadius: 10,
+                    border: `1px solid ${kit.primaryColor}66`,
+                    background: isHover ? `linear-gradient(135deg, ${kit.primaryColor}, ${kit.accentColor})` : "transparent",
+                    color: isHover ? "#fff" : kit.primaryColor,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    letterSpacing: 1,
+                    transition: "all .25s",
+                  }}
+                >
+                  Devam Et →
+                </button>
+              </div>
             </div>
           );
         })}
-      </div>
-
-      {/* Footer */}
-      <div style={{
-        marginTop: 30,
-        fontSize: 12,
-        color: "#fff5",
-        textAlign: "center",
-        letterSpacing: 1,
-        position: "relative",
-        zIndex: 2,
-      }}>
-        💡 Seçimin admin tarafından sonradan değiştirilebilir
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ADMIN TASK EDITOR — Görev oluştur/düzenle/sil + medya yükle
-// ═══════════════════════════════════════════════════════════════
 function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload }) {
   const [selKit, setSelKit] = useState("berrybot");
   const [editing, setEditing] = useState(null); // task object or "new"
