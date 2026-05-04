@@ -488,27 +488,62 @@ export async function fetchCustomTasks(kit) {
 }
 
 export async function upsertTask(t) {
+  if (!t || !t.kit || !t.task_id || !t.title || !t.category) {
+    console.error('upsertTask: missing required fields', { kit: t?.kit, task_id: t?.task_id, title: t?.title, category: t?.category });
+    throw new Error("Eksik alan: kit, task_id, title, category zorunlu");
+  }
   const now = Date.now();
-  const { data: existing } = await supabase.from('bb_tasks')
-    .select('id').eq('kit', t.kit).eq('task_id', t.task_id).maybeSingle();
+  console.log('💾 upsertTask START:', { kit: t.kit, task_id: t.task_id, title: t.title });
+
+  const { data: existing, error: queryErr } = await supabase.from('bb_tasks')
+    .select('id, active').eq('kit', t.kit).eq('task_id', t.task_id).maybeSingle();
+  if (queryErr) {
+    console.error('upsertTask: existing query failed', queryErr);
+    throw new Error("DB sorgu hatası: " + (queryErr.message || ""));
+  }
+  console.log('💾 existing row:', existing);
+
+  // Build payload with explicit defaults — never let nulls cause CHECK violations
   const payload = {
-    title: t.title, category: t.category, difficulty: t.difficulty,
-    expected_min: t.expected_min, xp: t.xp, emoji: t.emoji,
-    description: t.description, answer: t.answer,
-    learnings: t.learnings || [],
-    image_url: t.image_url, video_url: t.video_url, answer_image_url: t.answer_image_url,
-    position: t.position, updated_at: now,
+    title: String(t.title || "").trim(),
+    category: String(t.category || "").trim(),
+    difficulty: parseInt(t.difficulty) || 1,
+    expected_min: parseInt(t.expected_min) || 15,
+    xp: parseInt(t.xp) || 10,
+    emoji: t.emoji || "📋",
+    description: t.description || "",
+    answer: t.answer || "",
+    learnings: Array.isArray(t.learnings) ? t.learnings : [],
+    image_url: t.image_url || null,
+    video_url: t.video_url || null,
+    answer_image_url: t.answer_image_url || null,
+    position: parseInt(t.position) || 0,
+    active: true,  // always true (un-soft-delete if was deleted)
+    updated_at: now,
   };
+
   if (existing) {
+    console.log('💾 UPDATE existing.id =', existing.id);
     const { error } = await supabase.from('bb_tasks').update(payload).eq('id', existing.id);
-    if (error) console.error('upsertTask update', error);
+    if (error) {
+      console.error('💾 upsertTask UPDATE error:', error);
+      throw new Error("Güncelleme hatası: " + (error.message || error.details || error.hint || "DB hatası"));
+    }
     addLog({ type: 'task_updated', detail: `${t.kit} #${t.task_id}` });
+    console.log('💾 UPDATE OK');
     return existing.id;
   } else {
-    const { data, error } = await supabase.from('bb_tasks').insert({
-      ...payload, kit: t.kit, task_id: t.task_id, created_at: now,
-    }).select().single();
-    if (error) { console.error('upsertTask insert', error); return null; }
+    console.log('💾 INSERT new task');
+    const insertData = { ...payload, kit: t.kit, task_id: parseInt(t.task_id), created_at: now };
+    const { data, error } = await supabase.from('bb_tasks').insert(insertData).select().single();
+    if (error) {
+      console.error('💾 upsertTask INSERT error:', error);
+      throw new Error("Ekleme hatası: " + (error.message || error.details || error.hint || JSON.stringify(error)));
+    }
+    if (!data) {
+      throw new Error("Görev kaydedildi ama ID dönmedi");
+    }
+    console.log('💾 INSERT OK, id =', data.id);
     addLog({ type: 'task_created', detail: `${t.kit} #${t.task_id}: ${t.title}` });
 
     // Auto-seed progress rows for all students of this kit.

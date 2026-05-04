@@ -527,6 +527,17 @@ export default function App() {
   // Apply theme synchronously every render — ensures first paint is correct
   applyKitTheme(activeKit);
 
+  // Update browser tab title and favicon based on active kit
+  useEffect(() => {
+    const kitName = KITS[activeKit]?.name || "BerryBot";
+    document.title = `${kitName} LMS`;
+    // Update favicon dynamically
+    const link = document.querySelector("link[rel='icon']") || document.createElement('link');
+    link.rel = 'icon';
+    link.href = `/logos/${activeKit}.png`;
+    if (!link.parentNode) document.head.appendChild(link);
+  }, [activeKit]);
+
   // Trigger re-render when theme should change (covers edge cases)
   useEffect(() => {
     setThemeVersion(v => v + 1);
@@ -546,7 +557,7 @@ export default function App() {
 
   console.log("[BB-RENDER] loading:", loading, "user:", user?.id, "kit:", activeKit);
 
-  if(loading)return<div style={{background:T.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:T.orange,fontSize:18}}>⏳ BerryBot LMS Yükleniyor...</div>;
+  if(loading)return<div style={{background:T.bg,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",color:T.orange,fontSize:18}}>⏳ {KITS[activeKit]?.name || "BerryBot"} LMS Yükleniyor...</div>;
   if(!user&&!selectedKit)return<KitSelector onSelect={handleKitSelect}/>;
   if(!user)return<LoginPage onLogin={handleLogin} kit={KITS[selectedKit]||KITS.berrybot} onChangeKit={handleResetKit}/>;
 
@@ -618,7 +629,11 @@ export default function App() {
       `}</style>
       <nav style={{background:T.card,borderBottom:`1px solid ${T.border}`,padding:"12px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <img src="/logos/berrybot.png" alt="BerryBot" style={{height:54,width:"auto",maxWidth:200,objectFit:"contain",filter:`drop-shadow(0 2px 8px ${T.orange}66)`}}/>
+          <img
+            src={`/logos/${activeKit}.png`}
+            alt={KITS[activeKit]?.name || "Robot"}
+            onError={(e) => { e.currentTarget.src = "/logos/berrybot.png"; }}
+            style={{height:54,width:"auto",maxWidth:200,objectFit:"contain",filter:`drop-shadow(0 2px 8px ${T.orange}66)`}}/>
           <span style={{fontSize:16,background:`linear-gradient(135deg,${T.purple},${T.pd})`,color:"#fff",padding:"6px 16px",borderRadius:10,fontWeight:900,letterSpacing:2,boxShadow:`0 3px 12px ${T.purple}77`,border:`2px solid ${T.pl}66`}}>LMS</span>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
@@ -4487,7 +4502,7 @@ function ParentCVView({child,sp}){
           </div>
         </div>
         <div style={{textAlign:"right"}}>
-          <div style={{fontSize:11,color:"#888",letterSpacing:1}}>BerryBot LMS</div>
+          <div style={{fontSize:11,color:"#888",letterSpacing:1}}>{KITS[child?.kit || "berrybot"]?.name || "BerryBot"} LMS</div>
           <div style={{fontSize:13,color:"#444",fontWeight:700,marginTop:2}}>{new Date().toLocaleDateString("tr-TR")}</div>
         </div>
       </div>
@@ -4602,8 +4617,8 @@ function ParentCVView({child,sp}){
           <div style={{fontSize:14,fontFamily:"monospace",fontWeight:800,color:"#1a1a1a"}}>{verifyCode}</div>
         </div>
         <div style={{textAlign:"right"}}>
-          <div style={{fontSize:11,color:"#666",marginBottom:2}}>Bu sertifika RoboGPT BerryBot Akademisi tarafından düzenlenmiştir.</div>
-          <div style={{fontSize:11,color:"#888"}}>🤖 BerryBot LMS — {new Date().getFullYear()}</div>
+          <div style={{fontSize:11,color:"#666",marginBottom:2}}>Bu sertifika RoboGPT Robotik Akademisi tarafından düzenlenmiştir.</div>
+          <div style={{fontSize:11,color:"#888"}}>🤖 {KITS[child?.kit || "berrybot"]?.name || "BerryBot"} LMS — {new Date().getFullYear()}</div>
         </div>
       </div>
     </div>
@@ -6000,6 +6015,28 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
                   {t.video_url && <span title="Video var" style={{ fontSize: 16 }}>▶️</span>}
                   {t.answer_image_url && <span title="Cevap var" style={{ fontSize: 16 }}>🗝️</span>}
                 </div>
+                {/* Inline delete button — only for saved tasks (not templates) */}
+                {!isDefault && t.id && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!confirm(`"${t.title}" görevini silmek istediğine emin misin?\n\nBu işlem öğrencilerin ilerleme verisini etkileyebilir.`)) return;
+                      try {
+                        await onDelete(t.id);
+                        if (onRefresh) await onRefresh();
+                      } catch (err) {
+                        alert("Silme hatası: " + (err?.message || "Bilinmeyen"));
+                      }
+                    }}
+                    title="Sil"
+                    style={{
+                      padding: "6px 10px", borderRadius: 8,
+                      border: `1px solid ${T.err}55`,
+                      background: T.err + "15", color: T.err,
+                      cursor: "pointer", fontSize: 14, fontWeight: 700,
+                    }}
+                  >🗑️</button>
+                )}
                 <span style={{ fontSize: 16, color: T.tm }}>▶</span>
               </div>
             );
