@@ -38,7 +38,7 @@ export default function TankRobot3D({ interactive = true } = {}) {
 
     const camera = new THREE.PerspectiveCamera(40, W0 / H0, 0.1, 100);
     camera.position.set(5, 3.5, 7);
-    camera.lookAt(0, 0.4, 0);
+    camera.lookAt(0, -0.6, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(W0, H0);
@@ -722,7 +722,7 @@ export default function TankRobot3D({ interactive = true } = {}) {
       camera.position.x = orbitDist * Math.sin(orbitAngle);
       camera.position.z = orbitDist * Math.cos(orbitAngle);
       camera.position.y = orbitHeight;
-      camera.lookAt(0, 0.4, 0);
+      camera.lookAt(0, -0.6, 0);
     };
 
     const onDown = (cx, cy) => { dragging = true; prevX = cx; prevY = cy; };

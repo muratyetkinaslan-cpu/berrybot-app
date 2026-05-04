@@ -230,6 +230,147 @@ export default function PicoBricks3D({
 
     const anim = {};
 
+    // ------------------- RASPBERRY PI PICO W (CENTER) -------------------
+    {
+      const picoTex = makeCanvasTex(512, 1100, (ctx, w, h) => {
+        ctx.fillStyle = "#0d4a37";
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = "rgba(240,240,235,0.9)";
+        ctx.font = "bold 24px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("Raspberry Pi", w / 2, h * 0.62);
+        ctx.fillText("Pico W", w / 2, h * 0.66);
+        ctx.font = "bold 14px monospace";
+        ctx.fillText("©2022", w / 2, h * 0.69);
+        ctx.font = "bold 11px monospace";
+        ctx.fillStyle = "rgba(240,240,235,0.7)";
+        const leftLabels = ["GP0","GP1","GND","GP2","GP3","GP4","GP5","GND","GP6","GP7","GP8","GP9","GND","GP10","GP11","GP12","GP13","GND","GP14","GP15"];
+        const rightLabels = ["VBUS","VSYS","GND","3V3_EN","3V3","ADC_VR","AGND","GP28","GP27","GP26","RUN","GP22","GND","GP21","GP20","GP19","GP18","GND","GP17","GP16"];
+        leftLabels.forEach((t, i) => {
+          const y = 38 + (i * (h - 80)) / leftLabels.length;
+          ctx.textAlign = "left";
+          ctx.fillText(t, 14, y);
+          ctx.textAlign = "right";
+          ctx.fillText(rightLabels[i], w - 14, y);
+        });
+        ctx.fillStyle = "rgba(240,240,235,0.5)";
+        ctx.textAlign = "center";
+        ctx.font = "bold 10px monospace";
+        ctx.fillText("BOOTSEL", w / 2, h * 0.16);
+      });
+
+      const matPicoTop = new THREE.MeshStandardMaterial({ color: 0xffffff, map: picoTex, roughness: 0.55, metalness: 0.3 });
+      const matPicoSide = new THREE.MeshStandardMaterial({ color: 0x0c4029, roughness: 0.55, metalness: 0.3 });
+
+      const g = new THREE.Group();
+
+      // Pico PCB
+      const picoBoxGeo = new THREE.BoxGeometry(0.95, 0.085, 2.20);
+      const picoBoxMats = [matPicoSide, matPicoSide, matPicoTop, matPicoSide, matPicoSide, matPicoSide];
+      const picoBoard = new THREE.Mesh(picoBoxGeo, picoBoxMats);
+      picoBoard.position.y = 0.0425;
+      picoBoard.castShadow = true; picoBoard.receiveShadow = true;
+      g.add(picoBoard);
+
+      // RP2040 chip
+      const rp = new THREE.Mesh(
+        new THREE.BoxGeometry(0.42, 0.05, 0.42),
+        new THREE.MeshStandardMaterial({ color: 0x101015, roughness: 0.45, metalness: 0.15 })
+      );
+      rp.position.set(0.05, 0.111, -0.05);
+      rp.castShadow = true;
+      g.add(rp);
+      const dot = new THREE.Mesh(
+        new THREE.CircleGeometry(0.018, 16),
+        new THREE.MeshStandardMaterial({ color: 0xeeeeee })
+      );
+      dot.rotation.x = -Math.PI / 2;
+      dot.position.set(-0.13, 0.137, -0.22);
+      g.add(dot);
+
+      // WiFi shield (CYW43439)
+      const wifi = new THREE.Mesh(
+        new THREE.BoxGeometry(0.36, 0.06, 0.42),
+        new THREE.MeshStandardMaterial({ color: 0xc8c8c8, metalness: 0.85, roughness: 0.3 })
+      );
+      wifi.position.set(0, 0.116, 0.55);
+      wifi.castShadow = true;
+      g.add(wifi);
+
+      // Antenna (gold trace)
+      const ant = new THREE.Mesh(
+        new THREE.BoxGeometry(0.28, 0.005, 0.32),
+        new THREE.MeshStandardMaterial({ color: 0xd9a93a, metalness: 0.9, roughness: 0.3 })
+      );
+      ant.position.set(0, 0.118, 0.94);
+      g.add(ant);
+
+      // USB connector
+      const usb = new THREE.Mesh(
+        new THREE.BoxGeometry(0.46, 0.18, 0.30),
+        new THREE.MeshStandardMaterial({ color: 0xb8b8b8, metalness: 0.85, roughness: 0.3 })
+      );
+      usb.position.set(0, 0.135, -1.04);
+      usb.castShadow = true;
+      g.add(usb);
+      const usbHole = new THREE.Mesh(
+        new THREE.BoxGeometry(0.34, 0.10, 0.05),
+        new THREE.MeshBasicMaterial({ color: 0x222222 })
+      );
+      usbHole.position.set(0, 0.135, -1.21);
+      g.add(usbHole);
+
+      // BOOTSEL button
+      const boot = new THREE.Mesh(
+        new THREE.BoxGeometry(0.10, 0.04, 0.10),
+        new THREE.MeshStandardMaterial({ color: 0xeeeeee })
+      );
+      boot.position.set(-0.20, 0.105, -0.55);
+      g.add(boot);
+
+      // Gold pin headers (40 pins, 20 each side)
+      const pinGeo = new THREE.BoxGeometry(0.055, 0.075, 0.055);
+      const pinMesh = new THREE.InstancedMesh(pinGeo, matGold, 40);
+      const m4 = new THREE.Matrix4();
+      let k = 0;
+      for (let i = 0; i < 20; i++) {
+        const z = -0.95 + i * 0.10;
+        m4.makeTranslation(-0.43, 0.117, z); pinMesh.setMatrixAt(k++, m4);
+        m4.makeTranslation( 0.43, 0.117, z); pinMesh.setMatrixAt(k++, m4);
+      }
+      pinMesh.count = k;
+      pinMesh.instanceMatrix.needsUpdate = true;
+      pinMesh.castShadow = true;
+      g.add(pinMesh);
+
+      // Pin header strips
+      const stripL = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.03, 1.95), matChip);
+      stripL.position.set(-0.43, 0.10, 0);
+      g.add(stripL);
+      const stripR = stripL.clone();
+      stripR.position.x = 0.43;
+      g.add(stripR);
+
+      // Activity LED (animated)
+      const act = new THREE.Mesh(
+        new THREE.BoxGeometry(0.05, 0.03, 0.05),
+        new THREE.MeshStandardMaterial({
+          color: 0x88ffaa, emissive: 0x33ff66, emissiveIntensity: 1.5,
+        })
+      );
+      act.position.set(-0.18, 0.105, 0.85);
+      g.add(act);
+      const actGlow = glowSprite(0x33ff66, 0.55, 0.7);
+      actGlow.position.set(-0.18, 0.13, 0.85);
+      g.add(actGlow);
+      anim.activityLed = act;
+      anim.activityGlow = actGlow;
+
+      // Position Pico in center of PicoBricks board
+      g.position.set(0, 0.05, 0);
+      board.add(g);
+    }
+
     // ------------------- MODULE FACTORY -------------------
     function moduleBase(jstSide) {
       const g = new THREE.Group();
@@ -520,6 +661,11 @@ export default function PicoBricks3D({
         const v = 0.6 + (Math.sin(t * 2.7) + 1) * 0.7;
         anim.redLed.material.emissiveIntensity = v;
         anim.redGlow.material.opacity = 0.4 + v * 0.25;
+      }
+      if (anim.activityLed) {
+        const v = 0.45 + (Math.sin(t * 5.5) + 1) * 0.6;
+        anim.activityLed.material.emissiveIntensity = v;
+        anim.activityGlow.material.opacity = 0.4 + v * 0.25;
       }
       if (Math.floor(t * 30) % 2 === 0) drawOLED(t);
       if (anim.powerLed) {

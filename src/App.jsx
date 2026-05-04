@@ -5239,7 +5239,7 @@ function KitSelector({ onSelect }) {
                 minHeight: 0,
                 margin: "clamp(4px, 0.8vh, 8px)",
                 overflow: "hidden",
-                background: kit.id === "berrybot" ? `radial-gradient(ellipse at center,#6B3FA055 0%,#2a1050 50%,#0f0828 100%)` : kit.id === "tank" ? `radial-gradient(ellipse at center,#16a34a44 0%,#0a1f15 50%,#000 100%)` : `radial-gradient(ellipse at center,#ea580c44 0%,#2a1505 50%,#000 100%)`,
+                background: kit.id === "berrybot" ? `radial-gradient(ellipse at center,#6B3FA055 0%,#2a1050 50%,#0f0828 100%)` : kit.id === "tank" ? `radial-gradient(ellipse at center,#15803d66 0%,#14532d 45%,#052e16 100%)` : `radial-gradient(ellipse at center,#ea580c44 0%,#2a1505 50%,#000 100%)`,
               }}>
                 {/* Targeting crosshair */}
                 {isHovered && <svg style={{
