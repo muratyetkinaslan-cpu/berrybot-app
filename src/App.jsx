@@ -674,7 +674,7 @@ function LoginPage({onLogin, kit, onChangeKit}){
             zIndex:1,
           }}/>
           <div className="robot-preview-wrapper" style={{position:"relative",zIndex:2,width:"100%",height:420,borderRadius:14,overflow:"hidden"}}>
-            {kit?.Component3D ? <kit.Component3D /> : <BerryBot3D height={420} autoRotate={true} background="transparent" interactive={false}/>}
+            {kit?.Component3D ? <kit.Component3D interactive={false} /> : <BerryBot3D height={420} autoRotate={true} background="transparent" interactive={false}/>}
           </div>
           <style>{`
             .robot-preview-wrapper { contain: layout size style paint; }
@@ -698,9 +698,9 @@ function LoginPage({onLogin, kit, onChangeKit}){
               alt={kit?.name || "BerryBot"}
               style={{
                 maxWidth:"100%",
-                width: kit?.id === "picobricks" ? 240 : 340,
+                width: kit?.id === "berrybot" ? 320 : 220,
                 height:"auto",
-                maxHeight: kit?.id === "picobricks" ? 100 : 140,
+                maxHeight: kit?.id === "berrybot" ? 130 : 90,
                 objectFit:"contain",
                 filter:`drop-shadow(0 4px 14px ${kitColor}88)`,
               }}
@@ -725,7 +725,7 @@ function LoginPage({onLogin, kit, onChangeKit}){
       }}>
         {/* LOGIN FORM */}
         <div style={{
-          background:`linear-gradient(135deg,${T.card},#1a0e3a)`,
+          background:`linear-gradient(135deg,${kitColor}18,${kitAccent}18,#0a0820)`,
           borderRadius:20,padding:22,
           border:`2px solid ${kitColor}55`,
           boxShadow: `0 0 30px ${kitColor}44, 0 0 60px ${kitAccent}22`,
@@ -734,7 +734,7 @@ function LoginPage({onLogin, kit, onChangeKit}){
             style={{
               width:"100%",padding:"13px 16px",borderRadius:12,
               border:`2px solid ${kitColor}66`,
-              background:`linear-gradient(135deg,${T.input},${kitColor}15)`,
+              background:`linear-gradient(135deg,#0a0820cc,${kitColor}10)`,
               color:T.tp,fontSize:15,outline:"none",marginBottom:10,boxSizing:"border-box",fontWeight:500,
               transition:"all .2s",
             }}
@@ -744,7 +744,7 @@ function LoginPage({onLogin, kit, onChangeKit}){
             style={{
               width:"100%",padding:"13px 16px",borderRadius:12,
               border:`2px solid ${kitColor}66`,
-              background:`linear-gradient(135deg,${T.input},${kitColor}15)`,
+              background:`linear-gradient(135deg,#0a0820cc,${kitColor}10)`,
               color:T.tp,fontSize:15,outline:"none",boxSizing:"border-box",fontWeight:500,
               transition:"all .2s",
             }}

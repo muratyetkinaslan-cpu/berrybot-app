@@ -881,10 +881,11 @@ export default function TankRobot3D({ interactive = true } = {}) {
       </div>
 
       {/* Canvas */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative flex-1 overflow-hidden" style={interactive ? {} : { pointerEvents: "none" }}>
         <div
           ref={mountRef}
           className="w-full h-full cursor-grab active:cursor-grabbing select-none"
+          style={interactive ? {} : { pointerEvents: "none", cursor: "default" }}
         />
 
         <div className="absolute top-4 right-4 flex flex-col gap-2">
