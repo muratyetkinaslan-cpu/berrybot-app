@@ -1,58 +1,51 @@
-import { useEffect, useRef, useState } from "react";
+// TankRobot3D.jsx — 3D animated tank robot kit component
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-/**
- * TankRobot3D — Interactive 3D model of a Raspberry Pi Pico tank robot kit.
- *
- * Features:
- *   - Laser-cut wooden chassis (top, bottom, side panels) with slot patterns
- *   - 4 wooden gear-toothed sprocket wheels (animated rotation)
- *   - 2 continuous rubber tracks with ~32 segments each that physically
- *     translate along a stadium-shaped path around the wheels
- *   - 2 yellow TT gear motors mounted between front and rear wheels
- *   - Mini PicoBricks-style top board with green Raspberry Pi Pico W
- *   - HC-SR04 ultrasonic distance sensor on the front with curved cable bundle
- *   - Auto-orbit camera animation (toggleable)
- *   - Mouse-drag and touch-drag for manual orbit
- *   - Mouse-wheel zoom
- *
- * Dependency: three (^0.128 or newer)
- */
-export default function TankRobot3D() {
+export default function TankRobot3D({
+  height = 520,
+  autoRotate = false,
+  background = "transparent",
+  className = "",
+  style = {},
+  interactive = true,
+}) {
   const mountRef = useRef(null);
-  const [autoRotate, setAutoRotate] = useState(true);
-  const autoRotateRef = useRef(true);
-  useEffect(() => { autoRotateRef.current = autoRotate; }, [autoRotate]);
 
   useEffect(() => {
-    const mount = mountRef.current;
-    if (!mount) return;
-    const W0 = mount.clientWidth, H0 = mount.clientHeight;
+    const container = mountRef.current;
+    if (!container) return;
 
-    // ============================================================
-    //  SCENE / CAMERA / RENDERER
-    // ============================================================
+    let W = container.clientWidth || 680;
+    const H = height;
+
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x06070b);
-    scene.fog = new THREE.Fog(0x06070b, 18, 40);
+    const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 100);
 
-    const camera = new THREE.PerspectiveCamera(40, W0 / H0, 0.1, 100);
-    camera.position.set(5, 3.5, 7);
-    camera.lookAt(0, 0.4, 0);
+    let camR = 9.5, camTheta = 0.85, camPhi = 0.45;
+    let spinning = autoRotate;
+
+    function updateCam() {
+      camera.position.set(
+        camR * Math.cos(camPhi) * Math.sin(camTheta),
+        camR * Math.sin(camPhi) + 0.6,
+        camR * Math.cos(camPhi) * Math.cos(camTheta)
+      );
+      camera.lookAt(0, 0.4, 0);
+    }
+    updateCam();
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(W0, H0);
+    renderer.setSize(W, H);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     if ("outputEncoding" in renderer) renderer.outputEncoding = THREE.sRGBEncoding;
     if ("toneMapping" in renderer) renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
-    mount.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
-    // ============================================================
-    //  LIGHTING
-    // ============================================================
+    // ------------------- LIGHTING -------------------
     scene.add(new THREE.AmbientLight(0xffffff, 0.45));
 
     const keyLight = new THREE.DirectionalLight(0xfff2dd, 1.05);
@@ -81,19 +74,16 @@ export default function TankRobot3D() {
     rimWarm.position.set(5, 1, -2);
     scene.add(rimWarm);
 
-    // Subtle ground for shadow grounding
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(40, 40),
-      new THREE.ShadowMaterial({ opacity: 0.45 })
+      new THREE.ShadowMaterial({ opacity: 0.3 })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -1.4;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // ============================================================
-    //  TEXTURE FACTORY
-    // ============================================================
+    // ------------------- TEXTURES -------------------
     const makeTex = (w, h, draw) => {
       const c = document.createElement("canvas");
       c.width = w; c.height = h;
@@ -105,17 +95,13 @@ export default function TankRobot3D() {
       return tex;
     };
 
-    // ---- Light wood (laser-cut MDF) ----
     const woodTex = makeTex(1024, 1024, (ctx, w, h) => {
-      // base creamy tan
       const grad = ctx.createLinearGradient(0, 0, w, h);
       grad.addColorStop(0, "#dfc699");
       grad.addColorStop(0.5, "#d4b985");
       grad.addColorStop(1, "#cdb079");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
-
-      // Long grain streaks
       for (let i = 0; i < 220; i++) {
         const y = Math.random() * h;
         const len = 200 + Math.random() * 600;
@@ -127,7 +113,6 @@ export default function TankRobot3D() {
         ctx.bezierCurveTo(x + len*0.3, y + (Math.random()-0.5)*8, x + len*0.7, y + (Math.random()-0.5)*8, x + len, y);
         ctx.stroke();
       }
-      // small darker knots
       for (let i = 0; i < 8; i++) {
         const x = Math.random() * w;
         const y = Math.random() * h;
@@ -138,7 +123,6 @@ export default function TankRobot3D() {
         ctx.fillStyle = g;
         ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
       }
-      // burn marks at edges (laser-cut signature)
       const edge = ctx.createLinearGradient(0, 0, 0, 18);
       edge.addColorStop(0, "rgba(60,40,20,0.6)");
       edge.addColorStop(1, "rgba(60,40,20,0)");
@@ -147,15 +131,12 @@ export default function TankRobot3D() {
       ctx.fillRect(0, h - 18, w, 18);
     });
 
-    // ---- Top deck pattern (chevron slot pattern + screw holes burned in) ----
     const deckTex = makeTex(1200, 800, (ctx, w, h) => {
-      // base wood
       const grad = ctx.createLinearGradient(0, 0, w, h);
       grad.addColorStop(0, "#dfc699");
       grad.addColorStop(1, "#cdb079");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, w, h);
-      // grain
       for (let i = 0; i < 180; i++) {
         const y = Math.random() * h;
         ctx.strokeStyle = `rgba(120,90,40,${Math.random() * 0.15})`;
@@ -164,23 +145,20 @@ export default function TankRobot3D() {
         ctx.moveTo(0, y); ctx.bezierCurveTo(w*0.3, y + 4, w*0.7, y - 4, w, y);
         ctx.stroke();
       }
-      // chevron slots (dark — these are the cutouts)
-      ctx.strokeStyle = "rgba(40,25,10,0.92)";
       ctx.fillStyle = "rgba(20,12,6,0.95)";
       const drawSlot = (cx, cy, len, ang) => {
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(ang);
         ctx.beginPath();
-        ctx.roundRect ? ctx.roundRect(-len/2, -8, len, 16, 8) : ctx.rect(-len/2, -8, len, 16);
+        if (ctx.roundRect) ctx.roundRect(-len/2, -8, len, 16, 8);
+        else ctx.rect(-len/2, -8, len, 16);
         ctx.fill();
-        // burnt edge
         ctx.strokeStyle = "rgba(70, 40, 20, 0.6)";
         ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.restore();
       };
-      // 4 rows of chevron slots (V pattern)
       const cols = 6;
       for (let row = 0; row < 4; row++) {
         const y = h * (0.18 + row * 0.18);
@@ -191,7 +169,6 @@ export default function TankRobot3D() {
           drawSlot(x2, y, 110, Math.PI / 6);
         }
       }
-      // 4 small dot slots at corners (screw locations - burned)
       [[0.06,0.08],[0.94,0.08],[0.06,0.92],[0.94,0.92]].forEach(([rx, ry]) => {
         const x = rx * w, y = ry * h;
         const g = ctx.createRadialGradient(x, y, 0, x, y, 30);
@@ -199,13 +176,11 @@ export default function TankRobot3D() {
         g.addColorStop(1, "rgba(40,25,10,0)");
         ctx.fillStyle = g;
         ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI*2); ctx.fill();
-        // hole
         ctx.fillStyle = "#1a1208";
         ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI*2); ctx.fill();
       });
     });
 
-    // ---- Bottom plate pattern (different slot layout, cleaner) ----
     const bottomTex = makeTex(1200, 800, (ctx, w, h) => {
       ctx.fillStyle = "#d4b985";
       ctx.fillRect(0, 0, w, h);
@@ -217,7 +192,6 @@ export default function TankRobot3D() {
         ctx.moveTo(0, y); ctx.bezierCurveTo(w*0.3, y+3, w*0.7, y-3, w, y); ctx.stroke();
       }
       ctx.fillStyle = "rgba(20,12,6,0.93)";
-      // diagonal slot pattern
       for (let row = 0; row < 5; row++) {
         for (let col = 0; col < 4; col++) {
           const x = w * (0.25 + col * 0.15);
@@ -231,51 +205,24 @@ export default function TankRobot3D() {
       }
     });
 
-    // ============================================================
-    //  SHARED MATERIALS
-    // ============================================================
-    const matWoodSide = new THREE.MeshStandardMaterial({
-      color: 0xffffff, map: woodTex, roughness: 0.85, metalness: 0.05,
-    });
-    const matDeck = new THREE.MeshStandardMaterial({
-      color: 0xffffff, map: deckTex, roughness: 0.85, metalness: 0.05,
-    });
-    const matBottom = new THREE.MeshStandardMaterial({
-      color: 0xffffff, map: bottomTex, roughness: 0.85, metalness: 0.05,
-    });
-    const matTrack = new THREE.MeshStandardMaterial({
-      color: 0x1a1a1d, roughness: 0.55, metalness: 0.2,
-    });
-    const matTrackEdge = new THREE.MeshStandardMaterial({
-      color: 0x0a0a0c, roughness: 0.65,
-    });
-    const matBolt = new THREE.MeshStandardMaterial({
-      color: 0xa0a0a8, metalness: 0.85, roughness: 0.3,
-    });
-    const matMotorYellow = new THREE.MeshStandardMaterial({
-      color: 0xf2c020, roughness: 0.55,
-    });
-    const matMotorWhite = new THREE.MeshStandardMaterial({
-      color: 0xebe8df, roughness: 0.55,
-    });
-    const matMotorBlue = new THREE.MeshStandardMaterial({
-      color: 0x2c5fb5, roughness: 0.5,
-    });
-    const matChip = new THREE.MeshStandardMaterial({
-      color: 0x111114, roughness: 0.5,
-    });
-    const matGold = new THREE.MeshStandardMaterial({
-      color: 0xd9a93a, roughness: 0.3, metalness: 0.95,
-    });
+    // ------------------- MATERIALS -------------------
+    const matWoodSide = new THREE.MeshStandardMaterial({ color: 0xffffff, map: woodTex, roughness: 0.85, metalness: 0.05 });
+    const matDeck = new THREE.MeshStandardMaterial({ color: 0xffffff, map: deckTex, roughness: 0.85, metalness: 0.05 });
+    const matBottom = new THREE.MeshStandardMaterial({ color: 0xffffff, map: bottomTex, roughness: 0.85, metalness: 0.05 });
+    const matTrack = new THREE.MeshStandardMaterial({ color: 0x1a1a1d, roughness: 0.55, metalness: 0.2 });
+    const matTrackEdge = new THREE.MeshStandardMaterial({ color: 0x0a0a0c, roughness: 0.65 });
+    const matBolt = new THREE.MeshStandardMaterial({ color: 0xa0a0a8, metalness: 0.85, roughness: 0.3 });
+    const matMotorYellow = new THREE.MeshStandardMaterial({ color: 0xf2c020, roughness: 0.55 });
+    const matMotorWhite = new THREE.MeshStandardMaterial({ color: 0xebe8df, roughness: 0.55 });
+    const matMotorBlue = new THREE.MeshStandardMaterial({ color: 0x2c5fb5, roughness: 0.5 });
+    const matChip = new THREE.MeshStandardMaterial({ color: 0x111114, roughness: 0.5 });
+    const matGold = new THREE.MeshStandardMaterial({ color: 0xd9a93a, roughness: 0.3, metalness: 0.95 });
 
-    // ============================================================
-    //  GEOMETRIC HELPERS
-    // ============================================================
-    // Gear-toothed wheel shape (sprocket)
+    // ------------------- HELPERS -------------------
     const makeSprocketShape = (R, teeth, depth) => {
       const shape = new THREE.Shape();
       const inner = R - depth;
-      const stepAng = Math.PI / teeth; // half a tooth
+      const stepAng = Math.PI / teeth;
       for (let i = 0; i <= teeth * 2; i++) {
         const ang = i * stepAng;
         const r = i % 2 === 0 ? R : inner;
@@ -284,16 +231,14 @@ export default function TankRobot3D() {
         if (i === 0) shape.moveTo(x, y);
         else shape.lineTo(x, y);
       }
-      // center hole
       const hole = new THREE.Path();
       hole.absarc(0, 0, 0.10, 0, Math.PI * 2, true);
       shape.holes.push(hole);
       return shape;
     };
 
-    // Stadium-path point (for tracks)
-    const trackR = 0.78;            // wheel-pitch radius
-    const trackHalfStraight = 1.05; // half the wheel-axle separation
+    const trackR = 0.78;
+    const trackHalfStraight = 1.05;
     const trackTotalLen = 4 * trackHalfStraight + 2 * Math.PI * trackR;
 
     const pointOnTrack = (t) => {
@@ -315,41 +260,28 @@ export default function TankRobot3D() {
       return { y: -trackR * Math.cos(th), z: -trackHalfStraight - trackR * Math.sin(th), ang: Math.PI + th };
     };
 
-    // ============================================================
-    //  ROOT TANK GROUP
-    // ============================================================
+    // ------------------- TANK ROOT -------------------
     const tank = new THREE.Group();
     tank.position.y = 0.0;
     scene.add(tank);
 
-    // ============================================================
-    //  CHASSIS — wooden plates
-    // ============================================================
+    // ------------------- CHASSIS -------------------
     const chassis = new THREE.Group();
-    const chassisW = 2.3;   // X
-    const chassisL = 3.4;   // Z
-    const chassisH = 1.1;   // Y
+    const chassisW = 2.3;
+    const chassisL = 3.4;
+    const chassisH = 1.1;
     const plateThick = 0.07;
 
-    // Top deck (with chevron texture)
-    const topDeck = new THREE.Mesh(
-      new THREE.BoxGeometry(chassisW, plateThick, chassisL),
-      matDeck
-    );
+    const topDeck = new THREE.Mesh(new THREE.BoxGeometry(chassisW, plateThick, chassisL), matDeck);
     topDeck.position.y = chassisH / 2;
     topDeck.castShadow = true; topDeck.receiveShadow = true;
     chassis.add(topDeck);
 
-    // Bottom deck
-    const botDeck = new THREE.Mesh(
-      new THREE.BoxGeometry(chassisW, plateThick, chassisL),
-      matBottom
-    );
+    const botDeck = new THREE.Mesh(new THREE.BoxGeometry(chassisW, plateThick, chassisL), matBottom);
     botDeck.position.y = -chassisH / 2;
     botDeck.castShadow = true; botDeck.receiveShadow = true;
     chassis.add(botDeck);
 
-    // Side panels (left + right, long)
     const sidePanelGeo = new THREE.BoxGeometry(plateThick, chassisH, chassisL - 0.3);
     [-1, 1].forEach((s) => {
       const sp = new THREE.Mesh(sidePanelGeo, matWoodSide);
@@ -358,7 +290,6 @@ export default function TankRobot3D() {
       chassis.add(sp);
     });
 
-    // End panels (front + back, short)
     const endPanelGeo = new THREE.BoxGeometry(chassisW - 0.2, chassisH, plateThick);
     [-1, 1].forEach((s) => {
       const ep = new THREE.Mesh(endPanelGeo, matWoodSide);
@@ -367,7 +298,6 @@ export default function TankRobot3D() {
       chassis.add(ep);
     });
 
-    // Bolts on the deck corners
     [
       [-chassisW/2 + 0.18,  chassisL/2 - 0.18],
       [ chassisW/2 - 0.18,  chassisL/2 - 0.18],
@@ -375,8 +305,7 @@ export default function TankRobot3D() {
       [ chassisW/2 - 0.18, -chassisL/2 + 0.18],
     ].forEach(([x, z]) => {
       const head = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.07, 0.04, 6),
-        matBolt
+        new THREE.CylinderGeometry(0.07, 0.07, 0.04, 6), matBolt
       );
       head.position.set(x, chassisH / 2 + plateThick / 2 + 0.02, z);
       head.castShadow = true;
@@ -385,9 +314,7 @@ export default function TankRobot3D() {
 
     tank.add(chassis);
 
-    // ============================================================
-    //  WHEELS (4) — wooden sprockets with teeth
-    // ============================================================
+    // ------------------- WHEELS -------------------
     const wheelR = 0.85;
     const wheelTeeth = 24;
     const wheelDepth = 0.085;
@@ -395,25 +322,20 @@ export default function TankRobot3D() {
 
     const sprocketShape = makeSprocketShape(wheelR, wheelTeeth, wheelDepth);
     const sprocketGeo = new THREE.ExtrudeGeometry(sprocketShape, {
-      depth: wheelThickness,
-      bevelEnabled: true,
-      bevelSize: 0.012,
-      bevelThickness: 0.008,
-      bevelSegments: 2,
+      depth: wheelThickness, bevelEnabled: true,
+      bevelSize: 0.012, bevelThickness: 0.008, bevelSegments: 2,
     });
-    sprocketGeo.translate(0, 0, -wheelThickness / 2); // center on Z
+    sprocketGeo.translate(0, 0, -wheelThickness / 2);
 
-    // Wheel positions: side (X) × axle (Z)
-    const sideOffset = chassisW / 2 + 0.12;        // outside edge of chassis
-    const axleZ = trackHalfStraight;               // matches stadium half-straight
+    const sideOffset = chassisW / 2 + 0.12;
+    const axleZ = trackHalfStraight;
 
-    const wheels = []; // { sideSign, mesh } for animation
+    const wheels = [];
 
     for (const sx of [-1, 1]) {
       for (const sz of [-1, 1]) {
         const holder = new THREE.Group();
         holder.position.set(sx * sideOffset, -0.05, sz * axleZ);
-        // Orient so wheel axle is along world X axis
         holder.rotation.y = Math.PI / 2;
         tank.add(holder);
 
@@ -421,7 +343,6 @@ export default function TankRobot3D() {
         wheel.castShadow = true; wheel.receiveShadow = true;
         holder.add(wheel);
 
-        // Center hub (gold/brass spacer)
         const hub = new THREE.Mesh(
           new THREE.CylinderGeometry(0.10, 0.10, wheelThickness + 0.05, 18),
           new THREE.MeshStandardMaterial({ color: 0xc9a050, metalness: 0.85, roughness: 0.35 })
@@ -429,12 +350,10 @@ export default function TankRobot3D() {
         hub.rotation.x = Math.PI / 2;
         wheel.add(hub);
 
-        // Bolt heads on wheel face (3 small bolts)
         for (let i = 0; i < 3; i++) {
           const a = (i / 3) * Math.PI * 2;
           const bolt = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.04, 0.04, 0.03, 6),
-            matBolt
+            new THREE.CylinderGeometry(0.04, 0.04, 0.03, 6), matBolt
           );
           bolt.rotation.x = Math.PI / 2;
           bolt.position.set(0.30 * Math.cos(a), 0.30 * Math.sin(a), wheelThickness / 2 + 0.005);
@@ -445,34 +364,26 @@ export default function TankRobot3D() {
       }
     }
 
-    // ============================================================
-    //  TRACKS (2 sides) — animated stadium-path segments
-    // ============================================================
+    // ------------------- TRACKS -------------------
     const N_SEGMENTS = 32;
-    const trackSideOffset = sideOffset + 0.05; // slightly outboard of wheel face
-    const trackWidth = 0.36; // along X (sideways thickness)
+    const trackSideOffset = sideOffset + 0.05;
+    const trackWidth = 0.36;
 
-    // Each segment: trapezoidal profile with a cleat ridge on top.
-    // We model as ExtrudeGeometry of a 2D wedge shape, extruded along X.
     const segShape = new THREE.Shape();
-    const segLen = 0.32; // along Z
+    const segLen = 0.32;
     segShape.moveTo(-segLen/2, -0.04);
     segShape.lineTo( segLen/2, -0.04);
     segShape.lineTo( segLen/2 - 0.04,  0.06);
     segShape.lineTo(-segLen/2 + 0.04,  0.06);
     segShape.lineTo(-segLen/2, -0.04);
     const segGeo = new THREE.ExtrudeGeometry(segShape, {
-      depth: trackWidth,
-      bevelEnabled: true,
-      bevelSize: 0.005,
-      bevelThickness: 0.005,
-      bevelSegments: 1,
+      depth: trackWidth, bevelEnabled: true,
+      bevelSize: 0.005, bevelThickness: 0.005, bevelSegments: 1,
     });
     segGeo.translate(0, 0, -trackWidth / 2);
-    segGeo.rotateY(Math.PI / 2); // extrude direction (was Z) becomes X
-    // After rotation: shape is in YZ plane, depth along X. Good.
+    segGeo.rotateY(Math.PI / 2);
 
-    const trackSegments = []; // { side, mesh, baseT }
+    const trackSegments = [];
 
     for (const sx of [-1, 1]) {
       const sideGroup = new THREE.Group();
@@ -487,42 +398,23 @@ export default function TankRobot3D() {
       }
     }
 
-    // ============================================================
-    //  TT MOTORS (2) — yellow gear motors mounted between front+back wheels
-    // ============================================================
+    // ------------------- TT MOTORS -------------------
     for (const sx of [-1, 1]) {
       const motor = new THREE.Group();
-      // Yellow body
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(0.25, 0.40, 0.55),
-        matMotorYellow
-      );
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.40, 0.55), matMotorYellow);
       body.castShadow = true;
       motor.add(body);
-      // White gearbox extension
-      const gbox = new THREE.Mesh(
-        new THREE.BoxGeometry(0.10, 0.30, 0.30),
-        matMotorWhite
-      );
+      const gbox = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.30, 0.30), matMotorWhite);
       gbox.position.set(sx * 0.16, 0, 0);
       motor.add(gbox);
-      // Output shaft (gold)
-      const shaft = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.04, 0.04, 0.18, 14),
-        matBolt
-      );
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.18, 14), matBolt);
       shaft.rotation.z = Math.PI / 2;
       shaft.position.set(sx * 0.30, 0, 0);
       motor.add(shaft);
-      // Blue motor coupling adapter at the wheel side
-      const coupling = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.10, 0.10, 0.07, 18),
-        matMotorBlue
-      );
+      const coupling = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.10, 0.07, 18), matMotorBlue);
       coupling.rotation.z = Math.PI / 2;
       coupling.position.set(sx * 0.42, 0, 0);
       motor.add(coupling);
-      // Two thin wires going up to the top board (red+black)
       ["#a02020", "#1a1a1a"].forEach((col, i) => {
         const wire = new THREE.Mesh(
           new THREE.TorusGeometry(0.30, 0.012, 6, 16, Math.PI * 0.7),
@@ -537,12 +429,9 @@ export default function TankRobot3D() {
       tank.add(motor);
     }
 
-    // ============================================================
-    //  TOP BOARD (mini PicoBricks-style) WITH RASPBERRY PI PICO W
-    // ============================================================
+    // ------------------- TOP BOARD WITH PICO W -------------------
     const topBoard = new THREE.Group();
     {
-      // Black PCB
       const pcb = new THREE.Mesh(
         new THREE.BoxGeometry(1.6, 0.07, 0.95),
         new THREE.MeshStandardMaterial({ color: 0x16161c, roughness: 0.6 })
@@ -550,7 +439,6 @@ export default function TankRobot3D() {
       pcb.castShadow = true; pcb.receiveShadow = true;
       topBoard.add(pcb);
 
-      // Pico W (green) sitting on top
       const pico = new THREE.Group();
       const picoBoard = new THREE.Mesh(
         new THREE.BoxGeometry(0.45, 0.05, 1.05),
@@ -559,28 +447,21 @@ export default function TankRobot3D() {
       picoBoard.position.y = 0.06;
       picoBoard.castShadow = true;
       pico.add(picoBoard);
-      // RP2040 chip
-      const rp = new THREE.Mesh(
-        new THREE.BoxGeometry(0.20, 0.03, 0.20),
-        matChip
-      );
+      const rp = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.03, 0.20), matChip);
       rp.position.set(0.02, 0.10, -0.02);
       pico.add(rp);
-      // CYW43439 silver shield
       const wifi = new THREE.Mesh(
         new THREE.BoxGeometry(0.18, 0.04, 0.21),
         new THREE.MeshStandardMaterial({ color: 0xc8c8c8, metalness: 0.85, roughness: 0.3 })
       );
       wifi.position.set(0, 0.105, 0.26);
       pico.add(wifi);
-      // USB
       const usb = new THREE.Mesh(
         new THREE.BoxGeometry(0.22, 0.10, 0.14),
         new THREE.MeshStandardMaterial({ color: 0xb8b8b8, metalness: 0.85, roughness: 0.3 })
       );
       usb.position.set(0, 0.115, -0.50);
       pico.add(usb);
-      // Pin headers — instanced
       const pinGeo = new THREE.BoxGeometry(0.025, 0.05, 0.025);
       const pins = new THREE.InstancedMesh(pinGeo, matGold, 40);
       const M = new THREE.Matrix4();
@@ -593,16 +474,11 @@ export default function TankRobot3D() {
       pins.count = k;
       pins.instanceMatrix.needsUpdate = true;
       pico.add(pins);
-      // Header strips
       [-0.205, 0.205].forEach((px) => {
-        const strip = new THREE.Mesh(
-          new THREE.BoxGeometry(0.05, 0.02, 0.95),
-          matChip
-        );
+        const strip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.95), matChip);
         strip.position.set(px, 0.090, 0);
         pico.add(strip);
       });
-      // Activity LED
       const actLed = new THREE.Mesh(
         new THREE.BoxGeometry(0.025, 0.015, 0.025),
         new THREE.MeshStandardMaterial({
@@ -617,7 +493,6 @@ export default function TankRobot3D() {
       topBoard.add(pico);
       topBoard.userData.pico = pico;
 
-      // Power LED on the corner
       const pwrLed = new THREE.Mesh(
         new THREE.BoxGeometry(0.04, 0.02, 0.04),
         new THREE.MeshStandardMaterial({
@@ -631,18 +506,14 @@ export default function TankRobot3D() {
     topBoard.position.set(0, chassisH/2 + 0.10, 0);
     tank.add(topBoard);
 
-    // ============================================================
-    //  HC-SR04 ULTRASONIC SENSOR (front)
-    // ============================================================
+    // ------------------- HC-SR04 ULTRASONIC -------------------
     const sensor = new THREE.Group();
     {
-      // Blue PCB
       const sPcb = new THREE.Mesh(
         new THREE.BoxGeometry(0.95, 0.04, 0.32),
         new THREE.MeshStandardMaterial({ color: 0x1c4a85, metalness: 0.5, roughness: 0.4 })
       );
       sensor.add(sPcb);
-      // Two transducers (the "eyes")
       [-0.28, 0.28].forEach((dx) => {
         const can = new THREE.Mesh(
           new THREE.CylinderGeometry(0.18, 0.18, 0.20, 28),
@@ -651,7 +522,6 @@ export default function TankRobot3D() {
         can.position.set(dx, 0.12, 0);
         can.castShadow = true;
         sensor.add(can);
-        // mesh grille on top
         const grille = new THREE.Mesh(
           new THREE.CircleGeometry(0.14, 28),
           new THREE.MeshStandardMaterial({ color: 0x22252a, roughness: 0.6 })
@@ -659,7 +529,6 @@ export default function TankRobot3D() {
         grille.rotation.x = -Math.PI / 2;
         grille.position.set(dx, 0.221, 0);
         sensor.add(grille);
-        // concentric rings on the grille
         for (let r = 1; r <= 3; r++) {
           const ring = new THREE.Mesh(
             new THREE.TorusGeometry(0.04 + r * 0.025, 0.005, 6, 28),
@@ -670,20 +539,12 @@ export default function TankRobot3D() {
           sensor.add(ring);
         }
       });
-      // 4 gold pins on the back
       for (let i = 0; i < 4; i++) {
-        const pin = new THREE.Mesh(
-          new THREE.BoxGeometry(0.025, 0.10, 0.025),
-          matGold
-        );
+        const pin = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.10, 0.025), matGold);
         pin.position.set(-0.18 + i * 0.12, -0.05, -0.13);
         sensor.add(pin);
       }
-      // small chip in the middle
-      const chip = new THREE.Mesh(
-        new THREE.BoxGeometry(0.10, 0.025, 0.10),
-        matChip
-      );
+      const chip = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.025, 0.10), matChip);
       chip.position.set(0, 0.04, -0.05);
       sensor.add(chip);
     }
@@ -691,9 +552,7 @@ export default function TankRobot3D() {
     sensor.rotation.x = -0.05;
     tank.add(sensor);
 
-    // ============================================================
-    //  CABLE BUNDLE — sensor → top board (4 curved wires)
-    // ============================================================
+    // ------------------- CABLE BUNDLE -------------------
     const wireColors = [0x9c1818, 0x1a1a1a, 0xeac030, 0xf0eedf];
     wireColors.forEach((col, i) => {
       const off = -0.06 + i * 0.04;
@@ -709,78 +568,72 @@ export default function TankRobot3D() {
       tank.add(tube);
     });
 
-    // ============================================================
-    //  MOUSE / TOUCH ORBIT
-    // ============================================================
-    let dragging = false;
-    let prevX = 0, prevY = 0;
-    let orbitAngle = Math.atan2(camera.position.x, camera.position.z); // radians
-    let orbitHeight = camera.position.y;
-    let orbitDist = Math.hypot(camera.position.x, camera.position.z);
-
-    const setCameraFromOrbit = () => {
-      camera.position.x = orbitDist * Math.sin(orbitAngle);
-      camera.position.z = orbitDist * Math.cos(orbitAngle);
-      camera.position.y = orbitHeight;
-      camera.lookAt(0, 0.4, 0);
+    // ------------------- INTERACTION -------------------
+    let dragging = false, lastX = 0, lastY = 0;
+    const onMouseDown = (e) => {
+      if (!interactive) return;
+      dragging = true; lastX = e.clientX; lastY = e.clientY;
+      container.style.cursor = "grabbing"; spinning = false;
     };
-
-    const onDown = (cx, cy) => { dragging = true; prevX = cx; prevY = cy; };
-    const onMove = (cx, cy) => {
-      if (!dragging) return;
-      const dx = cx - prevX, dy = cy - prevY;
-      orbitAngle -= dx * 0.0055;
-      orbitHeight = Math.max(0.5, Math.min(7, orbitHeight + dy * 0.015));
-      setCameraFromOrbit();
-      prevX = cx; prevY = cy;
+    const onMouseUp = () => {
+      if (!interactive) return;
+      dragging = false;
+      container.style.cursor = "grab";
     };
-    const onUp = () => { dragging = false; };
-
-    const md = (e) => onDown(e.clientX, e.clientY);
-    const mm = (e) => onMove(e.clientX, e.clientY);
-    const td = (e) => { if (e.touches.length === 1) onDown(e.touches[0].clientX, e.touches[0].clientY); };
-    const tm = (e) => {
-      if (e.touches.length === 1) {
-        e.preventDefault();
-        onMove(e.touches[0].clientX, e.touches[0].clientY);
-      }
+    const onMouseMove = (e) => {
+      if (!interactive || !dragging) return;
+      camTheta -= (e.clientX - lastX) * 0.008;
+      camPhi = Math.max(-0.2, Math.min(1.4, camPhi + (e.clientY - lastY) * 0.006));
+      lastX = e.clientX; lastY = e.clientY;
+      updateCam();
     };
-    renderer.domElement.addEventListener("mousedown", md);
-    window.addEventListener("mousemove", mm);
-    window.addEventListener("mouseup", onUp);
-    renderer.domElement.addEventListener("touchstart", td, { passive: true });
-    window.addEventListener("touchmove", tm, { passive: false });
-    window.addEventListener("touchend", onUp);
-
     const onWheel = (e) => {
       e.preventDefault();
-      orbitDist = Math.max(4, Math.min(15, orbitDist + e.deltaY * 0.01));
-      setCameraFromOrbit();
+      camR = Math.max(5, Math.min(18, camR + e.deltaY * 0.01));
+      updateCam();
     };
-    renderer.domElement.addEventListener("wheel", onWheel, { passive: false });
-
-    // ============================================================
-    //  ANIMATION
-    // ============================================================
-    const clock = new THREE.Clock();
-    let frameId;
-
-    const animate = () => {
-      frameId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
-
-      // Auto-orbit camera around tank
-      if (autoRotateRef.current && !dragging) {
-        orbitAngle += 0.004;
-        setCameraFromOrbit();
+    const onTouchStart = (e) => {
+      if (e.touches.length === 1) {
+        dragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+        spinning = false;
       }
+    };
+    const onTouchMove = (e) => {
+      if (!dragging || e.touches.length !== 1) return;
+      e.preventDefault();
+      camTheta -= (e.touches[0].clientX - lastX) * 0.008;
+      camPhi = Math.max(-0.2, Math.min(1.4, camPhi + (e.touches[0].clientY - lastY) * 0.006));
+      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+      updateCam();
+    };
+    const onTouchEnd = () => { dragging = false; };
+    const onResize = () => {
+      W = container.clientWidth || 680;
+      renderer.setSize(W, H);
+      camera.aspect = W / H;
+      camera.updateProjectionMatrix();
+    };
 
-      // Subtle floating motion
+    container.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mousemove", onMouseMove);
+    if (interactive) {
+      container.addEventListener("wheel", onWheel, { passive: false });
+      container.addEventListener("touchstart", onTouchStart, { passive: true });
+      container.addEventListener("touchmove", onTouchMove, { passive: false });
+      container.addEventListener("touchend", onTouchEnd);
+    }
+    window.addEventListener("resize", onResize);
+
+    // ------------------- LOOP -------------------
+    let animId;
+    const clock = new THREE.Clock();
+    const loop = () => {
+      const t = clock.getElapsedTime();
+      if (spinning) { camTheta += 0.004; updateCam(); }
+
       tank.position.y = 0.05 + Math.sin(t * 0.6) * 0.04;
 
-      // Track segments cycle along the stadium path.
-      // For both sides going forward visually, the right side advances in +Z,
-      // the left side also advances in +Z (same direction → tank goes forward).
       const trackOffset = (t * 0.18) % 1;
       trackSegments.forEach((s) => {
         const tt = (s.baseT + trackOffset) % 1;
@@ -789,116 +642,67 @@ export default function TankRobot3D() {
         s.mesh.rotation.x = p.ang;
       });
 
-      // Wheel rotation — speed matched to track linear velocity
-      // linear velocity at wheel surface = trackTotalLen / cycleSeconds
-      // cycleSeconds = 1 / 0.18 ≈ 5.56s per loop
-      // wheel angular vel = -2π / cycleSeconds (negative because forward = rotation toward -Z which is -X-rot direction)
       const wheelOmega = -trackTotalLen / trackR * 0.18;
       const wheelAngle = t * wheelOmega;
       wheels.forEach((w) => {
-        w.mesh.rotation.z = wheelAngle; // local Z spin (which is world X axis here)
+        w.mesh.rotation.z = wheelAngle;
       });
 
-      // Pico activity LED
       if (topBoard.userData.pico && topBoard.userData.pico.userData.actLed) {
         const v = 0.5 + (Math.sin(t * 5.5) + 1) * 0.7;
         topBoard.userData.pico.userData.actLed.material.emissiveIntensity = v;
       }
-      // Power LED pulse
       if (topBoard.userData.pwrLed) {
         topBoard.userData.pwrLed.material.emissiveIntensity = 0.85 + Math.sin(t * 2.0) * 0.25;
       }
 
       renderer.render(scene, camera);
+      animId = requestAnimationFrame(loop);
     };
-    animate();
+    loop();
 
-    // ============================================================
-    //  RESIZE
-    // ============================================================
-    const onResize = () => {
-      const w = mount.clientWidth, h = mount.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener("resize", onResize);
-
-    // ============================================================
-    //  CLEANUP
-    // ============================================================
     return () => {
-      cancelAnimationFrame(frameId);
+      cancelAnimationFrame(animId);
+      container.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("mousemove", onMouseMove);
+      if (interactive) {
+        container.removeEventListener("wheel", onWheel);
+        container.removeEventListener("touchstart", onTouchStart);
+        container.removeEventListener("touchmove", onTouchMove);
+        container.removeEventListener("touchend", onTouchEnd);
+      }
       window.removeEventListener("resize", onResize);
-      renderer.domElement.removeEventListener("mousedown", md);
-      window.removeEventListener("mousemove", mm);
-      window.removeEventListener("mouseup", onUp);
-      renderer.domElement.removeEventListener("touchstart", td);
-      window.removeEventListener("touchmove", tm);
-      window.removeEventListener("touchend", onUp);
-      renderer.domElement.removeEventListener("wheel", onWheel);
-      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
-      scene.traverse((o) => {
-        if (o.geometry) o.geometry.dispose();
-        if (o.material) {
-          const mats = Array.isArray(o.material) ? o.material : [o.material];
-          mats.forEach((m) => {
-            ["map", "emissiveMap", "normalMap"].forEach((k) => {
-              if (m[k] && m[k].dispose) { try { m[k].dispose(); } catch {} }
-            });
-            m.dispose();
-          });
+      if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
+      renderer.dispose();
+      woodTex.dispose();
+      deckTex.dispose();
+      bottomTex.dispose();
+      scene.traverse((obj) => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
+          else obj.material.dispose();
         }
       });
-      renderer.dispose();
     };
-  }, []);
+  }, [height, autoRotate, interactive]);
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-black flex flex-col">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-white/10 backdrop-blur flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Tank Robot 3D</h1>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Wooden chassis · Pico W · HC-SR04 · Animated tracks
-          </p>
-        </div>
-        <div className="hidden sm:flex items-center gap-2 text-[10px] text-emerald-300 uppercase tracking-widest">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          Live
-        </div>
-      </div>
-
-      {/* Canvas */}
-      <div className="relative flex-1 overflow-hidden">
-        <div
-          ref={mountRef}
-          className="w-full h-full cursor-grab active:cursor-grabbing select-none"
-        />
-
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
-          <button
-            onClick={() => setAutoRotate((v) => !v)}
-            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg backdrop-blur border border-white/10 transition"
-          >
-            {autoRotate ? "⏸  Pause Orbit" : "▶  Auto Orbit"}
-          </button>
-        </div>
-
-        <div className="absolute bottom-4 left-4 text-[11px] text-gray-300 bg-black/40 px-3 py-2 rounded-lg backdrop-blur border border-white/5">
-          🖱️  Drag = döndür · Scroll = zoom
-        </div>
-
-        <div className="absolute bottom-4 right-4 text-[10px] text-gray-300 bg-black/40 px-3 py-2 rounded-lg backdrop-blur border border-white/5 hidden md:block">
-          <div className="grid grid-cols-2 gap-x-5 gap-y-0.5">
-            <span className="text-gray-500">Şasi</span><span>Lazer-kesim ahşap</span>
-            <span className="text-gray-500">Tahrik</span><span>2× TT motor + paletler</span>
-            <span className="text-gray-500">MCU</span><span>Raspberry Pi Pico W</span>
-            <span className="text-gray-500">Sensör</span><span>HC-SR04 Ultrasonik</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div
+      ref={mountRef}
+      className={className}
+      style={{
+        width: "100%",
+        height: `${height}px`,
+        position: "relative",
+        cursor: interactive ? "grab" : "default",
+        userSelect: "none",
+        touchAction: interactive ? "none" : "auto",
+        pointerEvents: interactive ? "auto" : "none",
+        background,
+        ...style,
+      }}
+    />
   );
 }
