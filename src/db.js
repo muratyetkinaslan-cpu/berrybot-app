@@ -472,6 +472,42 @@ export async function upsertTask(t) {
     }).select().single();
     if (error) { console.error('upsertTask insert', error); return null; }
     addLog({ type: 'task_created', detail: `${t.kit} #${t.task_id}: ${t.title}` });
+
+    // Auto-seed progress rows for all students of this kit
+    // This is what makes the task actually appear on student MissionBoard
+    try {
+      const { data: kitStudents } = await supabase.from('bb_users')
+        .select('id').eq('role', 'student').eq('kit', t.kit);
+      if (kitStudents && kitStudents.length > 0) {
+        // Find each student's existing progress for this kit to determine status
+        const rowsToInsert = [];
+        for (const s of kitStudents) {
+          // Check if they already have any approved tasks (then this new task is locked)
+          // First task added → active. Subsequent tasks → locked until earlier approved.
+          const { data: existingProgress } = await supabase.from('bb_progress')
+            .select('task_id, status').eq('student_id', s.id).eq('kit', t.kit);
+          const hasAnyTask = existingProgress && existingProgress.length > 0;
+          const allApproved = hasAnyTask && existingProgress.every(p => p.status === 'approved');
+          // First task ever for this student in this kit → active
+          // OR all previous tasks approved → this new task active
+          // Otherwise → locked
+          const status = (!hasAnyTask || allApproved) ? 'active' : 'locked';
+          rowsToInsert.push({
+            student_id: s.id, task_id: t.task_id, status, kit: t.kit,
+          });
+        }
+        if (rowsToInsert.length > 0) {
+          // Use upsert to avoid conflicts if some already exist
+          const { error: progErr } = await supabase.from('bb_progress')
+            .upsert(rowsToInsert, { onConflict: 'student_id,task_id', ignoreDuplicates: true });
+          if (progErr) console.error('seed progress rows:', progErr);
+          else console.log(`Seeded progress for ${rowsToInsert.length} ${t.kit} students`);
+        }
+      }
+    } catch (e) {
+      console.error('auto-seed progress failed:', e);
+    }
+
     return data.id;
   }
 }

@@ -98,11 +98,12 @@ const applyKitTheme = (kitId) => {
 };
 
 // ─── TASK IMAGE COMPONENT ───
-function TaskImage({ taskId, type = "gorsel", size = 60, fallbackEmoji = "📋", style = {} }) {
+function TaskImage({ taskId, type = "gorsel", size = 60, fallbackEmoji = "📋", style = {}, customUrl = null }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const src = `/tasks/gorev_${taskId}/${type}.jpg`;
-  if (error) {
+  // Custom URL (from customTasks.image_url) takes priority, else fall back to public/tasks
+  const src = customUrl || `/tasks/gorev_${taskId}/${type}.jpg`;
+  if (error || (!customUrl && !taskId)) {
     return (
       <div style={{
         width: size, height: size, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
@@ -126,10 +127,10 @@ function TaskImage({ taskId, type = "gorsel", size = 60, fallbackEmoji = "📋",
   );
 }
 
-function AnswerImage({ taskId }) {
+function AnswerImage({ taskId, customUrl = null }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const src = `/tasks/gorev_${taskId}/cevap.jpg`;
+  const src = customUrl || `/tasks/gorev_${taskId}/cevap.jpg`;
   if (error) return null;
   return (
     <div style={{ marginTop: 6, borderRadius: 8, overflow: "hidden", border: `1px solid ${T.purple}44`, maxWidth: 400 }}>
@@ -5571,12 +5572,51 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload }) {
   const [selKit, setSelKit] = useState("berrybot");
   const [editing, setEditing] = useState(null); // task object or "new"
   const [uploading, setUploading] = useState({ image: false, video: false, answer: false });
+  const [importing, setImporting] = useState(false);
 
-  const kitTasks = customTasks.filter(t => t.kit === selKit).sort((a, b) => a.task_id - b.task_id);
+  // Merge: customTasks (from DB) override hardcoded TASKS for BerryBot kit
+  // For Tank/PicoBricks, only show customTasks
+  const kitTasks = (() => {
+    const dbTasks = customTasks.filter(t => t.kit === selKit);
+    if (selKit !== "berrybot") {
+      return dbTasks.sort((a, b) => a.task_id - b.task_id);
+    }
+    // BerryBot: merge default TASKS with customTasks (DB version wins)
+    const dbMap = new Map(dbTasks.map(t => [t.task_id, t]));
+    const merged = TASKS.map(t => {
+      const fromDb = dbMap.get(t.id);
+      if (fromDb) return fromDb;
+      // Convert TASKS-format to customTask-format for editor
+      return {
+        id: null, // means "not in DB yet"
+        kit: "berrybot",
+        task_id: t.id,
+        title: t.title,
+        category: t.cat,
+        difficulty: t.diff,
+        expected_min: t.expectedMin,
+        xp: t.xp,
+        emoji: t.img,
+        description: t.desc,
+        answer: t.answer || "",
+        learnings: t.learnings || [],
+        image_url: "",
+        video_url: "",
+        answer_image_url: "",
+        position: t.id - 1,
+        _isDefault: true, // marker — not yet customized
+      };
+    });
+    // Add any DB tasks with task_id > 36 (admin added beyond defaults)
+    dbTasks.filter(t => t.task_id > TASKS.length).forEach(t => merged.push(t));
+    return merged.sort((a, b) => a.task_id - b.task_id);
+  })();
+
   const kitInfo = KITS[selKit];
 
   const empty = {
-    kit: selKit, task_id: kitTasks.length + 1,
+    kit: selKit,
+    task_id: (kitTasks.length > 0 ? Math.max(...kitTasks.map(t => t.task_id)) + 1 : 1),
     title: "", category: "", difficulty: 1, expected_min: 15, xp: 10, emoji: "📋",
     description: "", answer: "",
     learnings: [],
@@ -5594,9 +5634,17 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload }) {
       if (url) {
         const field = type === "image" ? "image_url" : type === "video" ? "video_url" : "answer_image_url";
         setEditing(prev => ({ ...prev, [field]: url }));
+      } else {
+        alert("⚠ Dosya yüklenemedi. Storage bucket'ı (task-media) Supabase'de açık mı kontrol et. Görev medya olmadan da kaydedilebilir.");
       }
     } catch (e) {
-      alert("Yükleme hatası: " + e.message);
+      console.error("upload err:", e);
+      const msg = e?.message || "Bilinmeyen hata";
+      if (msg.toLowerCase().includes("bucket")) {
+        alert("⚠ Storage bucket bulunamadı.\n\nSupabase Dashboard → Storage → New bucket → 'task-media' (Public) oluştur.\n\nGörev medya olmadan da kaydedilebilir.");
+      } else {
+        alert("Yükleme hatası: " + msg + "\n\nGörev medya olmadan da kaydedilebilir.");
+      }
     } finally {
       setUploading(prev => ({ ...prev, [type]: false }));
     }
