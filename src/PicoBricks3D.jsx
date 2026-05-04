@@ -93,11 +93,14 @@ export default function PicoBricks3D({
     const TEX_W = 2048, TEX_H = Math.round(TEX_W * (pcbH / pcbW));
 
     const pcbSilkTex = makeCanvasTex(TEX_W, TEX_H, (ctx, w, h) => {
-      ctx.fillStyle = "#16161c";
+      // White PCB base (like real PicoBricks)
+      ctx.fillStyle = "#f5f1e8";
       ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = "rgba(184,144,40,0.6)";
+      // Subtle copper traces (gold lines)
+      ctx.fillStyle = "rgba(184,144,40,0.45)";
       [w * 0.30, w * 0.70].forEach((x) => ctx.fillRect(x - 1, h * 0.06, 2, h * 0.88));
-      ctx.fillStyle = "rgba(245,210,50,0.95)";
+      // Module labels in dark color (visible on white PCB)
+      ctx.fillStyle = "#2a2a35";
       ctx.font = "bold 22px monospace";
       const vLabel = (txt, x, y) => {
         ctx.save();
@@ -118,12 +121,12 @@ export default function PicoBricks3D({
       vLabel("POTENTIOMETER", w*0.96, h*0.92);
       ctx.font = "bold 32px monospace";
       ctx.textAlign = "center";
-      ctx.fillStyle = SILK;
+      ctx.fillStyle = "#1a1a25";
       ctx.fillText("PROTOBOARD", w*0.5, h*0.62);
       ctx.fillText("Hello World", w*0.55, h*0.965);
       ctx.textAlign = "left";
-      ctx.font = "bold 18px monospace";
-      ctx.fillStyle = SILK_DIM;
+      ctx.font = "bold 22px monospace";
+      ctx.fillStyle = "#fb923c";  // PicoBricks brand orange
       ctx.fillText("◢ picobricks", w*0.04, h*0.05);
     });
 
@@ -168,7 +171,7 @@ export default function PicoBricks3D({
     });
 
     const matPCBTop = new THREE.MeshStandardMaterial({ color: 0xffffff, map: pcbSilkTex, roughness: 0.6, metalness: 0.25 });
-    const matPCBSide = new THREE.MeshStandardMaterial({ color: 0x14141a, roughness: 0.7, metalness: 0.2 });
+    const matPCBSide = new THREE.MeshStandardMaterial({ color: 0xe8e2d2, roughness: 0.7, metalness: 0.2 });
     const matModuleWhite = new THREE.MeshStandardMaterial({ color: 0xeeeae0, roughness: 0.78 });
     const matJST = new THREE.MeshStandardMaterial({ color: 0xefefe6, roughness: 0.55 });
     const matGold = new THREE.MeshStandardMaterial({ color: 0xd9a93a, roughness: 0.28, metalness: 0.95 });
