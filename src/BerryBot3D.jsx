@@ -4,11 +4,11 @@ import * as THREE from "three";
 
 export default function BerryBot3D({
   height = 520,
-  autoRotate = false,
+  autoRotate = true,
   background = "transparent",
   className = "",
   style = {},
-  interactive = true,
+  interactive = false,
 }) {
   const mountRef = useRef(null);
 

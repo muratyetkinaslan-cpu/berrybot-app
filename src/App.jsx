@@ -3,6 +3,7 @@ import { useData, getLocalPhoto } from "./useData";
 import BerryBot3D from "./BerryBot3D";
 import TankRobot3D from "./TankRobot3D";
 import PicoBricks3D from "./PicoBricks3D";
+import Robot3DPreview from "./Robot3DPreview";
 
 // ═══════════════════════════════════════════════════════════
 //  BerryBot LMS — Production (Supabase)
@@ -5142,20 +5143,36 @@ function KitSelector({ onSelect }) {
         >›</button>
       </div>
 
-      {/* KIT NAME */}
+      {/* KIT LOGO */}
       <div className="ks-stage" key={selected + "_name"} style={{
         marginTop: 10, textAlign: "center", position: "relative", zIndex: 5,
+        display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
       }}>
+        <img
+          src={`/logos/${kit.id === "picobricks" ? "picobrick" : kit.id}.png`}
+          alt={kit.name}
+          style={{
+            height: 70,
+            width: "auto",
+            maxWidth: 360,
+            objectFit: "contain",
+            filter: `drop-shadow(0 0 24px ${kit.primaryColor}cc) drop-shadow(0 4px 16px #000)`,
+          }}
+          onError={(e) => {
+            // Fallback to text if logo missing
+            e.currentTarget.style.display = "none";
+            e.currentTarget.nextElementSibling.style.display = "block";
+          }}
+        />
         <div style={{
-          fontSize: 44, fontWeight: 900,
-          color: "#fff",
+          display: "none",
+          fontSize: 44, fontWeight: 900, color: "#fff",
           letterSpacing: 2,
           textShadow: `0 0 30px ${kit.primaryColor}, 0 4px 20px #000`,
         }}>{kit.icon} {kit.name}</div>
         <div style={{
-          fontSize: 13, color: kit.primaryColor,
+          fontSize: 12, color: kit.primaryColor,
           letterSpacing: 4, fontWeight: 800, textTransform: "uppercase",
-          marginTop: 4,
         }}>{kit.tagline}</div>
       </div>
 
@@ -5202,13 +5219,28 @@ function KitSelector({ onSelect }) {
 
       {/* SPONSOR LOGOS */}
       <div style={{
-        marginTop: 30, display: "flex", alignItems: "center", justifyContent: "center",
-        gap: 32, flexWrap: "wrap", position: "relative", zIndex: 5,
-        opacity: 0.85,
+        marginTop: 26, display: "flex", alignItems: "center", justifyContent: "center",
+        gap: 14, flexWrap: "wrap", position: "relative", zIndex: 5,
       }}>
-        <div style={{ fontSize: 10, color: "#fff8", letterSpacing: 2, fontWeight: 600, marginRight: 4 }}>POWERED BY</div>
-        <img src="/logos/robogpt.png" alt="RoboGPT" style={{ height: 32, width: "auto", filter: "brightness(0) invert(1) drop-shadow(0 2px 6px #000)", opacity: 0.9 }} />
-        <img src="/logos/robotistan.png" alt="Robotistan" style={{ height: 32, width: "auto", filter: "brightness(0) invert(1) drop-shadow(0 2px 6px #000)", opacity: 0.9 }} />
+        <div style={{ fontSize: 10, color: "#fff9", letterSpacing: 3, fontWeight: 700, marginRight: 4, textTransform: "uppercase" }}>Destekçilerimiz</div>
+        <div style={{
+          padding: "10px 18px", borderRadius: 12,
+          background: "rgba(255,255,255,0.95)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+          height: 52, minWidth: 110,
+        }}>
+          <img src="/logos/robogpt.png" alt="RoboGPT" style={{ maxHeight: 32, maxWidth: 130, objectFit: "contain" }} />
+        </div>
+        <div style={{
+          padding: "10px 18px", borderRadius: 12,
+          background: "rgba(255,255,255,0.95)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+          height: 52, minWidth: 110,
+        }}>
+          <img src="/logos/robotistan.png" alt="Robotistan" style={{ maxHeight: 32, maxWidth: 130, objectFit: "contain" }} />
+        </div>
       </div>
 
       {/* Lock all interactivity inside 3D area */}
