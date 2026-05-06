@@ -54,6 +54,11 @@ export function useData() {
   const [homeworkSubs, setHomeworkSubs] = useState([]);
   const [answerUnlocks, setAnswerUnlocks] = useState([]);
   const [customTasks, setCustomTasks] = useState([]);
+  // Homework v2 — template + assignment system
+  const [hwTemplates, setHwTemplates] = useState([]);
+  const [hwAssignments, setHwAssignments] = useState([]);
+  // Categories — admin manages, kit-aware
+  const [categories, setCategories] = useState([]);
 
   // SMART LOAD: students fetch only their 36 rows, admin/instructor fetch all (paginated)
   const loadAll = useCallback(async (user) => {
@@ -176,15 +181,17 @@ export function useData() {
       localStorage.setItem('bb_session', JSON.stringify({ userId: u.id, ts: Date.now() }));
       // Load full data for this user's role — all fetches IN PARALLEL for speed
       if (u.role === 'student') {
-        const studentKit = u.kit || 'berrybot';
-        const [sp, m, pp, hw, hs, au, ct] = await Promise.all([
+        const [sp, m, pp, hw, hs, au, ct, hwt, hwa, cats] = await Promise.all([
           db.getStudentProgress(u.id),
           db.getAllMeta(),
           db.fetchPracticeProgress(u.id),
           db.fetchHomework(),
           db.fetchHomeworkSubmissions(),
           db.fetchAnswerUnlocks(u.id),
-          db.fetchCustomTasks(),  // load ALL kits' tasks (student may have multi-kit)
+          db.fetchCustomTasks(),
+          db.fetchHomeworkTemplates(),
+          db.fetchAssignments({ studentId: u.id }),
+          db.fetchCategories(),
         ]);
         setProgress(prev => ({ ...prev, [u.id]: sp }));
         setMeta(m);
@@ -193,29 +200,44 @@ export function useData() {
         setHomeworkSubs(hs.filter(s => s.student_id === u.id));
         setAnswerUnlocks(au);
         setCustomTasks(ct);
+        setHwTemplates(hwt);
+        setHwAssignments(hwa);
+        setCategories(cats);
       } else if (u.role === 'parent' && u.childId) {
-        const [sp, m, l, cl, ct] = await Promise.all([
+        const [sp, m, l, cl, ct, hwt, hwa, cats] = await Promise.all([
           db.getStudentProgress(u.childId),
           db.getAllMeta(),
           db.getLogs(500),
           db.getClassLayouts(),
           db.fetchCustomTasks(),
+          db.fetchHomeworkTemplates(),
+          db.fetchAssignments({ studentId: u.childId }),
+          db.fetchCategories(),
         ]);
         setProgress(prev => ({ ...prev, [u.childId]: sp }));
         setMeta(m);
         setLogs(l.filter(lg => lg.userId === u.childId || lg.targetUser === u.childId));
         if (cl.length > 0) setClassLayout(cl);
         setCustomTasks(ct);
+        setHwTemplates(hwt);
+        setHwAssignments(hwa);
+        setCategories(cats);
       } else {
-        const [us, p, m, l, cl, hw, hs, au, ct] = await Promise.all([
+        const [us, p, m, l, cl, hw, hs, au, ct, hwt, hwa, cats] = await Promise.all([
           db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
           db.fetchHomework(), db.fetchHomeworkSubmissions(),
           db.fetchAnswerUnlocks(),
           db.fetchCustomTasks(),
+          db.fetchHomeworkTemplates(),
+          db.fetchAssignments(),
+          db.fetchCategories(),
         ]);
         setUsers(us); setProgress(p); setMeta(m); setLogs(l);
         setHomeworks(hw); setHomeworkSubs(hs); setAnswerUnlocks(au);
         setCustomTasks(ct);
+        setHwTemplates(hwt);
+        setHwAssignments(hwa);
+        setCategories(cats);
         if (cl.length > 0) setClassLayout(cl);
       }
     }
@@ -390,13 +412,83 @@ export function useData() {
     return await db.uploadTaskMedia({ kit, taskId, type, file });
   }, [currentUser]);
 
+  // ─── Homework v2 ───
+  const saveHwTemplate = useCallback(async (data) => {
+    if (!currentUser) return null;
+    const id = await db.upsertHomeworkTemplate(data);
+    const list = await db.fetchHomeworkTemplates();
+    setHwTemplates(list);
+    return id;
+  }, [currentUser]);
+
+  const removeHwTemplate = useCallback(async (id) => {
+    if (!currentUser) return;
+    await db.deleteHomeworkTemplate(id);
+    const list = await db.fetchHomeworkTemplates();
+    setHwTemplates(list);
+  }, [currentUser]);
+
+  const uploadHwMedia = useCallback(async ({ templateId, type, file }) => {
+    if (!currentUser) return null;
+    return await db.uploadHomeworkMedia({ templateId, type, file });
+  }, [currentUser]);
+
+  const assignHw = useCallback(async ({ templateId, studentIds, dueDate }) => {
+    if (!currentUser) return null;
+    const result = await db.assignHomework({ templateId, studentIds, dueDate, instructorId: currentUser.id });
+    const list = await db.fetchAssignments();
+    setHwAssignments(list);
+    return result;
+  }, [currentUser]);
+
+  const submitHwV2 = useCallback(async ({ assignmentId, photoUrl, text }) => {
+    if (!currentUser) return null;
+    await db.submitHomeworkV2({ assignmentId, photoUrl, text, studentId: currentUser.id });
+    const list = await db.fetchAssignments({ studentId: currentUser.id });
+    setHwAssignments(list);
+  }, [currentUser]);
+
+  const reviewHwV2 = useCallback(async ({ assignmentId, status, instructorNote }) => {
+    if (!currentUser) return null;
+    await db.reviewHomeworkV2({ assignmentId, status, instructorNote, instructorId: currentUser.id });
+    const list = await db.fetchAssignments();
+    setHwAssignments(list);
+  }, [currentUser]);
+
+  const unlockHwAnswerKey = useCallback(async (assignmentId) => {
+    if (!currentUser) return null;
+    await db.unlockHomeworkAnswer({ assignmentId, instructorId: currentUser.id });
+    const list = await db.fetchAssignments();
+    setHwAssignments(list);
+  }, [currentUser]);
+
+  // ─── Categories ───
+  const addNewCategory = useCallback(async ({ kit, name, emoji }) => {
+    if (!currentUser) return null;
+    const cat = await db.addCategory({ kit, name, emoji });
+    const list = await db.fetchCategories();
+    setCategories(list);
+    return cat;
+  }, [currentUser]);
+
+  const removeCategory = useCallback(async (id) => {
+    if (!currentUser) return;
+    await db.deleteCategory(id);
+    const list = await db.fetchCategories();
+    setCategories(list);
+  }, [currentUser]);
+
   return {
     loading, currentUser, users, progress: merged, logs, classLayout,
     practiceProg, homeworks, homeworkSubs, answerUnlocks, customTasks,
+    hwTemplates, hwAssignments, categories,
     login, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh: loadAll,
     recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
     toggleAnswerUnlock,
     saveCustomTask, removeCustomTask, uploadMedia,
+    saveHwTemplate, removeHwTemplate, uploadHwMedia,
+    assignHw, submitHwV2, reviewHwV2, unlockHwAnswerKey,
+    addNewCategory, removeCategory,
   };
 }

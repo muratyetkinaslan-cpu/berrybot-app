@@ -424,14 +424,15 @@ export default function App() {
   const data = useData();
   const { loading, currentUser: user, users, progress: prog, logs, classLayout,
     practiceProg, homeworks, homeworkSubs, answerUnlocks, customTasks,
-    hwTemplates, hwAssignments,
+    hwTemplates, hwAssignments, categories,
     login: doLogin, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh,
     recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
     toggleAnswerUnlock,
     saveCustomTask, removeCustomTask, uploadMedia,
     saveHwTemplate, removeHwTemplate, uploadHwMedia,
-    assignHw, submitHwV2, reviewHwV2, unlockHwAnswerKey } = data;
+    assignHw, submitHwV2, reviewHwV2, unlockHwAnswerKey,
+    addNewCategory, removeCategory } = data;
 
   const [page,setPage]=useState("dash");
   const [selS,setSelS]=useState(null);
@@ -758,8 +759,8 @@ export default function App() {
         {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} onBack={()=>nav("dash")}/>}
         {user.role===ROLES.ADMIN&&page==="users"&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo} onRefresh={refresh}/>}
         {user.role===ROLES.ADMIN&&page==="audit"&&<AuditLog logs={logs} users={users}/>}
-        {user.role===ROLES.ADMIN&&page==="taskedit"&&<AdminTaskEditor customTasks={customTasks} onSave={saveCustomTask} onDelete={removeCustomTask} onUpload={uploadMedia} onRefresh={refresh}/>}
-        {user.role===ROLES.ADMIN&&page==="hwedit"&&<AdminHomeworkEditor hwTemplates={hwTemplates} onSave={saveHwTemplate} onDelete={removeHwTemplate} onUpload={uploadHwMedia} onRefresh={refresh}/>}
+        {user.role===ROLES.ADMIN&&page==="taskedit"&&<AdminTaskEditor customTasks={customTasks} onSave={saveCustomTask} onDelete={removeCustomTask} onUpload={uploadMedia} onRefresh={refresh} categories={categories} addNewCategory={addNewCategory}/>}
+        {user.role===ROLES.ADMIN&&page==="hwedit"&&<AdminHomeworkEditor hwTemplates={hwTemplates} onSave={saveHwTemplate} onDelete={removeHwTemplate} onUpload={uploadHwMedia} onRefresh={refresh} categories={categories} addNewCategory={addNewCategory}/>}
         {user.role===ROLES.ADMIN&&page==="tasks"&&<TaskBrowser showAns={false}/>}
 
         {/* ──── INSTRUCTOR ──── */}
@@ -5859,7 +5860,7 @@ function KitSelector({ onSelect }) {
   );
 }
 
-function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh }) {
+function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, categories, addNewCategory }) {
   const [selKit, setSelKit] = useState("berrybot");
   const [editing, setEditing] = useState(null); // task object or "new"
   const [uploading, setUploading] = useState({ image: false, video: false, answer: false });
@@ -6099,7 +6100,16 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
               <input value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} placeholder="Görev Başlığı" style={inputStyle} />
               <input value={editing.emoji} onChange={e => setEditing({ ...editing, emoji: e.target.value })} placeholder="📋" maxLength={4} style={{ ...inputStyle, textAlign: "center", fontSize: 22 }} />
             </div>
-            <input value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })} placeholder="Kategori (örn: RGB LED, Motor, Sumo)" style={{ ...inputStyle, marginBottom: 10 }} />
+            <div style={{ marginBottom: 10 }}>
+              <div style={{ fontSize: 10, color: T.tm, fontWeight: 700, marginBottom: 4, letterSpacing: 1 }}>📂 KATEGORİ</div>
+              <CategoryPicker
+                kit={editing.kit}
+                value={editing.category}
+                onChange={(v) => setEditing({ ...editing, category: v })}
+                categories={categories}
+                onAddCategory={addNewCategory}
+              />
+            </div>
             <textarea value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })} placeholder="Görev açıklaması — öğrenci ne yapacak?" rows={3} style={{ ...inputStyle, resize: "vertical", marginBottom: 10 }} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
               <div>
@@ -6357,7 +6367,7 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
 // ════════════════════════════════════════════════════════════════════════
 // ADMIN HOMEWORK TEMPLATE EDITOR — şablon yönetimi (admin)
 // ════════════════════════════════════════════════════════════════════════
-function AdminHomeworkEditor({ hwTemplates, onSave, onDelete, onUpload, onRefresh }) {
+function AdminHomeworkEditor({ hwTemplates, onSave, onDelete, onUpload, onRefresh, categories, addNewCategory }) {
   const [selKit, setSelKit] = useState("berrybot");
   const [editing, setEditing] = useState(null);
   const [uploading, setUploading] = useState({ image: false, video: false, answer: false });
@@ -6445,8 +6455,18 @@ function AdminHomeworkEditor({ hwTemplates, onSave, onDelete, onUpload, onRefres
                 placeholder="Ödev Başlığı *" style={inputStyle} />
             </div>
 
-            <input value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })}
-              placeholder="Kategori (örn: Sumo Robot, Sensör, Final Proje)" style={inputStyle} />
+            <div>
+              <label style={{ fontSize: 11, color: T.tm, fontWeight: 700, letterSpacing: 1 }}>📂 KATEGORİ</label>
+              <div style={{ marginTop: 4 }}>
+                <CategoryPicker
+                  kit={editing.kit}
+                  value={editing.category}
+                  onChange={(v) => setEditing({ ...editing, category: v })}
+                  categories={categories}
+                  onAddCategory={addNewCategory}
+                />
+              </div>
+            </div>
 
             <textarea value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })}
               placeholder="Açıklama (öğrenciye gösterilir)" rows={4} style={{ ...inputStyle, resize: "vertical" }} />
@@ -7134,6 +7154,89 @@ const inputStyle = {
   boxSizing: "border-box",
   fontFamily: "inherit",
 };
+
+// ─── Helper: kit-aware category picker with "add new" option ───
+function CategoryPicker({ kit, value, onChange, categories, onAddCategory }) {
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  // Categories from DB for this kit
+  const kitCategories = (categories || [])
+    .filter(c => c.kit === kit)
+    .map(c => c.name);
+
+  // Also include any category that exists in current value but not in DB list (for backwards compat)
+  const allOptions = [...new Set([...kitCategories, ...(value ? [value] : [])])].sort();
+
+  const handleAdd = async () => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    setBusy(true);
+    try {
+      await onAddCategory({ kit, name: trimmed });
+      onChange(trimmed);
+      setNewName("");
+      setAdding(false);
+    } catch (err) {
+      alert("Hata: " + (err?.message || "Bilinmeyen"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (adding) {
+    return (
+      <div style={{ display: "grid", gap: 6 }}>
+        <input
+          autoFocus
+          value={newName}
+          onChange={e => setNewName(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") handleAdd(); if (e.key === "Escape") { setAdding(false); setNewName(""); } }}
+          placeholder="Yeni kategori adı (örn: Sumo Robot)"
+          style={inputStyle}
+        />
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={handleAdd} disabled={busy || !newName.trim()} style={{
+            padding: "8px 14px", borderRadius: 8, border: "none",
+            background: (busy || !newName.trim()) ? T.border : T.ok,
+            color: "#fff", cursor: busy ? "wait" : "pointer", fontSize: 13, fontWeight: 700,
+          }}>{busy ? "⏳" : "✓ Ekle"}</button>
+          <button onClick={() => { setAdding(false); setNewName(""); }} style={{
+            padding: "8px 14px", borderRadius: 8,
+            background: T.dark, color: T.ts, border: `1px solid ${T.border}`,
+            cursor: "pointer", fontSize: 13, fontWeight: 600,
+          }}>İptal</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
+      <select
+        value={value || ""}
+        onChange={e => {
+          if (e.target.value === "__new__") { setAdding(true); }
+          else onChange(e.target.value);
+        }}
+        style={{ ...inputStyle, flex: 1 }}
+      >
+        <option value="">— Kategori seç —</option>
+        {allOptions.map(c => <option key={c} value={c}>{c}</option>)}
+        <option value="__new__" style={{ fontWeight: 800, color: T.ok }}>+ Yeni Kategori Ekle...</option>
+      </select>
+      <button
+        onClick={() => setAdding(true)}
+        title="Yeni kategori ekle"
+        style={{
+          padding: "0 14px", borderRadius: 10, border: `1px solid ${T.ok}55`,
+          background: T.ok + "15", color: T.ok, cursor: "pointer", fontSize: 16, fontWeight: 800,
+        }}
+      >+</button>
+    </div>
+  );
+}
 
 // ─── Helper: media upload component ───
 function MediaUploader({ label, accept, currentUrl, onUpload, onClear, uploading, color, isVideo }) {

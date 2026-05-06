@@ -696,6 +696,39 @@ export async function setPrimaryKit(userId, kit) {
 
 
 // ═══════════════════════════════════════════════════════════════
+// CATEGORIES — kit bazlı, admin yönetir
+// ═══════════════════════════════════════════════════════════════
+export async function fetchCategories() {
+  const { data, error } = await supabase.from('bb_categories')
+    .select('*').eq('active', true).order('kit').order('name');
+  if (error) { console.error('fetchCategories', error); return []; }
+  return data || [];
+}
+
+export async function addCategory({ kit, name, emoji }) {
+  if (!kit || !name?.trim()) throw new Error("Kit ve kategori adı zorunlu");
+  const trimmed = name.trim();
+  const { data, error } = await supabase.from('bb_categories')
+    .insert({ kit, name: trimmed, emoji: emoji || '📋', active: true })
+    .select().single();
+  if (error) {
+    // Duplicate (already exists) — return the existing row
+    if (error.code === '23505') {
+      const { data: existing } = await supabase.from('bb_categories')
+        .select('*').eq('kit', kit).eq('name', trimmed).maybeSingle();
+      return existing;
+    }
+    throw new Error("Kategori eklenemedi: " + (error.message || ""));
+  }
+  addLog({ type: 'category_added', detail: `${kit}: ${trimmed}` });
+  return data;
+}
+
+export async function deleteCategory(id) {
+  await supabase.from('bb_categories').update({ active: false }).eq('id', id);
+}
+
+// ═══════════════════════════════════════════════════════════════
 export async function fetchCustomTasks(kit) {
   const q = kit
     ? supabase.from('bb_tasks').select('*').eq('kit', kit).eq('active', true).order('task_id')
