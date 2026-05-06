@@ -6032,7 +6032,13 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, c
       emoji: editing.emoji || "📋",
       description: editing.description || "",
       answer: editing.answer || "",
-      learnings: editing.learnings || [],
+      // Convert string back to array (split by newlines, trim each, drop empty)
+      learnings: (() => {
+        const raw = editing.learnings;
+        if (Array.isArray(raw)) return raw.filter(s => s && s.trim());
+        if (typeof raw === "string") return raw.split("\n").map(s => s.trim()).filter(Boolean);
+        return [];
+      })(),
       image_url: editing.image_url || null,
       video_url: editing.video_url || null,
       answer_image_url: editing.answer_image_url || null,
@@ -6131,12 +6137,15 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, c
           <div style={{ padding: 18, borderRadius: 14, background: T.card, border: `1px solid ${T.border}` }}>
             <div style={{ fontSize: 11, color: T.pl, fontWeight: 800, letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>📚 Kazanımlar (her satır = 1 yetkinlik)</div>
             <textarea
-              value={(editing.learnings || []).join("\n")}
-              onChange={e => setEditing({ ...editing, learnings: e.target.value.split("\n").map(s => s.trim()).filter(Boolean) })}
+              value={Array.isArray(editing.learnings) ? editing.learnings.join("\n") : (editing.learnings || "")}
+              onChange={e => setEditing({ ...editing, learnings: e.target.value })}
               placeholder={"RGB renk sistemi\nPin çıkışı kontrolü\nTemel blok kod"}
-              rows={4}
-              style={{ ...inputStyle, fontFamily: "monospace", fontSize: 13, resize: "vertical" }}
+              rows={5}
+              style={{ ...inputStyle, fontFamily: "monospace", fontSize: 13, resize: "vertical", whiteSpace: "pre-wrap" }}
             />
+            <div style={{ fontSize: 11, color: T.tm, marginTop: 6 }}>
+              💡 Enter ile alt satıra geç, her satır ayrı bir kazanım olarak kaydedilir.
+            </div>
           </div>
 
           {/* Media uploads */}
