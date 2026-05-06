@@ -414,6 +414,132 @@ export async function reviewHomework({ submissionId, status, instructorNote, ins
 }
 
 // ═══════════════════════════════════════════════════════════════
+// HOMEWORK v2 — Template + Assignment system
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Templates (admin manages) ───
+export async function fetchHomeworkTemplates() {
+  const { data, error } = await supabase.from('bb_homework_templates')
+    .select('*').eq('active', true).order('created_at', { ascending: false });
+  if (error) { console.error('fetchHomeworkTemplates', error); return []; }
+  return data || [];
+}
+
+export async function upsertHomeworkTemplate(t) {
+  if (!t || !t.title?.trim() || !t.kit) {
+    throw new Error("Eksik alan: title ve kit zorunlu");
+  }
+  const now = Date.now();
+  const payload = {
+    kit: t.kit,
+    title: String(t.title || "").trim(),
+    category: String(t.category || "Genel").trim(),
+    description: t.description || "",
+    difficulty: parseInt(t.difficulty) || 1,
+    expected_min: parseInt(t.expected_min) || 30,
+    emoji: t.emoji || "📝",
+    image_url: t.image_url || null,
+    video_url: t.video_url || null,
+    answer_image_url: t.answer_image_url || null,
+    active: true,
+    updated_at: now,
+  };
+  if (t.id) {
+    const { error } = await supabase.from('bb_homework_templates').update(payload).eq('id', t.id);
+    if (error) throw new Error("Güncelleme hatası: " + (error.message || ""));
+    addLog({ type: 'hw_template_updated', detail: `Şablon #${t.id} güncellendi` });
+    return t.id;
+  } else {
+    const { data, error } = await supabase.from('bb_homework_templates')
+      .insert({ ...payload, created_at: now }).select().single();
+    if (error) throw new Error("Ekleme hatası: " + (error.message || ""));
+    addLog({ type: 'hw_template_created', detail: `Şablon "${t.title}" oluşturuldu` });
+    return data.id;
+  }
+}
+
+export async function deleteHomeworkTemplate(id) {
+  await supabase.from('bb_homework_templates').update({ active: false }).eq('id', id);
+  addLog({ type: 'hw_template_deleted', detail: `Şablon #${id} silindi` });
+}
+
+export async function uploadHomeworkMedia({ templateId, type, file }) {
+  // type: image, video, answer
+  const ext = file.name.split('.').pop();
+  const path = `homework/${templateId || 'new'}/${type}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from('task-media')
+    .upload(path, file, { upsert: true, cacheControl: '3600' });
+  if (error) throw error;
+  const { data } = supabase.storage.from('task-media').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ─── Assignments (instructor → student) ───
+export async function fetchAssignments(filter = {}) {
+  let q = supabase.from('bb_homework_assignment').select('*');
+  if (filter.studentId) q = q.eq('student_id', filter.studentId);
+  if (filter.instructorId) q = q.eq('instructor_id', filter.instructorId);
+  const { data, error } = await q.order('assigned_at', { ascending: false });
+  if (error) { console.error('fetchAssignments', error); return []; }
+  return data || [];
+}
+
+export async function assignHomework({ templateId, studentIds, instructorId, dueDate }) {
+  if (!templateId || !Array.isArray(studentIds) || studentIds.length === 0 || !dueDate) {
+    throw new Error("Eksik alan: şablon, en az 1 öğrenci ve bitiş tarihi gerekli");
+  }
+  const now = Date.now();
+  const rows = studentIds.map(sid => ({
+    template_id: templateId,
+    student_id: sid,
+    instructor_id: instructorId,
+    due_date: dueDate,
+    assigned_at: now,
+    status: 'assigned',
+  }));
+  // upsert ignores duplicates (same template+student already assigned)
+  const { error } = await supabase.from('bb_homework_assignment')
+    .upsert(rows, { onConflict: 'template_id,student_id', ignoreDuplicates: true });
+  if (error) throw new Error("Atama hatası: " + (error.message || ""));
+  addLog({ type: 'hw_assigned', userId: instructorId, detail: `Ödev ${studentIds.length} öğrenciye atandı` });
+  return { count: studentIds.length };
+}
+
+export async function submitHomeworkV2({ assignmentId, photoUrl, text, studentId }) {
+  const now = Date.now();
+  const payload = {
+    submission_photo_url: photoUrl || null,
+    submission_text: text || null,
+    submitted_at: now,
+    status: 'submitted',
+  };
+  const { error } = await supabase.from('bb_homework_assignment')
+    .update(payload).eq('id', assignmentId);
+  if (error) throw new Error("Teslim hatası: " + (error.message || ""));
+  addLog({ type: 'hw_v2_submitted', userId: studentId, detail: `Ödev #${assignmentId} teslim edildi` });
+}
+
+export async function reviewHomeworkV2({ assignmentId, status, instructorNote, instructorId }) {
+  if (!['approved', 'rejected'].includes(status)) {
+    throw new Error("Geçersiz durum");
+  }
+  await supabase.from('bb_homework_assignment').update({
+    status,
+    instructor_note: instructorNote || null,
+    reviewed_at: Date.now(),
+  }).eq('id', assignmentId);
+  addLog({ type: 'hw_v2_reviewed', userId: instructorId, detail: `${status}: assignment #${assignmentId}` });
+}
+
+export async function unlockHomeworkAnswer({ assignmentId, instructorId }) {
+  await supabase.from('bb_homework_assignment').update({
+    answer_unlocked: true,
+    answer_unlocked_at: Date.now(),
+  }).eq('id', assignmentId);
+  addLog({ type: 'hw_answer_unlocked', userId: instructorId, detail: `Cevap anahtarı açıldı: assignment #${assignmentId}` });
+}
+
+// ═══════════════════════════════════════════════════════════════
 // ANSWER UNLOCK
 // ═══════════════════════════════════════════════════════════════
 export async function fetchAnswerUnlocks(studentId) {
@@ -642,17 +768,32 @@ export async function upsertTask(t) {
     // Rule: in task_id order (ascending), the FIRST task that isn't approved/in-flight becomes 'active',
     // all later tasks become 'locked'. In-flight statuses (in_progress, pending_review, rejected)
     // are preserved. Approved tasks ALWAYS preserved (student already finished them).
+    //
+    // For BerryBot, the original 36 hardcoded task IDs (1-36) are merged with DB additions.
     try {
       const { data: kitStudents } = await supabase.from('bb_users')
         .select('id').eq('role', 'student').eq('kit', t.kit);
       if (kitStudents && kitStudents.length > 0) {
-        // All currently active tasks for this kit, sorted by task_id ascending
-        const { data: allKitTasks } = await supabase.from('bb_tasks')
+        // All currently active DB tasks for this kit
+        const { data: dbKitTasks } = await supabase.from('bb_tasks')
           .select('task_id').eq('kit', t.kit).eq('active', true);
-        const taskIds = (allKitTasks || [])
-          .map(x => parseInt(x.task_id))
-          .filter(n => !isNaN(n))
-          .sort((a, b) => a - b);  // explicit ascending sort
+        const dbIds = (dbKitTasks || [])
+          .map(x => Number(x.task_id))   // supports decimals like 2.5
+          .filter(n => !isNaN(n));
+
+        // For BerryBot, also include the 36 hardcoded task IDs as base
+        let allIds;
+        if (t.kit === 'berrybot') {
+          // Hardcoded 1..36 + DB additions (override duplicates by using Set)
+          const idSet = new Set();
+          for (let i = 1; i <= 36; i++) idSet.add(i);
+          dbIds.forEach(id => idSet.add(id));
+          allIds = Array.from(idSet);
+        } else {
+          allIds = dbIds;
+        }
+
+        const taskIds = allIds.sort((a, b) => a - b);  // ascending
         console.log('💾 Auto-seed task_ids (sorted):', taskIds);
 
         const PRESERVE = new Set(['approved', 'in_progress', 'pending_review', 'rejected']);
@@ -660,7 +801,7 @@ export async function upsertTask(t) {
         for (const s of kitStudents) {
           const { data: existingProgress } = await supabase.from('bb_progress')
             .select('task_id, status').eq('student_id', s.id).eq('kit', t.kit);
-          const progMap = new Map((existingProgress || []).map(p => [parseInt(p.task_id), p.status]));
+          const progMap = new Map((existingProgress || []).map(p => [Number(p.task_id), p.status]));
 
           const newRows = [];
           let activeAssigned = false;
@@ -668,15 +809,11 @@ export async function upsertTask(t) {
             const cur = progMap.get(tid);
             let status;
             if (cur && PRESERVE.has(cur)) {
-              // Already approved/in-flight — KEEP IT (don't disturb student progress)
               status = cur;
-              // If approved, the active slot moves to next non-approved task
-              // If in_progress/pending_review/rejected — student is on this task, NO active needed
               if (cur !== 'approved') {
-                activeAssigned = true; // student already on a task, no other active
+                activeAssigned = true;
               }
             } else if (!activeAssigned) {
-              // First non-approved-or-in-flight task → active
               status = 'active';
               activeAssigned = true;
             } else {

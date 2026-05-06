@@ -424,11 +424,14 @@ export default function App() {
   const data = useData();
   const { loading, currentUser: user, users, progress: prog, logs, classLayout,
     practiceProg, homeworks, homeworkSubs, answerUnlocks, customTasks,
+    hwTemplates, hwAssignments,
     login: doLogin, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh,
     recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
     toggleAnswerUnlock,
-    saveCustomTask, removeCustomTask, uploadMedia } = data;
+    saveCustomTask, removeCustomTask, uploadMedia,
+    saveHwTemplate, removeHwTemplate, uploadHwMedia,
+    assignHw, submitHwV2, reviewHwV2, unlockHwAnswerKey } = data;
 
   const [page,setPage]=useState("dash");
   const [selS,setSelS]=useState(null);
@@ -622,8 +625,7 @@ export default function App() {
   // Kit-aware task list helper — returns the correct task array for a given student
   const getTasksForUser = (u) => {
     const k = u?.kit || "berrybot";
-    if (k === "berrybot") return TASKS;
-    return (customTasks || []).filter(t => t.kit === k).map(t => ({
+    const fromDb = (t) => ({
       id: t.task_id,
       title: t.title || "Görev",
       cat: t.category || "Genel",
@@ -637,7 +639,18 @@ export default function App() {
       image_url: t.image_url || "",
       video_url: t.video_url || "",
       answer_image_url: t.answer_image_url || "",
-    }));
+    });
+    const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === k);
+    if (k !== "berrybot") return dbTasks.map(fromDb).sort((a, b) => a.id - b.id);
+    // BerryBot: TASKS base, DB overrides + extras above 36
+    const dbMap = new Map(dbTasks.map(t => [t.task_id, t]));
+    const merged = [];
+    for (const t of TASKS) {
+      const dbVer = dbMap.get(t.id);
+      merged.push(dbVer ? fromDb(dbVer) : t);
+    }
+    dbTasks.filter(t => t.task_id > TASKS.length).forEach(t => merged.push(fromDb(t)));
+    return merged.sort((a, b) => a.id - b.id);
   };
   const getXP=(sid)=>{
     const u=users.find(x=>x.id===sid);const tasks=getTasksForUser(u);
@@ -695,7 +708,7 @@ export default function App() {
           <span style={{fontSize:16,background:`linear-gradient(135deg,${T.purple},${T.pd})`,color:"#fff",padding:"6px 16px",borderRadius:10,fontWeight:900,letterSpacing:2,boxShadow:`0 3px 12px ${T.purple}77`,border:`2px solid ${T.pl}66`}}>LMS</span>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="taskedit"} o={()=>nav("taskedit")}>📝 Görev Editörü</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
+          {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="taskedit"} o={()=>nav("taskedit")}>📝 Görev Editörü</NBtn><NBtn a={page==="hwedit"} o={()=>nav("hwedit")}>📋 Ödev Şablonları</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.STUDENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>🗺️ Görev</NBtn><NBtn a={page==="practice"} o={()=>nav("practice")}>🧠 Practice</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn></>}
           {user.role===ROLES.PARENT&&null}
@@ -746,6 +759,7 @@ export default function App() {
         {user.role===ROLES.ADMIN&&page==="users"&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo} onRefresh={refresh}/>}
         {user.role===ROLES.ADMIN&&page==="audit"&&<AuditLog logs={logs} users={users}/>}
         {user.role===ROLES.ADMIN&&page==="taskedit"&&<AdminTaskEditor customTasks={customTasks} onSave={saveCustomTask} onDelete={removeCustomTask} onUpload={uploadMedia} onRefresh={refresh}/>}
+        {user.role===ROLES.ADMIN&&page==="hwedit"&&<AdminHomeworkEditor hwTemplates={hwTemplates} onSave={saveHwTemplate} onDelete={removeHwTemplate} onUpload={uploadHwMedia} onRefresh={refresh}/>}
         {user.role===ROLES.ADMIN&&page==="tasks"&&<TaskBrowser showAns={false}/>}
 
         {/* ──── INSTRUCTOR ──── */}
@@ -754,13 +768,13 @@ export default function App() {
         {user.role===ROLES.INSTRUCTOR&&page==="pend"&&<PendingReviews user={user} users={users} prog={prog} onApprove={handleApprove} onReject={handleReject}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="show"&&<DailyShow users={users} prog={prog} logs={logs} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="tasks"&&<TaskBrowser showAns/>}
-        {user.role===ROLES.INSTRUCTOR&&page==="hw"&&<InstructorHomework user={user} users={users} homeworks={homeworks} subs={homeworkSubs} onAdd={addHomework} onDel={removeHomework} onReview={reviewHw}/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="hw"&&<InstructorHomeworkV2 user={user} users={users} hwTemplates={hwTemplates} hwAssignments={hwAssignments} onAssign={assignHw} onReview={reviewHwV2} onUnlockAnswer={unlockHwAnswerKey} onRefresh={refresh}/>}
 
         {/* ──── STUDENT ──── */}
         {user.role===ROLES.STUDENT&&page==="dash"&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)} customTasks={customTasks} activeKit={activeKit}/>}
         {user.role===ROLES.STUDENT&&page==="dash"&&selT&&<StudentTaskView user={user} task={selT} prog={prog} answerUnlocks={answerUnlocks} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
         {user.role===ROLES.STUDENT&&page==="practice"&&<PracticeView user={user} practiceProg={practiceProg} onAnswer={recordPractice}/>}
-        {user.role===ROLES.STUDENT&&page==="hw"&&<StudentHomework user={user} homeworks={homeworks} subs={homeworkSubs} onSubmit={sendHomework}/>}
+        {user.role===ROLES.STUDENT&&page==="hw"&&<StudentHomeworkV2 user={user} hwTemplates={hwTemplates} hwAssignments={hwAssignments} onSubmit={submitHwV2} onUploadMedia={uploadHwMedia}/>}
 
         {/* ──── PARENT ──── */}
         {user.role===ROLES.PARENT&&<ParentView parent={user} users={users} prog={prog} classLayout={classLayout} logs={logs} initialTab={page==="cv"?"cv":"class"}/>}
@@ -1341,14 +1355,11 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit}){
   const userKit = activeKit || user.kit || "berrybot";
 
   // Kit-aware task list:
-  //  - BerryBot: hardcoded TASKS array (36 görev) + any custom additions
+  //  - BerryBot: hardcoded TASKS array (36 görev) MERGED with DB customTasks (admin overrides)
   //  - Tank/PicoBricks: only customTasks (admin-managed, may be empty)
   const kitTasks = (() => {
-    if (userKit === "berrybot") {
-      return TASKS;  // 36 hardcoded BerryBot missions
-    }
-    // Tank/PicoBricks: only what admin has created
-    return (customTasks || []).filter(t => t.kit === userKit).map(t => ({
+    // Helper to convert DB task → TASKS-format object
+    const fromDb = (t) => ({
       id: t.task_id,
       title: t.title || "Görev",
       cat: t.category || "Genel",
@@ -1362,7 +1373,30 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit}){
       image_url: t.image_url || "",
       video_url: t.video_url || "",
       answer_image_url: t.answer_image_url || "",
-    }));
+    });
+
+    const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === userKit);
+
+    if (userKit !== "berrybot") {
+      return dbTasks.map(fromDb).sort((a, b) => a.id - b.id);
+    }
+
+    // BerryBot: take TASKS as base, override with DB version where task_id matches
+    const dbMap = new Map(dbTasks.map(t => [t.task_id, t]));
+    const merged = [];
+    // 1. Original 36 TASKS — replaced with DB version if exists
+    for (const t of TASKS) {
+      const dbVer = dbMap.get(t.id);
+      if (dbVer) {
+        merged.push(fromDb(dbVer));
+      } else {
+        merged.push(t);
+      }
+    }
+    // 2. Admin'in 36'nın üstüne eklediği yeni görevler
+    dbTasks.filter(t => t.task_id > TASKS.length).forEach(t => merged.push(fromDb(t)));
+    // 3. Sort by task_id ascending
+    return merged.sort((a, b) => a.id - b.id);
   })();
 
   const sp=prog[user.id]||{};
@@ -5920,6 +5954,22 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
     }
   };
 
+  // Insert a new task BEFORE the given task at this position. Uses integer task_id —
+  // existing tasks with task_id >= insertion_id get shifted up by 1 (renumbered).
+  const insertBefore = async (taskAtPosition) => {
+    if (!confirm(`"${taskAtPosition.title}" görevinin üstüne yeni görev eklensin mi?\n\nBu görevden itibaren tüm ID'ler 1 artacak.\n\nÖğrenci ilerlemesi (onaylanmış görevler) etkilenmez ama yeni numaralarla devam eder.`)) {
+      return;
+    }
+    const insertId = taskAtPosition.task_id;
+    setEditing({
+      ...empty,
+      kit: selKit,
+      task_id: insertId,
+      position: insertId - 1,
+      _shiftFrom: insertId,  // marker — submit will renumber on save
+    });
+  };
+
   const handleUpload = async (type, file) => {
     if (!file || !editing) return;
     setUploading(prev => ({ ...prev, [type]: true }));
@@ -5949,10 +5999,30 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
       alert("Başlık ve kategori zorunlu");
       return;
     }
-    // Strip the _isDefault marker and other client-only fields before save
+
+    // If this is an "insert before" action — first, shift all existing tasks at >= shiftFrom up by 1.
+    // Then insert the new task at the original shiftFrom position.
+    const shiftFrom = editing._shiftFrom;
+    if (shiftFrom !== undefined && shiftFrom !== null) {
+      try {
+        // Find DB tasks for this kit with task_id >= shiftFrom, sorted DESC (highest first to avoid unique conflicts)
+        const tasksToShift = (customTasks || [])
+          .filter(t => (t.kit || "berrybot") === editing.kit && t.task_id >= shiftFrom)
+          .sort((a, b) => b.task_id - a.task_id);  // highest first
+        for (const tk of tasksToShift) {
+          await onSave({ ...tk, task_id: tk.task_id + 1, learnings: tk.learnings || [] });
+        }
+      } catch (err) {
+        console.error("shift error:", err);
+        alert("⚠ Görevleri kaydırırken hata: " + (err?.message || "Bilinmeyen"));
+        return;
+      }
+    }
+
+    // Strip the _isDefault and _shiftFrom client-only markers before save
     const payload = {
       kit: editing.kit,
-      task_id: editing.task_id,
+      task_id: parseInt(editing.task_id),
       title: editing.title.trim(),
       category: editing.category.trim(),
       difficulty: editing.difficulty || 1,
@@ -5974,6 +6044,7 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
         return;
       }
       setEditing(null);
+      if (onRefresh) await onRefresh();
     } catch (err) {
       console.error("save task error:", err);
       alert("⚠ Hata: " + (err?.message || "Bilinmeyen hata. Konsolu kontrol et (F12)."));
@@ -6237,6 +6308,20 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
                   {t.video_url && <span title="Video var" style={{ fontSize: 16 }}>▶️</span>}
                   {t.answer_image_url && <span title="Cevap var" style={{ fontSize: 16 }}>🗝️</span>}
                 </div>
+                {/* Insert before — adds a new task in this position */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    insertBefore(t);
+                  }}
+                  title="Üstüne yeni görev ekle"
+                  style={{
+                    padding: "6px 10px", borderRadius: 8,
+                    border: `1px solid ${T.cyan}55`,
+                    background: T.cyan + "15", color: T.cyan,
+                    cursor: "pointer", fontSize: 14, fontWeight: 700,
+                  }}
+                >➕</button>
                 {/* Inline delete button — only for saved tasks (not templates) */}
                 {!isDefault && t.id && (
                   <button
@@ -6265,6 +6350,773 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh })
             })}
           </div>
       )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// ADMIN HOMEWORK TEMPLATE EDITOR — şablon yönetimi (admin)
+// ════════════════════════════════════════════════════════════════════════
+function AdminHomeworkEditor({ hwTemplates, onSave, onDelete, onUpload, onRefresh }) {
+  const [selKit, setSelKit] = useState("berrybot");
+  const [editing, setEditing] = useState(null);
+  const [uploading, setUploading] = useState({ image: false, video: false, answer: false });
+  const [refreshing, setRefreshing] = useState(false);
+
+  const kitTemplates = (hwTemplates || [])
+    .filter(t => (t.kit || "berrybot") === selKit)
+    .sort((a, b) => b.created_at - a.created_at);
+
+  const kitInfo = KITS[selKit];
+
+  const handleManualRefresh = async () => {
+    if (!onRefresh) return;
+    setRefreshing(true);
+    try { await onRefresh(); } finally { setRefreshing(false); }
+  };
+
+  const startEdit = (t) => {
+    setEditing(t ? { ...t } : {
+      kit: selKit, title: "", category: "Genel", description: "",
+      difficulty: 1, expected_min: 30, emoji: "📝",
+      image_url: "", video_url: "", answer_image_url: "",
+    });
+  };
+
+  const handleUpload = async (type, file) => {
+    if (!file || !editing) return;
+    setUploading(prev => ({ ...prev, [type]: true }));
+    try {
+      const url = await onUpload({ templateId: editing.id, type, file });
+      if (url) {
+        const field = type === "image" ? "image_url" : type === "video" ? "video_url" : "answer_image_url";
+        setEditing(prev => ({ ...prev, [field]: url }));
+      } else {
+        alert("⚠ Yükleme başarısız. Storage bucket (task-media) açık mı kontrol et.");
+      }
+    } catch (e) {
+      console.error("hw upload err:", e);
+      alert("Yükleme hatası: " + (e?.message || "Bilinmeyen") + "\n\nMedya olmadan da kaydedebilirsin.");
+    } finally {
+      setUploading(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const submit = async () => {
+    if (!editing.title?.trim()) { alert("Başlık zorunlu"); return; }
+    try {
+      await onSave({
+        ...editing,
+        title: editing.title.trim(),
+        category: (editing.category || "Genel").trim(),
+      });
+      setEditing(null);
+      if (onRefresh) await onRefresh();
+    } catch (e) {
+      alert("Kaydetme hatası: " + (e?.message || "Bilinmeyen"));
+    }
+  };
+
+  if (editing) {
+    return (
+      <div>
+        <button onClick={() => setEditing(null)} style={{
+          padding: "8px 16px", borderRadius: 10, background: `${T.cyan}22`, color: T.cyan,
+          border: `1px solid ${T.cyan}55`, cursor: "pointer", fontSize: 13, fontWeight: 600, marginBottom: 14,
+        }}>← Geri</button>
+        <Card>
+          <h2 style={{ fontSize: 20, marginBottom: 16, color: T.orange }}>📝 {editing.id ? "Şablon Düzenle" : "Yeni Ödev Şablonu"}</h2>
+
+          <div style={{ display: "grid", gap: 12 }}>
+            <div style={{ padding: 12, borderRadius: 10, background: T.dark, border: `2px solid ${KITS[editing.kit]?.primaryColor || T.border}88` }}>
+              <div style={{ fontSize: 11, color: KITS[editing.kit]?.primaryColor, fontWeight: 800, marginBottom: 6 }}>🎯 KİT</div>
+              <select value={editing.kit} onChange={e => setEditing({ ...editing, kit: e.target.value })}
+                style={{ ...inputStyle, fontWeight: 700, fontSize: 16 }}>
+                <option value="berrybot">🍓 BerryBot</option>
+                <option value="tank">🪖 Tank Robot</option>
+                <option value="picobricks">🧱 PicoBricks</option>
+              </select>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 12 }}>
+              <input value={editing.emoji} onChange={e => setEditing({ ...editing, emoji: e.target.value })}
+                placeholder="📝" style={{ ...inputStyle, width: 60, textAlign: "center", fontSize: 24 }} />
+              <input value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })}
+                placeholder="Ödev Başlığı *" style={inputStyle} />
+            </div>
+
+            <input value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })}
+              placeholder="Kategori (örn: Sumo Robot, Sensör, Final Proje)" style={inputStyle} />
+
+            <textarea value={editing.description} onChange={e => setEditing({ ...editing, description: e.target.value })}
+              placeholder="Açıklama (öğrenciye gösterilir)" rows={4} style={{ ...inputStyle, resize: "vertical" }} />
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, color: T.tm, fontWeight: 700 }}>ZORLUK (1-5)</label>
+                <input type="number" min="1" max="5" value={editing.difficulty} onChange={e => setEditing({ ...editing, difficulty: parseInt(e.target.value) || 1 })} style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: T.tm, fontWeight: 700 }}>SÜRE (dk)</label>
+                <input type="number" min="5" value={editing.expected_min} onChange={e => setEditing({ ...editing, expected_min: parseInt(e.target.value) || 30 })} style={inputStyle} />
+              </div>
+            </div>
+
+            {/* Media upload */}
+            <div style={{ padding: 14, borderRadius: 10, background: T.dark, border: `1px solid ${T.border}`, display: "grid", gap: 10 }}>
+              <div style={{ fontSize: 12, color: T.tm, fontWeight: 700, letterSpacing: 1 }}>📎 MEDYA (opsiyonel)</div>
+              {[{ k: "image", label: "📷 Görsel", url: editing.image_url, accept: "image/*" },
+                { k: "video", label: "🎬 Video", url: editing.video_url, accept: "video/*" },
+                { k: "answer", label: "🗝️ Cevap Anahtarı", url: editing.answer_image_url, accept: "image/*" }].map(({ k, label, url, accept }) => (
+                <div key={k} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: T.ts, minWidth: 130 }}>{label}</span>
+                  <label style={{ padding: "6px 12px", borderRadius: 8, background: T.purple + "33", color: T.pl, cursor: "pointer", fontSize: 12, fontWeight: 700 }}>
+                    {uploading[k] ? "⏳ Yükleniyor..." : url ? "✓ Değiştir" : "📤 Yükle"}
+                    <input type="file" accept={accept} style={{ display: "none" }}
+                      onChange={e => e.target.files[0] && handleUpload(k, e.target.files[0])} />
+                  </label>
+                  {url && (
+                    <>
+                      <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: T.cyan, textDecoration: "none" }}>🔗 Aç</a>
+                      <button onClick={() => setEditing({ ...editing, [k === "image" ? "image_url" : k === "video" ? "video_url" : "answer_image_url"]: "" })}
+                        style={{ padding: "4px 8px", background: T.err + "22", color: T.err, border: `1px solid ${T.err}55`, borderRadius: 6, cursor: "pointer", fontSize: 11, fontWeight: 700 }}>✗</button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+              <button onClick={submit} style={{
+                padding: "12px 22px", borderRadius: 10, background: `linear-gradient(135deg,${T.ok},#16a34a)`,
+                color: "#fff", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 800,
+              }}>💾 Kaydet</button>
+              <button onClick={() => setEditing(null)} style={{
+                padding: "12px 18px", borderRadius: 10, background: T.dark, color: T.ts,
+                border: `1px solid ${T.border}`, cursor: "pointer", fontSize: 13, fontWeight: 600,
+              }}>İptal</button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, marginBottom: 14, color: T.orange, fontWeight: 900 }}>📝 Ödev Şablonları</h2>
+
+      <div style={{ marginBottom: 14, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        {Object.values(KITS).map(k => (
+          <button key={k.id} onClick={() => { setSelKit(k.id); setEditing(null); }} style={{
+            padding: "10px 18px", borderRadius: 12,
+            border: `2px solid ${selKit === k.id ? k.primaryColor : T.border}`,
+            background: selKit === k.id ? `${k.primaryColor}22` : T.dark,
+            color: selKit === k.id ? k.primaryColor : T.ts,
+            cursor: "pointer", fontWeight: 800, fontSize: 14,
+            display: "inline-flex", alignItems: "center", gap: 8,
+          }}>
+            <span style={{ fontSize: 20 }}>{k.icon}</span><span>{k.name}</span>
+            <span style={{ fontSize: 11, padding: "1px 7px", borderRadius: 6, background: selKit === k.id ? k.primaryColor + "33" : T.border }}>
+              {(hwTemplates || []).filter(t => (t.kit || "berrybot") === k.id).length}
+            </span>
+          </button>
+        ))}
+        <button onClick={handleManualRefresh} disabled={refreshing} title="Yenile"
+          style={{ marginLeft: "auto", padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.dark, color: T.ts, cursor: refreshing ? "wait" : "pointer", fontSize: 13, fontWeight: 700 }}>
+          {refreshing ? "⏳ Yenileniyor..." : "🔄 Yenile"}
+        </button>
+      </div>
+
+      <button onClick={() => startEdit(null)} style={{
+        padding: "12px 22px", marginBottom: 14, borderRadius: 12,
+        background: `linear-gradient(135deg,${kitInfo.primaryColor},${kitInfo.accentColor})`,
+        color: "#fff", border: "none", cursor: "pointer", fontSize: 14, fontWeight: 800,
+        boxShadow: `0 4px 16px ${kitInfo.primaryColor}66`,
+      }}>+ Yeni Ödev Şablonu</button>
+
+      {kitTemplates.length === 0 ? (
+        <div style={{ padding: 50, textAlign: "center", borderRadius: 16, background: T.card, border: `1px solid ${T.border}` }}>
+          <div style={{ fontSize: 48, opacity: .4, marginBottom: 8 }}>📝</div>
+          <div style={{ fontSize: 15, color: T.ts, fontWeight: 600 }}>Bu kit için henüz ödev şablonu yok</div>
+          <div style={{ fontSize: 12, color: T.tm, marginTop: 4 }}>Yukarıdaki butonla ekle</div>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gap: 8 }}>
+          {kitTemplates.map(t => (
+            <div key={t.id} onClick={() => startEdit(t)} style={{
+              padding: 12, borderRadius: 12, cursor: "pointer", background: T.card, border: `1px solid ${T.border}`,
+              display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+            }}>
+              <span style={{ fontSize: 24 }}>{t.emoji}</span>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.tp, marginBottom: 2 }}>{t.title}</div>
+                <div style={{ fontSize: 11, color: T.ts, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  <span style={{ padding: "1px 7px", borderRadius: 5, background: T.purple + "22", color: T.pl, fontWeight: 600 }}>{t.category}</span>
+                  <span style={{ color: T.cyan }}>⏱ {t.expected_min}dk</span>
+                  <span>{"★".repeat(t.difficulty)}</span>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 4 }}>
+                {t.image_url && <span title="Görsel" style={{ fontSize: 16 }}>📷</span>}
+                {t.video_url && <span title="Video" style={{ fontSize: 16 }}>▶️</span>}
+                {t.answer_image_url && <span title="Cevap" style={{ fontSize: 16 }}>🗝️</span>}
+              </div>
+              <button onClick={async (e) => {
+                e.stopPropagation();
+                if (!confirm(`"${t.title}" şablonunu silmek istediğine emin misin?`)) return;
+                try {
+                  await onDelete(t.id);
+                  if (onRefresh) await onRefresh();
+                } catch (err) { alert("Silme hatası: " + err.message); }
+              }} title="Sil" style={{
+                padding: "6px 10px", borderRadius: 8, border: `1px solid ${T.err}55`,
+                background: T.err + "15", color: T.err, cursor: "pointer", fontSize: 14, fontWeight: 700,
+              }}>🗑️</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// INSTRUCTOR HOMEWORK ASSIGN — eğitmen ödev atama paneli
+// ════════════════════════════════════════════════════════════════════════
+function InstructorHomeworkV2({ user, users, hwTemplates, hwAssignments, onAssign, onReview, onUnlockAnswer, onRefresh }) {
+  const [tab, setTab] = useState("assign"); // assign | review
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [dueDate, setDueDate] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterKit, setFilterKit] = useState("all");
+  const [busy, setBusy] = useState(false);
+
+  // Default due date: 7 days from now
+  useEffect(() => {
+    if (!dueDate) {
+      const d = new Date();
+      d.setDate(d.getDate() + 7);
+      setDueDate(d.toISOString().slice(0, 16));
+    }
+  }, []);
+
+  const myStudents = users.filter(u =>
+    u.role === "student" && (u.instructor_id === user.id || u.instructorId === user.id)
+  );
+
+  const allCategories = [...new Set((hwTemplates || []).map(t => t.category))].filter(Boolean);
+
+  const filteredTemplates = (hwTemplates || []).filter(t => {
+    if (filterKit !== "all" && t.kit !== filterKit) return false;
+    if (filterCategory && t.category !== filterCategory) return false;
+    return true;
+  });
+
+  const handleAssign = async () => {
+    if (!selectedTemplate) { alert("Şablon seç"); return; }
+    if (selectedStudents.length === 0) { alert("En az 1 öğrenci seç"); return; }
+    if (!dueDate) { alert("Bitiş tarihi gir"); return; }
+    setBusy(true);
+    try {
+      const dueMs = new Date(dueDate).getTime();
+      const result = await onAssign({ templateId: selectedTemplate.id, studentIds: selectedStudents, dueDate: dueMs });
+      alert(`✓ ${result?.count || selectedStudents.length} öğrenciye atandı`);
+      setSelectedStudents([]);
+      setSelectedTemplate(null);
+    } catch (e) {
+      alert("Atama hatası: " + (e?.message || "Bilinmeyen"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // For review tab: only assignments by this instructor
+  const myAssignments = (hwAssignments || []).filter(a => a.instructor_id === user.id);
+  const submittedAssignments = myAssignments.filter(a => a.status === "submitted");
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+        <button onClick={() => setTab("assign")} style={{
+          padding: "8px 16px", borderRadius: 10,
+          background: tab === "assign" ? T.orange : T.dark,
+          color: tab === "assign" ? "#fff" : T.ts,
+          border: `1px solid ${tab === "assign" ? T.orange : T.border}`,
+          cursor: "pointer", fontWeight: 700, fontSize: 13,
+        }}>📤 Ödev Ata</button>
+        <button onClick={() => setTab("review")} style={{
+          padding: "8px 16px", borderRadius: 10,
+          background: tab === "review" ? T.orange : T.dark,
+          color: tab === "review" ? "#fff" : T.ts,
+          border: `1px solid ${tab === "review" ? T.orange : T.border}`,
+          cursor: "pointer", fontWeight: 700, fontSize: 13,
+          display: "inline-flex", alignItems: "center", gap: 6,
+        }}>📋 Değerlendir
+          {submittedAssignments.length > 0 && (
+            <span style={{ padding: "2px 8px", borderRadius: 10, background: T.warn, color: "#000", fontSize: 11, fontWeight: 800 }}>
+              {submittedAssignments.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {tab === "assign" && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
+          {/* Template selector */}
+          <Card>
+            <h3 style={{ fontSize: 16, color: T.orange, marginBottom: 10, fontWeight: 800 }}>1️⃣ Ödev Şablonu Seç</h3>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+              <select value={filterKit} onChange={e => setFilterKit(e.target.value)} style={{
+                padding: "6px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.input, color: T.tp, fontSize: 12,
+              }}>
+                <option value="all">🌐 Tüm Kitler</option>
+                <option value="berrybot">🍓 BerryBot</option>
+                <option value="tank">🪖 Tank</option>
+                <option value="picobricks">🧱 PicoBricks</option>
+              </select>
+              <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={{
+                padding: "6px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.input, color: T.tp, fontSize: 12,
+              }}>
+                <option value="">Tüm kategoriler</option>
+                {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div style={{ maxHeight: 360, overflowY: "auto", display: "grid", gap: 6 }}>
+              {filteredTemplates.length === 0 && (
+                <div style={{ padding: 20, textAlign: "center", color: T.tm, fontSize: 13 }}>Şablon yok. Admin oluştursun.</div>
+              )}
+              {filteredTemplates.map(t => (
+                <div key={t.id} onClick={() => setSelectedTemplate(t)} style={{
+                  padding: 10, borderRadius: 8, cursor: "pointer",
+                  background: selectedTemplate?.id === t.id ? T.orange + "22" : T.dark,
+                  border: `2px solid ${selectedTemplate?.id === t.id ? T.orange : T.border}`,
+                  display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <span style={{ fontSize: 20 }}>{t.emoji}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</div>
+                    <div style={{ fontSize: 10, color: T.tm, display: "flex", gap: 6 }}>
+                      <span>{KITS[t.kit]?.icon}</span>
+                      <span>{t.category}</span>
+                      <span>⏱{t.expected_min}dk</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Students + due date */}
+          <Card>
+            <h3 style={{ fontSize: 16, color: T.orange, marginBottom: 10, fontWeight: 800 }}>2️⃣ Öğrenci(ler) Seç</h3>
+            <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+              <button onClick={() => setSelectedStudents(myStudents.map(s => s.id))} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.cyan}55`, background: T.cyan + "15", color: T.cyan, cursor: "pointer" }}>Tümü</button>
+              <button onClick={() => setSelectedStudents([])} style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, border: `1px solid ${T.border}`, background: T.dark, color: T.tm, cursor: "pointer" }}>Hiçbiri</button>
+              <span style={{ fontSize: 12, color: T.ts, marginLeft: "auto" }}>{selectedStudents.length} seçili</span>
+            </div>
+            <div style={{ maxHeight: 280, overflowY: "auto", display: "grid", gap: 4 }}>
+              {myStudents.map(s => {
+                const checked = selectedStudents.includes(s.id);
+                return (
+                  <label key={s.id} style={{
+                    padding: 8, borderRadius: 8, cursor: "pointer",
+                    background: checked ? T.ok + "15" : T.dark,
+                    border: `1px solid ${checked ? T.ok + "55" : T.border}`,
+                    display: "flex", alignItems: "center", gap: 8,
+                  }}>
+                    <input type="checkbox" checked={checked} onChange={e => {
+                      if (e.target.checked) setSelectedStudents([...selectedStudents, s.id]);
+                      else setSelectedStudents(selectedStudents.filter(x => x !== s.id));
+                    }} />
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{s.name}</span>
+                    <span style={{ marginLeft: "auto", fontSize: 10, padding: "1px 6px", borderRadius: 4, background: T.purple + "33", color: T.pl }}>{s.grup || "Büyük"}</span>
+                  </label>
+                );
+              })}
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              <label style={{ fontSize: 11, color: T.tm, fontWeight: 700, letterSpacing: 1 }}>📅 BİTİŞ TARİHİ</label>
+              <input type="datetime-local" value={dueDate} onChange={e => setDueDate(e.target.value)}
+                style={{ ...inputStyle, marginTop: 4 }} />
+            </div>
+
+            <button onClick={handleAssign} disabled={busy || !selectedTemplate || selectedStudents.length === 0} style={{
+              width: "100%", marginTop: 14, padding: "12px",
+              borderRadius: 10, border: "none",
+              background: (busy || !selectedTemplate || !selectedStudents.length) ? T.border : `linear-gradient(135deg,${T.ok},#16a34a)`,
+              color: "#fff", fontSize: 14, fontWeight: 800, cursor: busy ? "wait" : "pointer",
+              boxShadow: !busy && selectedTemplate && selectedStudents.length ? `0 4px 16px ${T.ok}55` : "none",
+            }}>
+              {busy ? "⏳ Atanıyor..." : `📤 ${selectedStudents.length} öğrenciye ata`}
+            </button>
+          </Card>
+        </div>
+      )}
+
+      {tab === "review" && (
+        <div>
+          <h3 style={{ fontSize: 16, color: T.orange, marginBottom: 10, fontWeight: 800 }}>📋 Tüm Atanmış Ödevler</h3>
+          {myAssignments.length === 0 ? (
+            <div style={{ padding: 40, textAlign: "center", color: T.tm }}>Henüz ödev atamadın.</div>
+          ) : (
+            <div style={{ display: "grid", gap: 8 }}>
+              {myAssignments.map(a => {
+                const tpl = (hwTemplates || []).find(t => t.id === a.template_id);
+                const student = users.find(u => u.id === a.student_id);
+                if (!tpl || !student) return null;
+                return <HwAssignmentCard key={a.id} a={a} tpl={tpl} student={student} onReview={onReview} onUnlock={onUnlockAnswer} />;
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HwAssignmentCard({ a, tpl, student, onReview, onUnlock }) {
+  const [expanded, setExpanded] = useState(false);
+  const [note, setNote] = useState(a.instructor_note || "");
+  const isLate = a.due_date && a.due_date < Date.now() && a.status === "assigned";
+  const statusColors = {
+    assigned: { bg: T.cyan + "20", color: T.cyan, label: "Atandı" },
+    submitted: { bg: T.warn + "30", color: T.warn, label: "Teslim Edildi" },
+    approved: { bg: T.ok + "20", color: T.ok, label: "✓ Onaylandı" },
+    rejected: { bg: T.err + "20", color: T.err, label: "✗ Reddedildi" },
+  };
+  const sc = statusColors[a.status] || statusColors.assigned;
+
+  return (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, overflow: "hidden" }}>
+      <div onClick={() => setExpanded(!expanded)} style={{
+        padding: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+      }}>
+        <span style={{ fontSize: 22 }}>{tpl.emoji}</span>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ fontSize: 14, fontWeight: 700 }}>{tpl.title}</div>
+          <div style={{ fontSize: 12, color: T.ts }}>👤 {student.name} • 📅 {new Date(a.due_date).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}{isLate && <span style={{ color: T.err, marginLeft: 6 }}>(Süre Doldu)</span>}</div>
+        </div>
+        <span style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: sc.bg, color: sc.color }}>{sc.label}</span>
+        <span style={{ fontSize: 14, color: T.tm }}>{expanded ? "▲" : "▼"}</span>
+      </div>
+
+      {expanded && (
+        <div style={{ padding: 14, borderTop: `1px solid ${T.border}`, background: T.dark, display: "grid", gap: 10 }}>
+          {tpl.description && (
+            <div style={{ fontSize: 13, color: T.ts }}>📋 {tpl.description}</div>
+          )}
+          {a.submission_photo_url && (
+            <div>
+              <div style={{ fontSize: 11, color: T.tm, fontWeight: 700, marginBottom: 4 }}>📷 ÖĞRENCİ TESLİMİ</div>
+              <a href={a.submission_photo_url} target="_blank" rel="noreferrer">
+                <img src={a.submission_photo_url} alt="Teslim" style={{ maxWidth: "100%", maxHeight: 280, borderRadius: 8 }} />
+              </a>
+            </div>
+          )}
+          {a.submission_text && (
+            <div>
+              <div style={{ fontSize: 11, color: T.tm, fontWeight: 700, marginBottom: 4 }}>💬 ÖĞRENCİ NOTU</div>
+              <div style={{ fontSize: 13, color: T.tp, padding: 10, borderRadius: 8, background: T.input, whiteSpace: "pre-wrap" }}>{a.submission_text}</div>
+            </div>
+          )}
+
+          {a.status === "submitted" && (
+            <>
+              <textarea value={note} onChange={e => setNote(e.target.value)}
+                placeholder="Geri bildirim (opsiyonel)" rows={3}
+                style={{ ...inputStyle, resize: "vertical" }} />
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={async () => {
+                  await onReview({ assignmentId: a.id, status: "approved", instructorNote: note });
+                }} style={{
+                  padding: "10px 18px", borderRadius: 10, background: T.ok, color: "#fff",
+                  border: "none", cursor: "pointer", fontSize: 13, fontWeight: 800,
+                }}>✓ Onayla</button>
+                <button onClick={async () => {
+                  await onReview({ assignmentId: a.id, status: "rejected", instructorNote: note || "Tekrar dene" });
+                }} style={{
+                  padding: "10px 18px", borderRadius: 10, background: T.err, color: "#fff",
+                  border: "none", cursor: "pointer", fontSize: 13, fontWeight: 800,
+                }}>✗ Reddet</button>
+              </div>
+            </>
+          )}
+
+          {a.instructor_note && a.status !== "submitted" && (
+            <div style={{ padding: 10, borderRadius: 8, background: T.purple + "15", border: `1px solid ${T.purple}33`, fontSize: 13 }}>
+              <div style={{ fontSize: 10, color: T.tm, fontWeight: 700, marginBottom: 4 }}>👨‍🏫 NOT</div>
+              {a.instructor_note}
+            </div>
+          )}
+
+          {/* Answer key unlock */}
+          {tpl.answer_image_url && (
+            <div style={{ padding: 10, borderRadius: 8, background: a.answer_unlocked ? T.ok + "15" : T.warn + "15", border: `1px solid ${a.answer_unlocked ? T.ok : T.warn}55`, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 18 }}>🗝️</span>
+              <span style={{ fontSize: 12, color: T.tp, fontWeight: 600, flex: 1 }}>
+                {a.answer_unlocked ? "Cevap anahtarı öğrenciye açıldı" : "Cevap anahtarı kilitli"}
+              </span>
+              {!a.answer_unlocked && (
+                <button onClick={() => onUnlock(a.id)} style={{
+                  padding: "6px 14px", borderRadius: 8, background: T.warn, color: "#000",
+                  border: "none", cursor: "pointer", fontSize: 12, fontWeight: 800,
+                }}>Kilidi Aç</button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// STUDENT HOMEWORK V2 — öğrenci ödev görünümü
+// ════════════════════════════════════════════════════════════════════════
+function StudentHomeworkV2({ user, hwTemplates, hwAssignments, onSubmit, onUploadMedia }) {
+  const [selected, setSelected] = useState(null); // assignment + template
+  const [photo, setPhoto] = useState(null); // local file
+  const [photoUrl, setPhotoUrl] = useState(null); // uploaded URL
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const myAssignments = (hwAssignments || []).filter(a => a.student_id === user.id);
+  const tplMap = new Map((hwTemplates || []).map(t => [t.id, t]));
+
+  // Group: pending (assigned/rejected), submitted, completed
+  const pending = myAssignments.filter(a => a.status === "assigned" || a.status === "rejected");
+  const submitted = myAssignments.filter(a => a.status === "submitted");
+  const done = myAssignments.filter(a => a.status === "approved");
+
+  if (selected) {
+    const tpl = tplMap.get(selected.template_id);
+    if (!tpl) {
+      return <div style={{ padding: 20, color: T.err }}>Şablon bulunamadı. <button onClick={() => setSelected(null)}>Geri</button></div>;
+    }
+
+    const handleSubmit = async () => {
+      if (!photoUrl && !text.trim()) {
+        alert("Fotoğraf veya açıklama ekle");
+        return;
+      }
+      setBusy(true);
+      try {
+        await onSubmit({ assignmentId: selected.id, photoUrl, text: text.trim() });
+        alert("✓ Ödev teslim edildi! Eğitmen değerlendirecek.");
+        setSelected(null);
+        setPhoto(null); setPhotoUrl(null); setText("");
+      } catch (e) {
+        alert("Hata: " + (e?.message || "Bilinmeyen"));
+      } finally {
+        setBusy(false);
+      }
+    };
+
+    const handleUpload = async (file) => {
+      if (!file) return;
+      setPhoto(file);
+      setBusy(true);
+      try {
+        const url = await onUploadMedia({ templateId: tpl.id, type: `submission-${user.id}`, file });
+        setPhotoUrl(url);
+      } catch (e) {
+        alert("Yükleme hatası: " + e.message);
+      } finally {
+        setBusy(false);
+      }
+    };
+
+    const isLate = selected.due_date < Date.now() && selected.status === "assigned";
+
+    return (
+      <div>
+        <button onClick={() => setSelected(null)} style={{
+          padding: "8px 16px", borderRadius: 10, background: `${T.cyan}22`, color: T.cyan,
+          border: `1px solid ${T.cyan}55`, cursor: "pointer", fontSize: 13, fontWeight: 600, marginBottom: 14,
+        }}>← Ödev Listesi</button>
+
+        <Card>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 36 }}>{tpl.emoji}</span>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <h2 style={{ fontSize: 22, color: T.orange, fontWeight: 900, margin: 0 }}>{tpl.title}</h2>
+              <div style={{ fontSize: 13, color: T.ts, marginTop: 4, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ padding: "2px 8px", borderRadius: 4, background: T.purple + "22", color: T.pl, fontWeight: 700 }}>{tpl.category}</span>
+                <span style={{ color: isLate ? T.err : T.cyan, fontWeight: 700 }}>📅 {new Date(selected.due_date).toLocaleString("tr-TR")}</span>
+                <span>⏱ {tpl.expected_min}dk</span>
+                <span>{"★".repeat(tpl.difficulty)}</span>
+              </div>
+            </div>
+          </div>
+
+          {tpl.description && (
+            <div style={{ padding: 14, borderRadius: 10, background: T.dark, fontSize: 14, color: T.tp, marginBottom: 14, lineHeight: 1.6 }}>
+              {tpl.description}
+            </div>
+          )}
+
+          {tpl.image_url && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: T.tm, fontWeight: 700, marginBottom: 4 }}>📷 GÖRSEL</div>
+              <img src={tpl.image_url} alt="Görsel" style={{ maxWidth: "100%", maxHeight: 360, borderRadius: 10, border: `1px solid ${T.border}` }} />
+            </div>
+          )}
+
+          {tpl.video_url && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: T.tm, fontWeight: 700, marginBottom: 4 }}>🎬 VİDEO</div>
+              <video src={tpl.video_url} controls style={{ width: "100%", maxHeight: 360, borderRadius: 10, border: `1px solid ${T.border}` }} />
+            </div>
+          )}
+
+          {/* Answer key (if unlocked) */}
+          {selected.answer_unlocked && tpl.answer_image_url && (
+            <div style={{ marginBottom: 14, padding: 12, borderRadius: 10, background: T.ok + "15", border: `2px solid ${T.ok}55` }}>
+              <div style={{ fontSize: 12, color: T.ok, fontWeight: 700, marginBottom: 6 }}>🗝️ CEVAP ANAHTARI (Eğitmen tarafından açıldı)</div>
+              <img src={tpl.answer_image_url} alt="Cevap" style={{ maxWidth: "100%", maxHeight: 360, borderRadius: 8 }} />
+            </div>
+          )}
+
+          {selected.status === "submitted" && (
+            <div style={{ padding: 14, borderRadius: 10, background: T.warn + "15", border: `1px solid ${T.warn}55`, marginBottom: 14, fontSize: 14 }}>
+              ⏳ Ödevi teslim ettin, eğitmen değerlendirecek.
+              {selected.submission_photo_url && (
+                <div style={{ marginTop: 8 }}>
+                  <a href={selected.submission_photo_url} target="_blank" rel="noreferrer">
+                    <img src={selected.submission_photo_url} alt="Teslim" style={{ maxWidth: 280, borderRadius: 8 }} />
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
+          {selected.status === "approved" && (
+            <div style={{ padding: 14, borderRadius: 10, background: T.ok + "15", border: `1px solid ${T.ok}55`, marginBottom: 14, fontSize: 14, color: T.ok, fontWeight: 700 }}>
+              ✓ Ödev onaylandı! Tebrikler.
+              {selected.instructor_note && <div style={{ marginTop: 6, fontSize: 13, fontWeight: 400, color: T.tp }}>👨‍🏫 {selected.instructor_note}</div>}
+            </div>
+          )}
+
+          {selected.status === "rejected" && (
+            <div style={{ padding: 14, borderRadius: 10, background: T.err + "15", border: `1px solid ${T.err}55`, marginBottom: 14, fontSize: 14 }}>
+              <div style={{ color: T.err, fontWeight: 700, marginBottom: 4 }}>✗ Tekrar dene</div>
+              {selected.instructor_note && <div style={{ fontSize: 13, color: T.tp }}>👨‍🏫 {selected.instructor_note}</div>}
+            </div>
+          )}
+
+          {/* Submission form (only if assigned or rejected) */}
+          {(selected.status === "assigned" || selected.status === "rejected") && (
+            <div style={{ display: "grid", gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, color: T.tm, fontWeight: 700, letterSpacing: 1 }}>📷 FOTOĞRAF / EKRAN GÖRÜNTÜSÜ</label>
+                <label style={{
+                  display: "block", padding: 24, marginTop: 4, borderRadius: 10, border: `2px dashed ${T.border}`,
+                  background: T.dark, textAlign: "center", cursor: "pointer", fontSize: 13, color: T.ts,
+                }}>
+                  {photoUrl ? <>
+                    <img src={photoUrl} alt="Yüklendi" style={{ maxWidth: 200, maxHeight: 200, borderRadius: 8 }} />
+                    <div style={{ marginTop: 8, color: T.ok, fontWeight: 700 }}>✓ Yüklendi (değiştirmek için tıkla)</div>
+                  </> : busy ? "⏳ Yükleniyor..." : "📤 Tıkla ve fotoğraf seç"}
+                  <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => e.target.files[0] && handleUpload(e.target.files[0])} />
+                </label>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 11, color: T.tm, fontWeight: 700, letterSpacing: 1 }}>💬 AÇIKLAMA / KOD</label>
+                <textarea value={text} onChange={e => setText(e.target.value)}
+                  placeholder="Yaptığın işi anlat, kodunu paylaş..." rows={6}
+                  style={{ ...inputStyle, marginTop: 4, resize: "vertical", fontFamily: "monospace", fontSize: 13 }} />
+              </div>
+
+              <button onClick={handleSubmit} disabled={busy} style={{
+                padding: "14px", borderRadius: 12, border: "none",
+                background: busy ? T.border : `linear-gradient(135deg,${T.ok},#16a34a)`,
+                color: "#fff", fontSize: 15, fontWeight: 800, cursor: busy ? "wait" : "pointer",
+                boxShadow: busy ? "none" : `0 4px 16px ${T.ok}55`,
+              }}>
+                {busy ? "⏳ Gönderiliyor..." : "📤 Ödevi Gönder"}
+              </button>
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  // List view
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, color: T.orange, fontWeight: 900, marginBottom: 14 }}>📝 Ödevlerim</h2>
+      {myAssignments.length === 0 ? (
+        <Card>
+          <div style={{ padding: 30, textAlign: "center" }}>
+            <div style={{ fontSize: 56, opacity: .4, marginBottom: 8 }}>📝</div>
+            <div style={{ fontSize: 15, color: T.ts, fontWeight: 600 }}>Henüz ödevin yok</div>
+            <div style={{ fontSize: 12, color: T.tm, marginTop: 4 }}>Eğitmenin ödev atınca burada görürsün</div>
+          </div>
+        </Card>
+      ) : (
+        <div style={{ display: "grid", gap: 14 }}>
+          {pending.length > 0 && (
+            <div>
+              <h3 style={{ fontSize: 14, color: T.warn, fontWeight: 800, marginBottom: 8, letterSpacing: 1 }}>⏳ YAPILACAK ({pending.length})</h3>
+              <div style={{ display: "grid", gap: 6 }}>
+                {pending.map(a => <HwStudentCard key={a.id} a={a} tpl={tplMap.get(a.template_id)} onSelect={() => setSelected(a)} />)}
+              </div>
+            </div>
+          )}
+          {submitted.length > 0 && (
+            <div>
+              <h3 style={{ fontSize: 14, color: T.cyan, fontWeight: 800, marginBottom: 8, letterSpacing: 1 }}>📤 BEKLEYEN ({submitted.length})</h3>
+              <div style={{ display: "grid", gap: 6 }}>
+                {submitted.map(a => <HwStudentCard key={a.id} a={a} tpl={tplMap.get(a.template_id)} onSelect={() => setSelected(a)} />)}
+              </div>
+            </div>
+          )}
+          {done.length > 0 && (
+            <div>
+              <h3 style={{ fontSize: 14, color: T.ok, fontWeight: 800, marginBottom: 8, letterSpacing: 1 }}>✓ TAMAMLANAN ({done.length})</h3>
+              <div style={{ display: "grid", gap: 6 }}>
+                {done.map(a => <HwStudentCard key={a.id} a={a} tpl={tplMap.get(a.template_id)} onSelect={() => setSelected(a)} />)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HwStudentCard({ a, tpl, onSelect }) {
+  if (!tpl) return null;
+  const isLate = a.due_date < Date.now() && a.status === "assigned";
+  const statusColors = {
+    assigned: { bg: T.cyan + "20", color: T.cyan, label: "Yapılacak" },
+    submitted: { bg: T.warn + "30", color: T.warn, label: "Onay Bekliyor" },
+    approved: { bg: T.ok + "20", color: T.ok, label: "✓ Onaylandı" },
+    rejected: { bg: T.err + "20", color: T.err, label: "Tekrar Dene" },
+  };
+  const sc = statusColors[a.status] || statusColors.assigned;
+  return (
+    <div onClick={onSelect} style={{
+      padding: 12, borderRadius: 12, cursor: "pointer", background: T.card,
+      border: `1px solid ${isLate ? T.err + "55" : T.border}`,
+      display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
+      transition: "transform .15s",
+    }} onMouseOver={e => e.currentTarget.style.transform = "translateX(4px)"} onMouseOut={e => e.currentTarget.style.transform = "translateX(0)"}>
+      <span style={{ fontSize: 28 }}>{tpl.emoji}</span>
+      <div style={{ flex: 1, minWidth: 180 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.tp }}>{tpl.title}</div>
+        <div style={{ fontSize: 11, color: T.ts, display: "flex", gap: 6, flexWrap: "wrap", marginTop: 2 }}>
+          <span style={{ padding: "1px 7px", borderRadius: 4, background: T.purple + "22", color: T.pl, fontWeight: 600 }}>{tpl.category}</span>
+          <span style={{ color: isLate ? T.err : T.tm, fontWeight: 600 }}>📅 {new Date(a.due_date).toLocaleDateString("tr-TR", { day: "2-digit", month: "short" })}{isLate ? " (geçti)" : ""}</span>
+        </div>
+      </div>
+      <span style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: sc.bg, color: sc.color }}>{sc.label}</span>
+      <span style={{ fontSize: 16, color: T.tm }}>▶</span>
     </div>
   );
 }
