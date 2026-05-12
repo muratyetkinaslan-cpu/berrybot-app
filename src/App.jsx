@@ -7290,4 +7290,3 @@ function MediaUploader({ label, accept, currentUrl, onUpload, onClear, uploading
     </div>
   );
 }
-
