@@ -2434,12 +2434,16 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
               key={videoSrc}
               src={videoSrc}
               controls
+              controlsList="nodownload novolume"
               playsInline
               muted
+              defaultMuted
               preload="metadata"
               onError={()=>setVideoError(true)}
               onEnded={()=>setVideoEnded(true)}
-              onVolumeChange={(e)=>{ if (!e.target.muted) e.target.muted = true; }}
+              onLoadedMetadata={(e)=>{ e.target.muted = true; e.target.volume = 0; }}
+              onPlay={(e)=>{ e.target.muted = true; e.target.volume = 0; }}
+              onVolumeChange={(e)=>{ if (!e.target.muted || e.target.volume > 0) { e.target.muted = true; e.target.volume = 0; } }}
               style={{width:"100%",maxHeight:540,display:"block",background:"#000"}}
             >
               Tarayıcınız video oynatmayı desteklemiyor.
@@ -7000,7 +7004,7 @@ function StudentHomeworkV2({ user, hwTemplates, hwAssignments, onSubmit, onUploa
           {tpl.video_url && (
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: T.tm, fontWeight: 700, marginBottom: 4 }}>🎬 VİDEO</div>
-              <video src={tpl.video_url} controls muted playsInline onVolumeChange={(e)=>{ if (!e.target.muted) e.target.muted = true; }} style={{ width: "100%", maxHeight: 360, borderRadius: 10, border: `1px solid ${T.border}` }} />
+              <video src={tpl.video_url} controls controlsList="nodownload novolume" muted defaultMuted playsInline onLoadedMetadata={(e)=>{ e.target.muted = true; e.target.volume = 0; }} onPlay={(e)=>{ e.target.muted = true; e.target.volume = 0; }} onVolumeChange={(e)=>{ if (!e.target.muted || e.target.volume > 0) { e.target.muted = true; e.target.volume = 0; } }} style={{ width: "100%", maxHeight: 360, borderRadius: 10, border: `1px solid ${T.border}` }} />
             </div>
           )}
 
@@ -7262,7 +7266,7 @@ function MediaUploader({ label, accept, currentUrl, onUpload, onClear, uploading
       {currentUrl && (
         <div style={{ marginBottom: 8, borderRadius: 8, overflow: "hidden", border: `1px solid ${color}44`, background: "#000" }}>
           {isVideo ? (
-            <video src={currentUrl} controls muted playsInline onVolumeChange={(e)=>{ if (!e.target.muted) e.target.muted = true; }} style={{ width: "100%", maxHeight: 200, display: "block" }} />
+            <video src={currentUrl} controls controlsList="nodownload novolume" muted defaultMuted playsInline onLoadedMetadata={(e)=>{ e.target.muted = true; e.target.volume = 0; }} onPlay={(e)=>{ e.target.muted = true; e.target.volume = 0; }} onVolumeChange={(e)=>{ if (!e.target.muted || e.target.volume > 0) { e.target.muted = true; e.target.volume = 0; } }} style={{ width: "100%", maxHeight: 200, display: "block" }} />
           ) : (
             <img src={currentUrl} alt="" style={{ width: "100%", maxHeight: 200, objectFit: "contain", display: "block", background: T.dark }} />
           )}
