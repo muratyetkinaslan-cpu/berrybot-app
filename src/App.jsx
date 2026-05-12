@@ -4,6 +4,7 @@ import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
 import TankRobot3D from "./TankRobot3D";
 import PicoBricks3D from "./PicoBricks3D";
+import Robot3DPreview from "./Robot3DPreview";
 
 // ═══════════════════════════════════════════════════════════
 //  BerryBot LMS — Production (Supabase)
@@ -2434,9 +2435,11 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
               src={videoSrc}
               controls
               playsInline
+              muted
               preload="metadata"
               onError={()=>setVideoError(true)}
               onEnded={()=>setVideoEnded(true)}
+              onVolumeChange={(e)=>{ if (!e.target.muted) e.target.muted = true; }}
               style={{width:"100%",maxHeight:540,display:"block",background:"#000"}}
             >
               Tarayıcınız video oynatmayı desteklemiyor.
@@ -6997,7 +7000,7 @@ function StudentHomeworkV2({ user, hwTemplates, hwAssignments, onSubmit, onUploa
           {tpl.video_url && (
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: T.tm, fontWeight: 700, marginBottom: 4 }}>🎬 VİDEO</div>
-              <video src={tpl.video_url} controls style={{ width: "100%", maxHeight: 360, borderRadius: 10, border: `1px solid ${T.border}` }} />
+              <video src={tpl.video_url} controls muted playsInline onVolumeChange={(e)=>{ if (!e.target.muted) e.target.muted = true; }} style={{ width: "100%", maxHeight: 360, borderRadius: 10, border: `1px solid ${T.border}` }} />
             </div>
           )}
 
@@ -7259,7 +7262,7 @@ function MediaUploader({ label, accept, currentUrl, onUpload, onClear, uploading
       {currentUrl && (
         <div style={{ marginBottom: 8, borderRadius: 8, overflow: "hidden", border: `1px solid ${color}44`, background: "#000" }}>
           {isVideo ? (
-            <video src={currentUrl} controls style={{ width: "100%", maxHeight: 200, display: "block" }} />
+            <video src={currentUrl} controls muted playsInline onVolumeChange={(e)=>{ if (!e.target.muted) e.target.muted = true; }} style={{ width: "100%", maxHeight: 200, display: "block" }} />
           ) : (
             <img src={currentUrl} alt="" style={{ width: "100%", maxHeight: 200, objectFit: "contain", display: "block", background: T.dark }} />
           )}
@@ -7287,3 +7290,4 @@ function MediaUploader({ label, accept, currentUrl, onUpload, onClear, uploading
     </div>
   );
 }
+
