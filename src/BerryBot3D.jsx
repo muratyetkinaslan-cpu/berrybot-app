@@ -1,37 +1,32 @@
-// BerryBot3D.jsx — Robotistan orijinal STEP modelinden üretilmiş GLB'yi yükleyen 3D robot componenti
+// BerryBot3D.jsx — Robotistan BerryBot 3D component
+// Loads the real geometry from the BerryBot Fusion 360 STEP export (berrybot.glb)
+// and animates the wheels.
 //
-// Kullanım:
-//   1) berrybot.glb dosyasını projende `public/` klasörüne (veya istediğin yere) koy.
-//   2) <BerryBot3D /> olarak kullan. Varsayılan olarak "/berrybot.glb" yolunu okur.
-//   3) Farklı bir yol kullanacaksan: <BerryBot3D modelUrl="/static/berrybot.glb" />
+// USAGE
+//   1) Place berrybot.glb in your public/ folder (or wherever you serve static assets).
+//   2) <BerryBot3D modelUrl="/berrybot.glb" autoRotate interactive />
 //
-// Bağımlılıklar:  npm i three
-//
-// Props önceki BerryBot3D ile birebir uyumlu — drop-in replacement gibi davranır.
+// The GLB was exported with gltfpack -cc -tc, so it uses MESHOPT_compression.
+// We register the MeshoptDecoder from three's examples. If you re-export without
+// meshopt compression, GLTFLoader still handles the file just fine.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 
 export default function BerryBot3D({
+  modelUrl = "/berrybot.glb",
   height = 520,
   autoRotate = true,
   background = "transparent",
   className = "",
   style = {},
   interactive = false,
-  modelUrl = "/berrybot.glb",
-  // İsteğe bağlı görsel ince ayarlar
-  initialCameraDistance = 7.5,
-  initialAzimuth = 0.85,   // theta — yatay açı (radyan)
-  initialElevation = 0.45, // phi   — dikey açı (radyan)
-  spinSpeed = 0.004,
-  exposure = 1.05,
+  spinWheels = true,
+  wheelRpm = 35,
 }) {
   const mountRef = useRef(null);
-  const [loaded, setLoaded] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -39,26 +34,21 @@ export default function BerryBot3D({
 
     let W = container.clientWidth || 680;
     const H = height;
+    let disposed = false;
 
-    // ---- Sahne, kamera, renderer ----
+    // ── Scene & camera ────────────────────────────────────────────────────
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 100);
 
-    let camR = initialCameraDistance;
-    let camTheta = initialAzimuth;
-    let camPhi = initialElevation;
+    let camR = 9.5, camTheta = 0.85, camPhi = 0.42;
     let spinning = autoRotate;
-
-    // Look target — modeli yükledikten sonra gerçek centroid ile güncellenecek
-    const lookTarget = new THREE.Vector3(0.5, 0.65, 0.25);
-
     function updateCam() {
       camera.position.set(
-        lookTarget.x + camR * Math.cos(camPhi) * Math.sin(camTheta),
-        lookTarget.y + camR * Math.sin(camPhi) + 0.4,
-        lookTarget.z + camR * Math.cos(camPhi) * Math.cos(camTheta)
+        camR * Math.cos(camPhi) * Math.sin(camTheta),
+        camR * Math.sin(camPhi) + 0.6,
+        camR * Math.cos(camPhi) * Math.cos(camTheta)
       );
-      camera.lookAt(lookTarget);
+      camera.lookAt(0, 0.4, 0);
     }
     updateCam();
 
@@ -68,139 +58,133 @@ export default function BerryBot3D({
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = exposure;
     container.appendChild(renderer.domElement);
 
-    // ---- Işıklar (önceki component ile aynı stil) ----
+    // ── Lighting ──────────────────────────────────────────────────────────
     scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-
     const sun = new THREE.DirectionalLight(0xffffff, 1.1);
     sun.position.set(5, 9, 4);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.left = -6;
-    sun.shadow.camera.right = 6;
-    sun.shadow.camera.top = 6;
-    sun.shadow.camera.bottom = -6;
+    sun.shadow.camera.left = -5; sun.shadow.camera.right = 5;
+    sun.shadow.camera.top = 5;   sun.shadow.camera.bottom = -5;
     sun.shadow.bias = -0.0005;
     scene.add(sun);
-
     const fill = new THREE.DirectionalLight(0xfff0d8, 0.4);
-    fill.position.set(-5, 4, -4);
-    scene.add(fill);
-
+    fill.position.set(-5, 4, -4); scene.add(fill);
     const rim = new THREE.DirectionalLight(0xb0c8ff, 0.3);
-    rim.position.set(2, 3, -6);
-    scene.add(rim);
+    rim.position.set(2, 3, -6); scene.add(rim);
 
-    // Zemin (gölge yakalayıcı)
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(40, 40),
       new THREE.ShadowMaterial({ opacity: 0.22 })
     );
     ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -0.95;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // ---- Robot grubu ----
+    // ── Materials per category ────────────────────────────────────────────
+    const matTire  = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.95 });
+    const matHub   = new THREE.MeshStandardMaterial({ color: 0xddc09a, roughness: 0.7 });
+    const matWood  = new THREE.MeshStandardMaterial({ color: 0xddc09a, roughness: 0.85 });
+    const matPcb   = new THREE.MeshStandardMaterial({ color: 0x7d40b8, roughness: 0.55, metalness: 0.05 });
+    const matElec  = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6 });
+    const matMetal = new THREE.MeshStandardMaterial({ color: 0xb8b8b8, roughness: 0.35, metalness: 0.7 });
+
+    // GLB meshes are in this order:
+    //   0=tire_L  1=tire_R  2=hub_L  3=hub_R
+    //   4=chassis_wood  5=pcb_substrate  6=electronics  7=metal
+    const categoryMaterials = [
+      matTire, matTire, matHub, matHub,
+      matWood, matPcb, matElec, matMetal,
+    ];
+
+    // ── Robot group ───────────────────────────────────────────────────────
     const robot = new THREE.Group();
     scene.add(robot);
 
-    // ---- GLB yükleyici ----
+    // ── Load the GLB ──────────────────────────────────────────────────────
     const loader = new GLTFLoader();
-    let disposed = false;
+    loader.setMeshoptDecoder(MeshoptDecoder);
+
+    let leftWheel = null, rightWheel = null;
 
     loader.load(
       modelUrl,
       (gltf) => {
         if (disposed) return;
-
         const model = gltf.scene;
 
-        // Tüm mesh'lere gölge ata ve materyal tutarlılığını sağla
+        let i = 0;
+        const tireMeshes = { L: null, R: null };
+        const hubMeshes  = { L: null, R: null };
         model.traverse((obj) => {
-          if (obj.isMesh) {
-            obj.castShadow = true;
-            obj.receiveShadow = true;
-            if (obj.material) {
-              // Per-vertex normal yoksa düz görünmesin diye düzelt
-              if (!obj.geometry.attributes.normal) {
-                obj.geometry.computeVertexNormals();
-              }
-            }
-          }
+          if (!obj.isMesh) return;
+          obj.castShadow = true;
+          obj.receiveShadow = true;
+          obj.material = categoryMaterials[i] || matMetal;
+          if (i === 0) tireMeshes.L = obj;
+          else if (i === 1) tireMeshes.R = obj;
+          else if (i === 2) hubMeshes.L = obj;
+          else if (i === 3) hubMeshes.R = obj;
+          i++;
         });
 
-        // Modelin merkezini bul ve kamera hedefini ona göre güncelle
-        const box = new THREE.Box3().setFromObject(model);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-        const size = new THREE.Vector3();
-        box.getSize(size);
+        // Re-parent the wheels into pivot groups at their bbox centers so
+        // they can rotate around their own axles.
+        function makeWheelGroup(tire, hub) {
+          if (!tire) return null;
+          const box = new THREE.Box3().setFromObject(tire);
+          const center = box.getCenter(new THREE.Vector3());
+          const pivot = new THREE.Group();
+          pivot.position.copy(center);
+          robot.add(pivot);
+          // attach() preserves world transform during reparenting
+          pivot.attach(tire);
+          if (hub) pivot.attach(hub);
+          return pivot;
+        }
+        leftWheel  = makeWheelGroup(tireMeshes.L, hubMeshes.L);
+        rightWheel = makeWheelGroup(tireMeshes.R, hubMeshes.R);
 
-        // Modeli, gövdesi orijinde olacak şekilde yatay merkezle
-        // (zemin Y=0'da kalsın diye dikey kaymayı uygulamıyoruz — GLB zaten yere oturmuş)
-        model.position.x -= center.x;
-        model.position.z -= center.z;
-
+        // Add the rest of the model
         robot.add(model);
 
-        // Kamera hedefini robotun gerçek merkezine taşı
-        lookTarget.set(0, size.y * 0.45, 0);
-        // Mesafeyi modele göre yumuşakça ölçekle
-        camR = Math.max(5.5, size.length() * 1.7);
-        updateCam();
-
-        setLoaded(true);
+        // Drop the rig so it rests on y=-0.95 (ground level)
+        const fullBox = new THREE.Box3().setFromObject(robot);
+        robot.position.y -= fullBox.min.y + 0.95;
       },
-      (xhr) => {
-        if (xhr.total) {
-          setProgress(Math.round((xhr.loaded / xhr.total) * 100));
-        }
-      },
-      (err) => {
-        console.error("BerryBot3D — GLB yüklenemedi:", err);
-        setError(err?.message || "Model yüklenemedi");
-      }
+      undefined,
+      (err) => console.error("BerryBot3D: failed to load model", modelUrl, err)
     );
 
-    // ---- Kullanıcı etkileşimi ----
-    let dragging = false;
-    let lastX = 0;
-    let lastY = 0;
-
+    // ── Interaction ───────────────────────────────────────────────────────
+    let dragging = false, lastX = 0, lastY = 0;
     const onMouseDown = (e) => {
       if (!interactive) return;
-      dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      container.style.cursor = "grabbing";
-      spinning = false;
+      dragging = true; lastX = e.clientX; lastY = e.clientY;
+      container.style.cursor = "grabbing"; spinning = false;
     };
     const onMouseUp = () => {
       if (!interactive) return;
-      dragging = false;
-      container.style.cursor = "grab";
+      dragging = false; container.style.cursor = "grab";
     };
     const onMouseMove = (e) => {
       if (!interactive || !dragging) return;
       camTheta -= (e.clientX - lastX) * 0.008;
       camPhi = Math.max(-0.2, Math.min(1.4, camPhi + (e.clientY - lastY) * 0.006));
-      lastX = e.clientX;
-      lastY = e.clientY;
+      lastX = e.clientX; lastY = e.clientY;
       updateCam();
     };
     const onWheel = (e) => {
       e.preventDefault();
-      camR = Math.max(3.5, Math.min(20, camR + e.deltaY * 0.01));
+      camR = Math.max(4.5, Math.min(18, camR + e.deltaY * 0.01));
       updateCam();
     };
     const onTouchStart = (e) => {
       if (e.touches.length === 1) {
-        dragging = true;
-        lastX = e.touches[0].clientX;
-        lastY = e.touches[0].clientY;
+        dragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
         spinning = false;
       }
     };
@@ -209,13 +193,10 @@ export default function BerryBot3D({
       e.preventDefault();
       camTheta -= (e.touches[0].clientX - lastX) * 0.008;
       camPhi = Math.max(-0.2, Math.min(1.4, camPhi + (e.touches[0].clientY - lastY) * 0.006));
-      lastX = e.touches[0].clientX;
-      lastY = e.touches[0].clientY;
+      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
       updateCam();
     };
-    const onTouchEnd = () => {
-      dragging = false;
-    };
+    const onTouchEnd = () => { dragging = false; };
     const onResize = () => {
       W = container.clientWidth || 680;
       renderer.setSize(W, H);
@@ -234,19 +215,22 @@ export default function BerryBot3D({
     }
     window.addEventListener("resize", onResize);
 
-    // ---- Render döngüsü ----
+    // ── Animation loop ────────────────────────────────────────────────────
+    const clock = new THREE.Clock();
     let animId;
     const loop = () => {
-      if (spinning) {
-        camTheta += spinSpeed;
-        updateCam();
+      const dt = clock.getDelta();
+      if (spinning) { camTheta += 0.004; updateCam(); }
+      if (spinWheels && spinning) {
+        const omega = (wheelRpm / 60) * Math.PI * 2;
+        if (leftWheel)  leftWheel.rotation.z  += omega * dt;
+        if (rightWheel) rightWheel.rotation.z += omega * dt;
       }
       renderer.render(scene, camera);
       animId = requestAnimationFrame(loop);
     };
     loop();
 
-    // ---- Temizlik ----
     return () => {
       disposed = true;
       cancelAnimationFrame(animId);
@@ -260,9 +244,8 @@ export default function BerryBot3D({
         container.removeEventListener("touchend", onTouchEnd);
       }
       window.removeEventListener("resize", onResize);
-      if (renderer.domElement.parentNode === container) {
+      if (renderer.domElement.parentNode === container)
         container.removeChild(renderer.domElement);
-      }
       renderer.dispose();
       scene.traverse((obj) => {
         if (obj.geometry) obj.geometry.dispose();
@@ -272,17 +255,7 @@ export default function BerryBot3D({
         }
       });
     };
-  }, [
-    height,
-    autoRotate,
-    interactive,
-    modelUrl,
-    initialCameraDistance,
-    initialAzimuth,
-    initialElevation,
-    spinSpeed,
-    exposure,
-  ]);
+  }, [modelUrl, height, autoRotate, interactive, spinWheels, wheelRpm]);
 
   return (
     <div
@@ -295,44 +268,9 @@ export default function BerryBot3D({
         cursor: interactive ? "grab" : "default",
         userSelect: "none",
         touchAction: interactive ? "none" : "auto",
-        pointerEvents: interactive ? "auto" : "none",
         background,
         ...style,
       }}
-    >
-      {!loaded && !error && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#666",
-            font: "13px system-ui, sans-serif",
-            pointerEvents: "none",
-          }}
-        >
-          BerryBot yükleniyor… {progress > 0 ? `%${progress}` : ""}
-        </div>
-      )}
-      {error && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#b00",
-            font: "13px system-ui, sans-serif",
-            padding: 16,
-            textAlign: "center",
-          }}
-        >
-          Model yüklenemedi: {error}
-        </div>
-      )}
-    </div>
+    />
   );
 }
