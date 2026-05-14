@@ -7,7 +7,7 @@
 //     objUrl="/models/berrybot.obj"
 //     mtlUrl="/models/berrybot.mtl"
 //   />
-//
+//a
 // NOT: OBJ dosyası içinde "mtllib Berry_Botb.mtl" yazıyor.
 // MTLLoader bu satırı kendi yükleme path'iyle override eder,
 // bu yüzden mtlUrl prop'u üzerinden doğrudan MTL yüklenir.
