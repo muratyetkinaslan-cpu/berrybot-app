@@ -1,106 +1,26 @@
-// BerryBot3D.jsx — 3D robot component loading Fusion 360 OBJ/MTL export
-//
-// Kullanım / Usage:
-//   import BerryBot3D from "./BerryBot3D";
-//
-//   <BerryBot3D
-//     objUrl="/models/berrybot.obj"
-//     mtlUrl="/models/berrybot.mtl"
-//   />
-//a
-// NOT: OBJ dosyası içinde "mtllib Berry_Botb.mtl" yazıyor.
-// MTLLoader bu satırı kendi yükleme path'iyle override eder,
-// bu yüzden mtlUrl prop'u üzerinden doğrudan MTL yüklenir.
-//
-// Gerekli paketler:
-//   npm install three
-//   (OBJLoader ve MTLLoader three/examples/jsm içinde gelir)
-
-import { useEffect, useRef, useState } from "react";
+// BerryBot3D.jsx — 3D animated robot component
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-import { MTLLoader } from "three/examples/jsm/loaders/MTLLoader.js";
 
-// ---------------------------------------------------------------------------
-// Fusion 360 MTL'den gelen materyallere fiziksel özellik ekler.
-// Sadece Kd (diffuse renk) var — bu fonksiyon material adına bakarak
-// roughness / metalness / envMapIntensity atar. Renk dokunulmaz.
-// ---------------------------------------------------------------------------
-function enrichMaterial(mat) {
-  if (!mat) return;
-
-  const name = (mat.name || "").toLowerCase();
-
-  // Temel MeshStandardMaterial'e dönüştür
-  const std = new THREE.MeshStandardMaterial();
-  std.name = mat.name;
-
-  // Kd rengini koru
-  if (mat.color) std.color.copy(mat.color);
-  if (mat.map) std.map = mat.map;
-
-  // Addan fiziksel özellik tahmini
-  if (name.includes("steel") || name.includes("çelik") || name.includes("demir") || name.includes("iron")) {
-    std.metalness = 0.85;
-    std.roughness = 0.25;
-  } else if (name.includes("parlak") || name.includes("glossy") || name.includes("enamel") || name.includes("emaye")) {
-    std.metalness = 0.0;
-    std.roughness = 0.15;
-  } else if (name.includes("plastik") || name.includes("plastic") || name.includes("mat")) {
-    std.metalness = 0.0;
-    std.roughness = 0.75;
-  } else if (name.includes("akrilik") || name.includes("cam") || name.includes("şeffaf")) {
-    std.metalness = 0.0;
-    std.roughness = 0.05;
-    std.transparent = true;
-    std.opacity = 0.45;
-    std.color.set(0xccddff);
-  } else if (name.includes("hus")) {
-    // Ahşap benzeri
-    std.metalness = 0.0;
-    std.roughness = 0.9;
-  } else if (name.includes("prizma") || name.includes("opak")) {
-    std.metalness = 0.0;
-    std.roughness = 0.55;
-  } else {
-    // Genel opak plastik varsayılanı
-    std.metalness = 0.0;
-    std.roughness = 0.6;
-  }
-
-  return std;
-}
-
-// ---------------------------------------------------------------------------
-// Ana component
-// ---------------------------------------------------------------------------
 export default function BerryBot3D({
-  objUrl,
-  mtlUrl,
   height = 520,
   autoRotate = true,
   background = "transparent",
   className = "",
   style = {},
   interactive = false,
-  onLoad = null,
-  onError = null,
 }) {
   const mountRef = useRef(null);
-  const [status, setStatus] = useState("loading"); // "loading" | "ready" | "error"
 
   useEffect(() => {
-    if (!objUrl || !mtlUrl) return;
-
     const container = mountRef.current;
     if (!container) return;
 
     let W = container.clientWidth || 680;
     const H = height;
 
-    // ── Sahne ──────────────────────────────────────────────────────────────
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 100);
 
     let camR = 9.5, camTheta = 0.85, camPhi = 0.45;
     let spinning = autoRotate;
@@ -120,207 +40,411 @@ export default function BerryBot3D({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.outputEncoding = THREE.sRGBEncoding; // Fusion 360 renkleri doğru göster
     container.appendChild(renderer.domElement);
 
-    // ── Işıklandırma ────────────────────────────────────────────────────────
-    // Hafif ambient — Fusion 360 Kd renklerini soldurmasın
-    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
 
-    const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+    const sun = new THREE.DirectionalLight(0xffffff, 0.9);
     sun.position.set(5, 9, 4);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.left = -6; sun.shadow.camera.right = 6;
-    sun.shadow.camera.top = 8;   sun.shadow.camera.bottom = -6;
+    sun.shadow.camera.top = 6;   sun.shadow.camera.bottom = -6;
     sun.shadow.bias = -0.0005;
     scene.add(sun);
 
-    const fill = new THREE.DirectionalLight(0xfff0d8, 0.3);
+    const fill = new THREE.DirectionalLight(0xfff0d8, 0.35);
     fill.position.set(-5, 4, -4);
     scene.add(fill);
 
-    const rim = new THREE.DirectionalLight(0xb0c8ff, 0.2);
+    const rim = new THREE.DirectionalLight(0xb0c8ff, 0.25);
     rim.position.set(2, 3, -6);
     scene.add(rim);
 
-    // Zemin gölgesi
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(60, 60),
-      new THREE.ShadowMaterial({ opacity: 0.18 })
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.ShadowMaterial({ opacity: 0.2 })
     );
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // ── OBJ + MTL Yükleme ──────────────────────────────────────────────────
-    // MTL'yi base path'ten yükle (OBJ içindeki "mtllib" satırı ignore edilir)
-    const mtlBasePath = mtlUrl.substring(0, mtlUrl.lastIndexOf("/") + 1);
-    const mtlFile = mtlUrl.substring(mtlUrl.lastIndexOf("/") + 1);
+    const woodLight = new THREE.MeshStandardMaterial({ color: 0xddc09a, roughness: 0.85 });
+    const woodMid   = new THREE.MeshStandardMaterial({ color: 0xc0986e, roughness: 0.9 });
+    const woodDark  = new THREE.MeshStandardMaterial({ color: 0x8a6235, roughness: 0.95 });
+    const cutoutMat = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.9 });
+    const slatMat   = new THREE.MeshStandardMaterial({ color: 0x2e1f12, roughness: 0.9 });
+    const tireMat   = new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.95 });
+    const metalMat  = new THREE.MeshStandardMaterial({ color: 0xb8b8b8, roughness: 0.3, metalness: 0.85 });
+    const screwMat  = new THREE.MeshStandardMaterial({ color: 0xc6c6c6, roughness: 0.4, metalness: 0.7 });
+    const ledOff    = new THREE.MeshStandardMaterial({ color: 0x8a1414, roughness: 0.4 });
+    const blackPlas = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.55 });
+    const whiteConn = new THREE.MeshStandardMaterial({ color: 0xf3f3f3, roughness: 0.5 });
+    const wireR = new THREE.MeshStandardMaterial({ color: 0xc92020, roughness: 0.5 });
+    const wireY = new THREE.MeshStandardMaterial({ color: 0xeac24a, roughness: 0.5 });
+    const wireW = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.5 });
+    const wireBlk = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.55 });
 
-    const mtlLoader = new MTLLoader();
-    mtlLoader.setPath(mtlBasePath);
+    // PCB texture
+    const pcbCanvas = document.createElement("canvas");
+    pcbCanvas.width = 1024; pcbCanvas.height = 800;
+    const ctx2d = pcbCanvas.getContext("2d");
+    ctx2d.fillStyle = "#6e3eaa";
+    ctx2d.fillRect(0, 0, 1024, 800);
+    ctx2d.strokeStyle = "#5a2d99";
+    ctx2d.lineWidth = 2;
+    for (let i = 0; i < 40; i++) {
+      ctx2d.beginPath();
+      const x1 = Math.random() * 1024, y1 = Math.random() * 800;
+      ctx2d.moveTo(x1, y1);
+      ctx2d.lineTo(x1 + (Math.random() - 0.5) * 300, y1 + (Math.random() - 0.5) * 300);
+      ctx2d.stroke();
+    }
+    ctx2d.fillStyle = "white";
+    ctx2d.font = "bold 86px sans-serif";
+    ctx2d.textAlign = "center";
+    ctx2d.textBaseline = "middle";
+    ctx2d.fillText("BerryBot", 380, 400);
+    ctx2d.fillStyle = "#caa1ee";
+    for (let i = 0; i < 8; i++) {
+      ctx2d.beginPath();
+      ctx2d.arc(80 + i * 30, 60, 6, 0, Math.PI * 2);
+      ctx2d.fill();
+    }
+    for (const [x, y] of [[120, 700], [900, 100], [120, 100], [900, 700]]) {
+      ctx2d.fillStyle = "#ffaacf";
+      ctx2d.beginPath(); ctx2d.arc(x, y, 22, 0, Math.PI * 2); ctx2d.fill();
+      ctx2d.fillStyle = "#3a8a3a";
+      ctx2d.beginPath();
+      ctx2d.moveTo(x, y - 22);
+      ctx2d.lineTo(x + 14, y - 32);
+      ctx2d.lineTo(x + 4, y - 14);
+      ctx2d.fill();
+    }
+    const pcbTex = new THREE.CanvasTexture(pcbCanvas);
+    pcbTex.anisotropy = 8;
+    const pcbTopMat    = new THREE.MeshStandardMaterial({ map: pcbTex, roughness: 0.55, metalness: 0.05 });
+    const pcbSideMat   = new THREE.MeshStandardMaterial({ color: 0x6e3eaa, roughness: 0.6 });
+    const pcbBottomMat = new THREE.MeshStandardMaterial({ color: 0x4d2675, roughness: 0.65 });
 
-    let animId;
-    let robotGroup;
+    const robot = new THREE.Group();
+    scene.add(robot);
 
-    mtlLoader.load(
-      mtlFile,
-      (materials) => {
-        materials.preload();
+    const halfL = 1.7, baseH = 0.4, topH = 1.25, cR = 0.55;
+    const sideShape = new THREE.Shape();
+    sideShape.moveTo(-halfL, 0);
+    sideShape.lineTo(halfL, 0);
+    sideShape.lineTo(halfL, baseH);
+    sideShape.quadraticCurveTo(halfL, topH, halfL - cR, topH);
+    sideShape.lineTo(-halfL + cR, topH);
+    sideShape.quadraticCurveTo(-halfL, topH, -halfL, baseH);
+    sideShape.lineTo(-halfL, 0);
 
-        // Materyalleri MeshStandardMaterial'e yükselt (rengi koru)
-        Object.keys(materials.materials).forEach((key) => {
-          const enriched = enrichMaterial(materials.materials[key]);
-          if (enriched) materials.materials[key] = enriched;
-        });
+    const bodyW = 2.4;
+    const sideThick = 0.08;
+    const innerW = bodyW - 2 * sideThick - 0.02;
 
-        const objLoader = new OBJLoader();
-        objLoader.setMaterials(materials);
-
-        objLoader.load(
-          objUrl,
-          (obj) => {
-            // ── Model boyutlandırma ─────────────────────────────────────
-            const box = new THREE.Box3().setFromObject(obj);
-            const size = new THREE.Vector3();
-            box.getSize(size);
-            const maxDim = Math.max(size.x, size.y, size.z);
-            // Hedef: ~3 birim yükseklik
-            const targetSize = 3.0;
-            const scaleFactor = targetSize / maxDim;
-            obj.scale.setScalar(scaleFactor);
-
-            // Tabanı zemine otur
-            const boxScaled = new THREE.Box3().setFromObject(obj);
-            obj.position.y = -boxScaled.min.y;
-
-            // Merkeze al
-            const centerX = (boxScaled.min.x + boxScaled.max.x) / 2;
-            const centerZ = (boxScaled.min.z + boxScaled.max.z) / 2;
-            obj.position.x = -centerX * scaleFactor;
-            obj.position.z = -centerZ * scaleFactor;
-
-            // Gölge ayarları
-            obj.traverse((child) => {
-              if (child.isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-              }
-            });
-
-            robotGroup = obj;
-            scene.add(obj);
-            setStatus("ready");
-            onLoad?.();
-
-            // ── Animasyon döngüsü ─────────────────────────────────────
-            const loop = () => {
-              if (spinning) {
-                camTheta += 0.004;
-                updateCam();
-              }
-              renderer.render(scene, camera);
-              animId = requestAnimationFrame(loop);
-            };
-            loop();
-          },
-          (xhr) => {
-            // yükleme ilerlemesi — isteğe bağlı kullanabilirsiniz
-          },
-          (err) => {
-            console.error("OBJ yükleme hatası:", err);
-            setStatus("error");
-            onError?.(err);
-          }
-        );
-      },
-      undefined,
-      (err) => {
-        console.error("MTL yükleme hatası:", err);
-        // MTL olmadan devam et
-        const objLoader = new OBJLoader();
-        objLoader.load(
-          objUrl,
-          (obj) => {
-            const box = new THREE.Box3().setFromObject(obj);
-            const size = new THREE.Vector3();
-            box.getSize(size);
-            const maxDim = Math.max(size.x, size.y, size.z);
-            obj.scale.setScalar(3.0 / maxDim);
-            const boxScaled = new THREE.Box3().setFromObject(obj);
-            obj.position.y = -boxScaled.min.y;
-            obj.traverse((c) => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
-            robotGroup = obj;
-            scene.add(obj);
-            setStatus("ready");
-            onLoad?.();
-            const loop = () => {
-              if (spinning) { camTheta += 0.004; updateCam(); }
-              renderer.render(scene, camera);
-              animId = requestAnimationFrame(loop);
-            };
-            loop();
-          },
-          undefined,
-          (e2) => { setStatus("error"); onError?.(e2); }
-        );
-      }
+    const innerBody = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(sideShape, { depth: innerW, bevelEnabled: false }),
+      woodLight
     );
+    innerBody.position.set(0, 0.18, -innerW / 2);
+    innerBody.castShadow = true;
+    innerBody.receiveShadow = true;
+    robot.add(innerBody);
 
-    // ── Etkileşim event'leri ───────────────────────────────────────────────
+    function upperPath(s) {
+      if (s < 0.3) {
+        const t = s / 0.3, inv = 1 - t;
+        const p0x = halfL, p0y = baseH;
+        const p1x = halfL, p1y = topH;
+        const p2x = halfL - cR, p2y = topH;
+        return {
+          x: inv * inv * p0x + 2 * inv * t * p1x + t * t * p2x,
+          y: inv * inv * p0y + 2 * inv * t * p1y + t * t * p2y,
+          tx: 2 * inv * (p1x - p0x) + 2 * t * (p2x - p1x),
+          ty: 2 * inv * (p1y - p0y) + 2 * t * (p2y - p1y),
+        };
+      } else if (s < 0.7) {
+        const t = (s - 0.3) / 0.4;
+        return {
+          x: (halfL - cR) - t * 2 * (halfL - cR),
+          y: topH,
+          tx: -1, ty: 0,
+        };
+      } else {
+        const t = (s - 0.7) / 0.3, inv = 1 - t;
+        const p0x = -halfL + cR, p0y = topH;
+        const p1x = -halfL, p1y = topH;
+        const p2x = -halfL, p2y = baseH;
+        return {
+          x: inv * inv * p0x + 2 * inv * t * p1x + t * t * p2x,
+          y: inv * inv * p0y + 2 * inv * t * p1y + t * t * p2y,
+          tx: 2 * inv * (p1x - p0x) + 2 * t * (p2x - p1x),
+          ty: 2 * inv * (p1y - p0y) + 2 * t * (p2y - p1y),
+        };
+      }
+    }
+
+    const numSlats = 38;
+    const slatLen = innerW - 0.04;
+    for (let i = 0; i < numSlats; i++) {
+      const s = (i + 0.5) / numSlats;
+      const p = upperPath(s);
+      const tlen = Math.sqrt(p.tx * p.tx + p.ty * p.ty);
+      const ntx = p.tx / tlen, nty = p.ty / tlen;
+      const nx = nty, ny = -ntx;
+      const ang = Math.atan2(nty, ntx);
+      const slat = new THREE.Mesh(
+        new THREE.BoxGeometry(0.014, 0.05, slatLen),
+        slatMat
+      );
+      const offset = 0.022;
+      slat.position.set(p.x + nx * offset, p.y + ny * offset + 0.18, 0);
+      slat.rotation.z = ang;
+      robot.add(slat);
+    }
+
+    const panelGeo = new THREE.ExtrudeGeometry(sideShape, { depth: sideThick, bevelEnabled: false });
+    const lp = new THREE.Mesh(panelGeo, woodLight);
+    lp.position.set(0, 0.18, -bodyW / 2);
+    lp.castShadow = true; lp.receiveShadow = true;
+    robot.add(lp);
+    const rp = new THREE.Mesh(panelGeo, woodLight);
+    rp.position.set(0, 0.18, bodyW / 2 - sideThick);
+    rp.castShadow = true; rp.receiveShadow = true;
+    robot.add(rp);
+
+    function addSidePanelDetails(zSign) {
+      const zSurface = zSign * (bodyW / 2 + 0.001);
+      const slot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.42, 0.015), cutoutMat);
+      slot.position.set(0.55, 0.18 + baseH + 0.32, zSurface);
+      robot.add(slot);
+      const sq = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.015), cutoutMat);
+      sq.position.set(-0.5, 0.18 + 0.12, zSurface);
+      robot.add(sq);
+      for (let i = 0; i < 7; i++) {
+        const hs = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.018, 0.015), cutoutMat);
+        hs.position.set(-0.05, 0.18 + baseH + 0.04 + i * 0.05, zSurface);
+        robot.add(hs);
+      }
+      for (const pos of [
+        [-1.55, 0.18 + baseH + 0.4],
+        [ 1.55, 0.18 + baseH + 0.4],
+        [-1.55, 0.18 + 0.12],
+        [ 1.55, 0.18 + 0.12],
+      ]) {
+        const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.025, 12), screwMat);
+        sc.rotation.x = Math.PI / 2;
+        sc.position.set(pos[0], pos[1], zSurface);
+        robot.add(sc);
+      }
+    }
+    addSidePanelDetails(1);
+    addSidePanelDetails(-1);
+
+    function makeWheel() {
+      const g = new THREE.Group();
+      const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.22, 36), tireMat);
+      tire.castShadow = true;
+      g.add(tire);
+      const tread = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.04, 8, 36), tireMat);
+      tread.rotation.x = Math.PI / 2;
+      g.add(tread);
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.18, 32), woodLight);
+      hub.castShadow = true;
+      g.add(hub);
+      const inner = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.21, 32), woodMid);
+      g.add(inner);
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const sp = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.22, 0.13), woodLight);
+        sp.rotation.y = a;
+        g.add(sp);
+      }
+      const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.26, 12), screwMat);
+      g.add(bolt);
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 8;
+        const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.25, 10), screwMat);
+        sc.position.set(Math.cos(a) * 0.32, 0, Math.sin(a) * 0.32);
+        g.add(sc);
+      }
+      const center = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.24, 16), woodDark);
+      g.add(center);
+      return g;
+    }
+
+    const wheelXOffset = -0.35;
+    const lw = makeWheel();
+    lw.rotation.x = Math.PI / 2;
+    lw.position.set(wheelXOffset, 0.7, -(bodyW / 2 + 0.13));
+    robot.add(lw);
+    const rw = makeWheel();
+    rw.rotation.x = Math.PI / 2;
+    rw.position.set(wheelXOffset, 0.7, (bodyW / 2 + 0.13));
+    robot.add(rw);
+
+    const caster = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 12), metalMat);
+    caster.position.set(-1.4, 0.13, 0);
+    caster.castShadow = true;
+    robot.add(caster);
+
+    const usY = baseH + 0.3 + 0.18;
+    const usZspread = 0.32;
+    const usMat = new THREE.MeshStandardMaterial({ color: 0x9a9a9a, roughness: 0.35, metalness: 0.7 });
+    const usFace = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.4 });
+
+    [-1, 1].forEach((sgn) => {
+      const us = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.12, 24), usMat);
+      us.rotation.z = Math.PI / 2;
+      us.position.set(halfL + 0.04, usY, sgn * usZspread);
+      robot.add(us);
+      const face = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.155, 0.04, 24), usFace);
+      face.rotation.z = Math.PI / 2;
+      face.position.set(halfL + 0.105, usY, sgn * usZspread);
+      robot.add(face);
+      for (let r = 0; r < 3; r++) {
+        const ringR = 0.05 + r * 0.04;
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(ringR, 0.005, 6, 22),
+          new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5 })
+        );
+        ring.rotation.y = Math.PI / 2;
+        ring.position.set(halfL + 0.13, usY, sgn * usZspread);
+        robot.add(ring);
+      }
+    });
+
+    const usBoard = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.18, 0.85),
+      new THREE.MeshStandardMaterial({ color: 0x1d4f2a, roughness: 0.5 })
+    );
+    usBoard.position.set(halfL - 0.01, usY, 0);
+    robot.add(usBoard);
+
+    const usLed = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.06, 0.12),
+      new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.2 })
+    );
+    usLed.position.set(halfL + 0.05, usY + 0.18, 0);
+    robot.add(usLed);
+
+    for (const sgn of [-1, 1]) {
+      const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.04, 10), screwMat);
+      screw.rotation.z = Math.PI / 2;
+      screw.position.set(halfL + 0.005, baseH - 0.05 + 0.18, sgn * 0.7);
+      robot.add(screw);
+    }
+
+    const pcbY = topH + 0.18 + 0.18;
+    const pcbW_ = 1.55, pcbD_ = 1.3, pcbT = 0.05;
+
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+      const so = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.18, 0.13), woodMid);
+      so.position.set(sx * (pcbW_ / 2 - 0.18), topH + 0.09 + 0.18, sz * (pcbD_ / 2 - 0.15));
+      so.castShadow = true;
+      robot.add(so);
+    });
+
+    const pcb = new THREE.Mesh(
+      new THREE.BoxGeometry(pcbW_, pcbT, pcbD_),
+      [pcbSideMat, pcbSideMat, pcbTopMat, pcbBottomMat, pcbSideMat, pcbSideMat]
+    );
+    pcb.position.set(0, pcbY, 0);
+    pcb.castShadow = true;
+    pcb.receiveShadow = true;
+    robot.add(pcb);
+
+    const ledMatX = 0.32;
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 5; j++) {
+        const led = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.022, 0.05), ledOff);
+        led.position.set(ledMatX - 0.2 + i * 0.1, pcbY + pcbT / 2 + 0.011, -0.2 + j * 0.1);
+        robot.add(led);
+      }
+    }
+
+    const chip = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.04, 0.22), blackPlas);
+    chip.position.set(-0.05, pcbY + pcbT / 2 + 0.02, 0.0);
+    robot.add(chip);
+
+    const chip2 = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.03, 0.14), blackPlas);
+    chip2.position.set(-0.05, pcbY + pcbT / 2 + 0.015, -0.32);
+    robot.add(chip2);
+
+    for (const [x, z] of [
+      [-0.55, 0.55], [-0.3, 0.55], [-0.05, 0.55], [0.25, 0.55], [0.55, 0.55],
+    ]) {
+      const conn = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.07, 0.11), whiteConn);
+      conn.position.set(x, pcbY + pcbT / 2 + 0.035, z);
+      robot.add(conn);
+      const pins = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.012, 0.03), metalMat);
+      pins.position.set(x, pcbY + pcbT / 2 + 0.075, z + 0.05);
+      robot.add(pins);
+    }
+
+    for (const [x, z] of [[-0.45, -0.55], [0.5, -0.55]]) {
+      const conn = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.07, 0.11), whiteConn);
+      conn.position.set(x, pcbY + pcbT / 2 + 0.035, z);
+      robot.add(conn);
+    }
+
+    const battSw = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.18), blackPlas);
+    battSw.position.set(-pcbW_ / 2 + 0.06, pcbY + pcbT / 2 + 0.025, 0);
+    robot.add(battSw);
+
+    const oled = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.04, 0.14), blackPlas);
+    oled.position.set(-0.4, pcbY + pcbT / 2 + 0.02, -0.5);
+    robot.add(oled);
+
+    const btnA = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.04, 12), blackPlas);
+    btnA.position.set(0.55, pcbY + pcbT / 2 + 0.02, -0.45);
+    robot.add(btnA);
+
+    function makeWire(material, points) {
+      const curve = new THREE.CatmullRomCurve3(points);
+      return new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 28, 0.018, 8, false),
+        material
+      );
+    }
+    const wires = new THREE.Group();
+    const baseZ = 0.62;
+    for (const [offX, mat] of [[0.05, wireR], [0.0, wireY], [-0.05, wireW], [-0.1, wireBlk]]) {
+      wires.add(
+        makeWire(mat, [
+          new THREE.Vector3(0.55 + offX, pcbY + 0.04, baseZ),
+          new THREE.Vector3(0.55 + offX, pcbY + 0.18, 0.85),
+          new THREE.Vector3(0.6 + offX, pcbY + 0.28, 1.18),
+          new THREE.Vector3(0.6 + offX, pcbY + 0.05, 1.55),
+        ])
+      );
+    }
+    robot.add(wires);
+
     let dragging = false, lastX = 0, lastY = 0;
-
-    const onMouseDown = (e) => {
-      if (!interactive) return;
-      dragging = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      container.style.cursor = "grabbing";
-      spinning = false;
-    };
-    const onMouseUp = () => {
-      if (!interactive) return;
-      dragging = false;
-      container.style.cursor = "grab";
-    };
+    const onMouseDown = (e) => { if (!interactive) return; dragging = true; lastX = e.clientX; lastY = e.clientY; container.style.cursor = "grabbing"; spinning = false; };
+    const onMouseUp = () => { if (!interactive) return; dragging = false; container.style.cursor = "grab"; };
     const onMouseMove = (e) => {
       if (!interactive || !dragging) return;
       camTheta -= (e.clientX - lastX) * 0.008;
       camPhi = Math.max(-0.2, Math.min(1.4, camPhi + (e.clientY - lastY) * 0.006));
-      lastX = e.clientX;
-      lastY = e.clientY;
+      lastX = e.clientX; lastY = e.clientY;
       updateCam();
     };
-    const onWheel = (e) => {
-      e.preventDefault();
-      camR = Math.max(3, Math.min(25, camR + e.deltaY * 0.012));
-      updateCam();
-    };
-    const onTouchStart = (e) => {
-      if (e.touches.length === 1) {
-        dragging = true;
-        lastX = e.touches[0].clientX;
-        lastY = e.touches[0].clientY;
-        spinning = false;
-      }
-    };
+    const onWheel = (e) => { e.preventDefault(); camR = Math.max(5, Math.min(18, camR + e.deltaY * 0.01)); updateCam(); };
+    const onTouchStart = (e) => { if (e.touches.length === 1) { dragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; spinning = false; } };
     const onTouchMove = (e) => {
       if (!dragging || e.touches.length !== 1) return;
       e.preventDefault();
       camTheta -= (e.touches[0].clientX - lastX) * 0.008;
       camPhi = Math.max(-0.2, Math.min(1.4, camPhi + (e.touches[0].clientY - lastY) * 0.006));
-      lastX = e.touches[0].clientX;
-      lastY = e.touches[0].clientY;
+      lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
       updateCam();
     };
     const onTouchEnd = () => { dragging = false; };
-    const onResize = () => {
-      W = container.clientWidth || 680;
-      renderer.setSize(W, H);
-      camera.aspect = W / H;
-      camera.updateProjectionMatrix();
-    };
+    const onResize = () => { W = container.clientWidth || 680; renderer.setSize(W, H); camera.aspect = W / H; camera.updateProjectionMatrix(); };
 
     container.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mouseup", onMouseUp);
@@ -333,7 +457,14 @@ export default function BerryBot3D({
     }
     window.addEventListener("resize", onResize);
 
-    // ── Cleanup ────────────────────────────────────────────────────────────
+    let animId;
+    const loop = () => {
+      if (spinning) { camTheta += 0.004; updateCam(); }
+      renderer.render(scene, camera);
+      animId = requestAnimationFrame(loop);
+    };
+    loop();
+
     return () => {
       cancelAnimationFrame(animId);
       container.removeEventListener("mousedown", onMouseDown);
@@ -346,10 +477,9 @@ export default function BerryBot3D({
         container.removeEventListener("touchend", onTouchEnd);
       }
       window.removeEventListener("resize", onResize);
-      if (renderer.domElement.parentNode === container) {
-        container.removeChild(renderer.domElement);
-      }
+      if (renderer.domElement.parentNode === container) container.removeChild(renderer.domElement);
       renderer.dispose();
+      pcbTex.dispose();
       scene.traverse((obj) => {
         if (obj.geometry) obj.geometry.dispose();
         if (obj.material) {
@@ -358,10 +488,12 @@ export default function BerryBot3D({
         }
       });
     };
-  }, [objUrl, mtlUrl, height, autoRotate, interactive]);
+  }, [height, autoRotate, interactive]);
 
   return (
     <div
+      ref={mountRef}
+      className={className}
       style={{
         width: "100%",
         height: `${height}px`,
@@ -373,61 +505,6 @@ export default function BerryBot3D({
         background,
         ...style,
       }}
-      className={className}
-    >
-      {/* Yükleme göstergesi */}
-      {status === "loading" && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 12,
-            color: "#888",
-            fontFamily: "system-ui, sans-serif",
-            fontSize: 14,
-            pointerEvents: "none",
-          }}
-        >
-          <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-            <circle cx="18" cy="18" r="15" stroke="#ddd" strokeWidth="3" />
-            <circle
-              cx="18" cy="18" r="15"
-              stroke="#888" strokeWidth="3"
-              strokeDasharray="30 70"
-              strokeLinecap="round"
-              style={{ transformOrigin: "center", animation: "berrybot-spin 1s linear infinite" }}
-            />
-          </svg>
-          <span>BerryBot yükleniyor…</span>
-          <style>{`@keyframes berrybot-spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      )}
-
-      {/* Hata göstergesi */}
-      {status === "error" && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#c00",
-            fontFamily: "system-ui, sans-serif",
-            fontSize: 14,
-            pointerEvents: "none",
-          }}
-        >
-          Model yüklenemedi. OBJ / MTL URL&apos;lerini kontrol edin.
-        </div>
-      )}
-
-      {/* Three.js canvas buraya mount edilir */}
-      <div ref={mountRef} style={{ width: "100%", height: "100%" }} />
-    </div>
+    />
   );
 }
