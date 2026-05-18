@@ -35,10 +35,17 @@ export async function createUser(userData) {
   }).select().single();
   if (error) { console.error('createUser:', error); return null; }
   if (userData.role === 'student') {
-    // Only seed initial 36 progress rows for BerryBot — others start with no tasks
-    if (kit === 'berrybot') {
-      const rows = [];
-      for (let i = 1; i <= 36; i++) rows.push({ student_id: id, task_id: i, status: i === 1 ? 'active' : 'locked', kit });
+    // Seed progress rows from the ACTUAL tasks in this kit (DB-driven, not hardcoded)
+    const { data: kitTasks } = await supabase.from('bb_tasks')
+      .select('task_id').eq('kit', kit).eq('active', true)
+      .order('task_id', { ascending: true });
+    const taskIds = (kitTasks || []).map(t => t.task_id);
+    if (taskIds.length > 0) {
+      const rows = taskIds.map((tid, idx) => ({
+        student_id: id, task_id: tid,
+        status: idx === 0 ? 'active' : 'locked',
+        kit,
+      }));
       await supabase.from('bb_progress').insert(rows);
     }
     await supabase.from('bb_student_meta').insert({ student_id: id, online: false, last_seen: 0 });
@@ -130,35 +137,66 @@ export async function startTask(studentId, taskId) {
   return ok;
 }
 
-export async function submitTask(studentId, taskId, hasPhoto) {
-  console.log('📤 submitTask:', { studentId, taskId, hasPhoto });
-  const ok = await updateStatus(studentId, taskId, { status: 'pending_review', completed_at: Date.now(), photo: hasPhoto ? 'local' : null });
+export async function submitTask(studentId, taskId, photoUrl) {
+  console.log('📤 submitTask:', { studentId, taskId, photoUrl });
+  const ok = await updateStatus(studentId, taskId, { 
+    status: 'pending_review', 
+    completed_at: Date.now(), 
+    photo: photoUrl || null,  // ★ Artık gerçek URL veya null
+  });
   console.log('📤 submitTask result:', ok);
   if (!ok) return false;
-  addLog({ type: 'task_completed', userId: studentId, taskId, detail: 'Fotoğraf yüklendi, onaya gönderildi' });
+  addLog({ type: 'task_completed', userId: studentId, taskId, detail: photoUrl ? 'Fotoğraf yüklendi, onaya gönderildi' : 'Onaya gönderildi' });
   return true;
 }
 
+// Storage'a foto yükle ve public URL döndür
+export async function uploadProgressPhoto(path, blob) {
+  const { error } = await supabase.storage
+    .from('task-media')
+    .upload(path, blob, { upsert: true, cacheControl: '3600', contentType: 'image/jpeg' });
+  if (error) {
+    console.error('uploadProgressPhoto:', error);
+    return null;
+  }
+  const { data } = supabase.storage.from('task-media').getPublicUrl(path);
+  return data?.publicUrl || null;
+}
+
 export async function approveTask(instructorId, studentId, taskId, note) {
-  await updateStatus(studentId, taskId, { status: 'approved', approved_at: Date.now(), instructor_note: note || 'Onaylandı ✓' });
+  // Önce mevcut foto URL'sini al (Storage'dan silmek için)
+  const { data: prog } = await supabase.from('bb_progress')
+    .select('photo').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+  
+  await updateStatus(studentId, taskId, { 
+    status: 'approved', 
+    approved_at: Date.now(), 
+    instructor_note: note || 'Onaylandı ✓',
+    photo: null,  // ★ Onay sonrası foto sil
+  });
+
+  // Storage'dan dosyayı sil (varsa)
+  if (prog?.photo) {
+    try {
+      const url = new URL(prog.photo);
+      const pathMatch = url.pathname.match(/\/task-media\/(.+)$/);
+      if (pathMatch) {
+        await supabase.storage.from('task-media').remove([pathMatch[1]]);
+      }
+    } catch (e) { console.warn('foto silme hatası:', e); }
+  }
 
   // Determine the student's kit
   const { data: studentRow } = await supabase.from('bb_users')
     .select('kit').eq('id', studentId).maybeSingle();
   const kit = studentRow?.kit || 'berrybot';
 
-  // Find the next task_id for this kit (next higher than current, in active tasks)
+  // Find the next task_id for this kit (next higher than current, in active tasks) — DB-driven
   let nextId = null;
-  if (kit === 'berrybot') {
-    // Hardcoded 36-task curriculum
-    if (taskId + 1 <= 36) nextId = taskId + 1;
-  } else {
-    // Tank/PicoBricks: look up next task_id from bb_tasks
-    const { data: nextTask } = await supabase.from('bb_tasks')
-      .select('task_id').eq('kit', kit).eq('active', true)
-      .gt('task_id', taskId).order('task_id').limit(1).maybeSingle();
-    if (nextTask) nextId = nextTask.task_id;
-  }
+  const { data: nextTask } = await supabase.from('bb_tasks')
+    .select('task_id').eq('kit', kit).eq('active', true)
+    .gt('task_id', taskId).order('task_id').limit(1).maybeSingle();
+  if (nextTask) nextId = nextTask.task_id;
 
   if (nextId !== null) {
     // First try update (task row should exist from seed)
@@ -178,7 +216,27 @@ export async function approveTask(instructorId, studentId, taskId, note) {
 }
 
 export async function rejectTask(instructorId, studentId, taskId, note) {
-  await updateStatus(studentId, taskId, { status: 'rejected', instructor_note: note || 'Tekrar dene' });
+  // Önce mevcut foto URL'sini al
+  const { data: prog } = await supabase.from('bb_progress')
+    .select('photo').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+
+  await updateStatus(studentId, taskId, { 
+    status: 'rejected', 
+    instructor_note: note || 'Tekrar dene',
+    photo: null,  // ★ Red sonrası da foto sil
+  });
+
+  // Storage'dan sil
+  if (prog?.photo) {
+    try {
+      const url = new URL(prog.photo);
+      const pathMatch = url.pathname.match(/\/task-media\/(.+)$/);
+      if (pathMatch) {
+        await supabase.storage.from('task-media').remove([pathMatch[1]]);
+      }
+    } catch (e) { console.warn('foto silme hatası:', e); }
+  }
+
   addLog({ type: 'task_rejected', userId: instructorId, targetUser: studentId, taskId, detail: note || 'Reddedildi' });
 }
 
@@ -223,31 +281,52 @@ export async function setCurrentPage(studentId, page, taskId) {
 export async function addLog({ type, userId, targetUser, taskId, detail }) {
   await supabase.from('bb_logs').insert({
     type, user_id: userId || null, target_user: targetUser || null,
-    task_id: taskId || null, detail: detail || '', ts: Date.now(),
+    task_id: taskId || null, detail: detail || '', created_at: Date.now(),
   }).then(({ error }) => { if (error) console.warn('log:', error.message); });
 }
 
 export async function getLogs(limit = 100) {
-  const { data } = await supabase.from('bb_logs').select('*').order('ts', { ascending: false }).limit(limit);
-  return (data || []).map(l => ({ id: l.id, type: l.type, userId: l.user_id, targetUser: l.target_user, taskId: l.task_id, detail: l.detail, ts: l.ts }));
+  const { data } = await supabase.from('bb_logs').select('*').order('created_at', { ascending: false }).limit(limit);
+  return (data || []).map(l => ({ id: l.id, type: l.type, userId: l.user_id, targetUser: l.target_user, taskId: l.task_id, detail: l.detail, ts: l.created_at }));
 }
 
 // ═══ LAYOUTS ═══
 export async function getClassLayouts() {
-  const { data } = await supabase.from('bb_class_layouts').select('*');
-  return (data || []).map(c => ({
-    id: c.id, name: c.name, instructorId: c.instructor_id, canvasH: c.canvas_h || 700,
-    ...(typeof c.layout_json === 'string' ? JSON.parse(c.layout_json) : c.layout_json),
-  }));
+  const { data, error } = await supabase.from('bb_class_layouts').select('*');
+  if (error) { console.error('getClassLayouts:', error); return []; }
+  return (data || []).map(c => {
+    // Yeni şema: { id, data: JSONB, updated_at }
+    if (c.data !== undefined) {
+      const inner = typeof c.data === 'string' ? JSON.parse(c.data) : c.data;
+      return { id: c.id, ...inner };
+    }
+    // Eski şema (production): { id, name, instructor_id, canvas_h, layout_json, ... }
+    return {
+      id: c.id, name: c.name, instructorId: c.instructor_id, canvasH: c.canvas_h || 700,
+      ...(typeof c.layout_json === 'string' ? JSON.parse(c.layout_json) : (c.layout_json || {})),
+    };
+  });
 }
 
 export async function saveClassLayout(classId, layoutData) {
+  // Önce yeni şema ile dene (data JSONB)
+  const payload = {
+    id: classId,
+    data: layoutData,
+    updated_at: Date.now(),
+  };
+  const { error } = await supabase.from('bb_class_layouts').upsert(payload, { onConflict: 'id' });
+  if (!error) return;
+
+  // Yeni şema yoksa eski şemaya düş (production)
+  console.warn('Yeni şema başarısız, eski şemaya geçiliyor:', error.message);
   const { tables, objects, canvasH, ...rest } = layoutData;
-  await supabase.from('bb_class_layouts').upsert({
+  const { error: err2 } = await supabase.from('bb_class_layouts').upsert({
     id: classId, name: rest.name || classId, instructor_id: rest.instructorId || null,
     canvas_h: canvasH || 700, layout_json: JSON.stringify({ tables: tables || [], objects: objects || [] }),
     updated_at: new Date().toISOString(),
   }, { onConflict: 'id' });
+  if (err2) console.error('saveClassLayout (eski şema da başarısız):', err2);
 }
 
 export async function saveAllLayouts(layouts) {
@@ -255,34 +334,51 @@ export async function saveAllLayouts(layouts) {
 }
 
 // ═══ ADMIN: SET STUDENT PROGRESS ═══
-// Sets tasks 1..(fromTask-1) as approved, fromTask as active, rest as locked
+// Sets tasks before fromTask as approved, fromTask as active, rest as locked
 export async function setStudentProgressTo(studentId, fromTask) {
   const now = Date.now();
   const ts = new Date().toISOString();
   
-  // 1. Set all tasks before fromTask as approved
-  if (fromTask > 1) {
+  // Öğrencinin kit'ini ve gerçek görev ID'lerini bul
+  const { data: studentRow } = await supabase.from('bb_users')
+    .select('kit').eq('id', studentId).maybeSingle();
+  const kit = studentRow?.kit || 'berrybot';
+  const { data: kitTasks } = await supabase.from('bb_tasks')
+    .select('task_id').eq('kit', kit).eq('active', true).order('task_id');
+  const taskIds = (kitTasks || []).map(t => t.task_id);
+  
+  if (taskIds.length === 0) {
+    console.warn('setStudentProgressTo: kit için görev yok');
+    return;
+  }
+
+  // Önce/sonra ID'leri ayır
+  const beforeIds = taskIds.filter(id => id < fromTask);
+  const afterIds = taskIds.filter(id => id > fromTask);
+
+  // 1. Önceki görevleri approved yap
+  if (beforeIds.length > 0) {
     await supabase.from('bb_progress')
       .update({ status: 'approved', started_at: now - 300000, completed_at: now - 60000, approved_at: now, updated_at: ts })
       .eq('student_id', studentId)
-      .gte('task_id', 1).lte('task_id', fromTask - 1);
+      .in('task_id', beforeIds);
   }
   
-  // 2. Set fromTask as active
+  // 2. fromTask'ı active yap
   await supabase.from('bb_progress')
     .update({ status: 'active', started_at: null, completed_at: null, approved_at: null, instructor_note: null, photo: null, updated_at: ts })
     .eq('student_id', studentId).eq('task_id', fromTask);
   
-  // 3. Set all tasks after fromTask as locked
-  if (fromTask < 36) {
+  // 3. Sonrakileri locked yap
+  if (afterIds.length > 0) {
     await supabase.from('bb_progress')
       .update({ status: 'locked', started_at: null, completed_at: null, approved_at: null, instructor_note: null, photo: null, updated_at: ts })
       .eq('student_id', studentId)
-      .gte('task_id', fromTask + 1).lte('task_id', 36);
+      .in('task_id', afterIds);
   }
   
-  addLog({ type: 'admin_set_progress', userId: studentId, taskId: fromTask, detail: `Admin: Görev ${fromTask}'den devam ayarlandı (${fromTask-1} görev onaylandı)` });
-  console.log('🔧 setStudentProgressTo:', studentId, 'from task', fromTask);
+  addLog({ type: 'admin_set_progress', userId: studentId, taskId: fromTask, detail: `Admin: Görev ${fromTask}'den devam ayarlandı (${beforeIds.length} görev onaylandı)` });
+  console.log('🔧 setStudentProgressTo:', studentId, 'from task', fromTask, 'kit', kit);
 }
 
 // ═══ REALTIME ═══
@@ -555,12 +651,15 @@ export async function unlockAnswer({ studentId, taskId, instructorId }) {
   const { data: existing } = await supabase.from('bb_answer_unlock')
     .select('id').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
   if (existing) return; // already unlocked
-  await supabase.from('bb_answer_unlock').insert({
+  const { error } = await supabase.from('bb_answer_unlock').insert({
     student_id: studentId,
     task_id: taskId,
-    unlocked_by: instructorId,
     unlocked_at: Date.now(),
   });
+  if (error) {
+    console.error('unlockAnswer error:', error);
+    throw new Error(error.message || 'Cevap anahtarı açılamadı');
+  }
   addLog({ type: 'answer_unlocked', userId: instructorId, targetUser: studentId, taskId, detail: `Görev ${taskId} cevap anahtarı açıldı` });
 }
 
@@ -579,28 +678,18 @@ export async function setUserKit(userId, kit) {
   await supabase.from('bb_users').update({ kit }).eq('id', userId);
   addLog({ type: 'kit_changed', userId, detail: `Kit: ${kit}` });
 
-  // Reset progress: delete old + seed new based on new kit's tasks
+  // Reset progress: delete old + seed new based on new kit's tasks (DB-driven for ALL kits)
   await supabase.from('bb_progress').delete().eq('student_id', userId);
 
-  if (kit === 'berrybot') {
-    // BerryBot: seed all 36 hardcoded tasks (1=active, 2-36=locked)
-    const rows = [];
-    for (let i = 1; i <= 36; i++) {
-      rows.push({ student_id: userId, task_id: i, status: i === 1 ? 'active' : 'locked', kit });
-    }
+  const { data: kitTasks } = await supabase.from('bb_tasks')
+    .select('task_id').eq('kit', kit).eq('active', true).order('task_id');
+  if (kitTasks && kitTasks.length > 0) {
+    const rows = kitTasks.map((t, i) => ({
+      student_id: userId, task_id: t.task_id, status: i === 0 ? 'active' : 'locked', kit,
+    }));
     await supabase.from('bb_progress').insert(rows);
-  } else {
-    // Tank/PicoBricks: seed from existing bb_tasks for this kit
-    const { data: kitTasks } = await supabase.from('bb_tasks')
-      .select('task_id').eq('kit', kit).eq('active', true).order('task_id');
-    if (kitTasks && kitTasks.length > 0) {
-      const rows = kitTasks.map((t, i) => ({
-        student_id: userId, task_id: t.task_id, status: i === 0 ? 'active' : 'locked', kit,
-      }));
-      await supabase.from('bb_progress').insert(rows);
-    }
-    // No tasks yet → empty, MissionBoard shows "Henüz görev yok"
   }
+  // No tasks yet → empty, MissionBoard shows "Henüz görev yok"
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -814,19 +903,8 @@ export async function upsertTask(t) {
           .map(x => Number(x.task_id))   // supports decimals like 2.5
           .filter(n => !isNaN(n));
 
-        // For BerryBot, also include the 36 hardcoded task IDs as base
-        let allIds;
-        if (t.kit === 'berrybot') {
-          // Hardcoded 1..36 + DB additions (override duplicates by using Set)
-          const idSet = new Set();
-          for (let i = 1; i <= 36; i++) idSet.add(i);
-          dbIds.forEach(id => idSet.add(id));
-          allIds = Array.from(idSet);
-        } else {
-          allIds = dbIds;
-        }
-
-        const taskIds = allIds.sort((a, b) => a - b);  // ascending
+        // All task IDs are DB-driven (no hardcoded 36 for BerryBot anymore)
+        const taskIds = dbIds.sort((a, b) => a - b);  // ascending
         console.log('💾 Auto-seed task_ids (sorted):', taskIds);
 
         const PRESERVE = new Set(['approved', 'in_progress', 'pending_review', 'rejected']);

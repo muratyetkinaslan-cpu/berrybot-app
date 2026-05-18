@@ -53,7 +53,7 @@ export function useData() {
   const [homeworks, setHomeworks] = useState([]);
   const [homeworkSubs, setHomeworkSubs] = useState([]);
   const [answerUnlocks, setAnswerUnlocks] = useState([]);
-  const [customTasks, setCustomTasks] = useState([]);
+  const [customTasks, setCustomTasks] = useState(null);  // null = loading, [] = loaded empty
   // Homework v2 — template + assignment system
   const [hwTemplates, setHwTemplates] = useState([]);
   const [hwAssignments, setHwAssignments] = useState([]);
@@ -271,10 +271,31 @@ export function useData() {
     db.startTask(sid, tid).then(after);
   }, [patch, after]);
 
-  const submitTask = useCallback((sid, tid, photoData) => {
-    patch(sid, tid, { status: 'pending_review', completedAt: Date.now(), photo: photoData ? 'local' : null });
+  const submitTask = useCallback(async (sid, tid, photoData) => {
+    // Hemen lokal state'i güncelle (UX için)
+    patch(sid, tid, { status: 'pending_review', completedAt: Date.now(), photo: photoData ? 'uploading' : null });
     if (photoData) saveLocalPhoto(sid, tid, photoData);
-    db.submitTask(sid, tid, !!photoData).then(after);
+    
+    // Photo varsa Supabase Storage'a yükle, URL al
+    let photoUrl = null;
+    if (photoData) {
+      try {
+        // base64 data URL'i Blob'a çevir
+        const res = await fetch(photoData);
+        const blob = await res.blob();
+        const fileName = `submissions/${sid}/${tid}_${Date.now()}.jpg`;
+        photoUrl = await db.uploadProgressPhoto(fileName, blob);
+        if (photoUrl) {
+          patch(sid, tid, { photo: photoUrl });
+        }
+      } catch (e) {
+        console.error('Photo upload error:', e);
+      }
+    }
+    
+    // DB'ye gerçek URL'i yaz
+    await db.submitTask(sid, tid, photoUrl);
+    after();
   }, [patch, after]);
 
   const approveTask = useCallback((sid, tid, note) => {

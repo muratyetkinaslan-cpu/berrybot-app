@@ -19,6 +19,14 @@ const TS = { LOCKED:"locked", ACTIVE:"active", IN_PROGRESS:"in_progress", PENDIN
 // ═══════════════════════════════════════════════════════════════
 // KIT SYSTEM — Multi-robot kit support
 // ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// 🎬 DEMO MODE — Robotistan sunumu için
+// ═══════════════════════════════════════════════════════════════
+// true ise: sadece BerryBot kit aktif, kit selektörü atlanır, login'de demo hesaplar gösterilir
+// false ise: tam sistem (3 kit, tam akış)
+const DEMO_MODE = false;
+
 const KITS = {
   berrybot: {
     id: "berrybot",
@@ -221,6 +229,10 @@ const QUIZ=[
   {id:"q_rgb_3",topic:"RGB LED",q:"set_rgb(255,255,0) hangi renk olur?",opts:["Mor","Sarı","Camgöbeği","Pembe"],ans:1,xp:8},
   {id:"q_rgb_4",topic:"RGB LED",q:"RGB değer aralığı kaçtan kaça kadardır?",opts:["0-100","0-255","0-1024","-128 ile 127"],ans:1,xp:5},
   {id:"q_rgb_5",topic:"RGB LED",q:"Tüm değerler 0 olduğunda LED ne yapar?",opts:["Beyaz yanar","Kırmızı yanar","Söner (kapalı)","Yanıp söner"],ans:2,xp:5},
+  {id:"q_rgb_6",topic:"RGB LED",q:"BerryBot'ta kaç adet RGB LED vardır?",opts:["2","4","6","8"],ans:1,xp:5},
+  {id:"q_rgb_7",topic:"RGB LED",q:"set_rgb(255,0,255) hangi renk olur?",opts:["Sarı","Mor (Magenta)","Camgöbeği","Turuncu"],ans:1,xp:8},
+  {id:"q_rgb_8",topic:"RGB LED",q:"Bir RGB LED kaç farklı renk üretebilir?",opts:["256","16384","16 milyon","Sınırsız"],ans:2,xp:10},
+  {id:"q_rgb_9",topic:"RGB LED",q:"RGB LED içinde aslında kaç tane LED vardır?",opts:["1","2","3","4"],ans:2,xp:5},
 
   // ─── Motor ───
   {id:"q_mot_1",topic:"Motor",q:"DC motor robotu hareket için nasıl kontrol edilir?",opts:["Sadece açıp kapamak","Hız ve yön kontrolü","Sadece ses","Sadece ışık"],ans:1,xp:5},
@@ -228,6 +240,9 @@ const QUIZ=[
   {id:"q_mot_3",topic:"Motor",q:"Robotun sağa dönmesi için ne yapılır?",opts:["İki motor da ileri","Sol motor ileri sağ motor geri","İki motor geri","İki motor durur"],ans:1,xp:8},
   {id:"q_mot_4",topic:"Motor",q:"PWM nedir?",opts:["Permanent Wave Motor","Pulse Width Modulation","Power Wire Mode","Programlama Web Modu"],ans:1,xp:10},
   {id:"q_mot_5",topic:"Motor",q:"Motor hızı %50 demek nedir?",opts:["Yarım voltaj","PWM duty %50","Yarı dönüş","2 saniye gider"],ans:1,xp:8},
+  {id:"q_mot_6",topic:"Motor",q:"Diferansiyel sürüş ne demektir?",opts:["Tek motor kullanır","İki motor farklı hızlarda döner","Sadece geri gider","Sadece ileri gider"],ans:1,xp:10},
+  {id:"q_mot_7",topic:"Motor",q:"Sol motor ileri, sağ motor geri olursa robot ne yapar?",opts:["İleri gider","Geri gider","Yerinde sağa döner","Yerinde sola döner"],ans:3,xp:10},
+  {id:"q_mot_8",topic:"Motor",q:"Robotu yerinde döndürmek için ne yapılmalı?",opts:["Tek motor çalışır","İki motor zıt yönde döner","İki motor aynı yönde","Hiç motor çalışmaz"],ans:1,xp:8},
 
   // ─── Sensör ───
   {id:"q_sen_1",topic:"Sensörler",q:"Ultrasonik sensör neyi ölçer?",opts:["Sıcaklık","Mesafe","Renk","Ses"],ans:1,xp:5},
@@ -235,19 +250,42 @@ const QUIZ=[
   {id:"q_sen_3",topic:"Sensörler",q:"LDR sensörü neyi algılar?",opts:["Sıcaklık","Işık","Hareket","Nem"],ans:1,xp:5},
   {id:"q_sen_4",topic:"Sensörler",q:"IR sensörü ne işe yarar?",opts:["Su geçirmezlik","Kızılötesi sinyal almak","Renk algılamak","GPS"],ans:1,xp:8},
   {id:"q_sen_5",topic:"Sensörler",q:"Ultrasonik sensör 30cm görürse engel hakkında ne söylenir?",opts:["Yakın","Uzak","Sensör bozuk","Renk siyah"],ans:0,xp:5},
+  {id:"q_sen_6",topic:"Sensörler",q:"HC-SR04 sensörü hangi tipte bir sensördür?",opts:["Sıcaklık","Ultrasonik mesafe","Renk","İvme"],ans:1,xp:8},
+  {id:"q_sen_7",topic:"Sensörler",q:"Ultrasonik sensör maksimum kaç metreye kadar ölçebilir?",opts:["0.5 m","2 m","4 m","20 m"],ans:2,xp:10},
+  {id:"q_sen_8",topic:"Sensörler",q:"Çizgi sensörü siyah çizgiyi nasıl algılar?",opts:["Sıcak gelir","Az ışık yansıtır","Çok ışık yansıtır","Manyetik etki"],ans:1,xp:10},
 
   // ─── Buzzer ───
   {id:"q_buz_1",topic:"Buzzer",q:"Buzzer ne işe yarar?",opts:["Işık verir","Ses üretir","Hareket eder","Mesafe ölçer"],ans:1,xp:5},
   {id:"q_buz_2",topic:"Buzzer",q:"Buzzer'da 440 Hz değeri hangi notayı temsil eder?",opts:["Do","Re","La","Sol"],ans:2,xp:10},
+  {id:"q_buz_3",topic:"Buzzer",q:"Buzzer'ın frekansı ne kadar yüksekse ses...",opts:["Daha alçak","Daha yüksek (tiz)","Aynı kalır","Hiç çıkmaz"],ans:1,xp:8},
+  {id:"q_buz_4",topic:"Buzzer",q:"Buzzer ile mors kodu çalmak için ne kullanılır?",opts:["Sadece açma","Açma/kapama süreleri (kısa-uzun)","Renk","Sıcaklık"],ans:1,xp:10},
 
   // ─── IR Kumanda ───
   {id:"q_ir_1",topic:"IR Kumanda",q:"IR kumanda hangi dalga boyu ile çalışır?",opts:["Görünür ışık","Kızılötesi","Ultraviyole","Radyo dalgası"],ans:1,xp:8},
   {id:"q_ir_2",topic:"IR Kumanda",q:"IR alıcısı kaç pin ile bağlanır genelde?",opts:["1","2","3","5"],ans:2,xp:8},
+  {id:"q_ir_3",topic:"IR Kumanda",q:"IR sinyali engeller arasından geçer mi?",opts:["Evet, duvardan geçer","Hayır, ışık gibi engellenir","Sadece metal engeller","Sadece su engeller"],ans:1,xp:8},
+  {id:"q_ir_4",topic:"IR Kumanda",q:"IR kumanda hangi cihazlarda kullanılır?",opts:["Sadece TV","TV, klima, robot","Sadece radyo","Sadece bilgisayar"],ans:1,xp:5},
 
   // ─── Programlama Temelleri ───
   {id:"q_prog_1",topic:"Programlama",q:"Bir değişken neye benzer?",opts:["Sabit kutu","Etiketli bir kutu","Çıkmaz sokak","Sadece sayı"],ans:1,xp:5},
   {id:"q_prog_2",topic:"Programlama",q:"Robotun karar vermesi için kullandığımız blok nedir?",opts:["if (eğer)","print","wait","loop"],ans:0,xp:5},
   {id:"q_prog_3",topic:"Programlama",q:"Tekrar etmesi için kullandığımız yapı?",opts:["if","while/for","def","import"],ans:1,xp:5},
+  {id:"q_prog_4",topic:"Programlama",q:"'Forever' (sonsuza kadar) bloku ne yapar?",opts:["1 kez çalışır","Belirli sayıda tekrar","Sonsuza kadar tekrar eder","Hiç çalışmaz"],ans:2,xp:8},
+  {id:"q_prog_5",topic:"Programlama",q:"Bir koşul yanlış olursa hangi blok çalışır?",opts:["if içindeki","else içindeki","while içindeki","for içindeki"],ans:1,xp:8},
+  {id:"q_prog_6",topic:"Programlama",q:"Algoritma nedir?",opts:["Bir robot türü","Problem çözmek için adımlar","Bir sensör","Bir motor"],ans:1,xp:8},
+  {id:"q_prog_7",topic:"Programlama",q:"500 milisaniye kaç saniyedir?",opts:["5 saniye","0.5 saniye","50 saniye","0.05 saniye"],ans:1,xp:5},
+  {id:"q_prog_8",topic:"Programlama",q:"Hangi blok kod akışını duraklatır?",opts:["wait/delay","if","print","set"],ans:0,xp:5},
+
+  // ─── Elektronik ───
+  {id:"q_ele_1",topic:"Elektronik",q:"BerryBot kaç voltla çalışır?",opts:["3.3V","5V","12V","220V"],ans:1,xp:8},
+  {id:"q_ele_2",topic:"Elektronik",q:"Pil bağlarken nelere dikkat etmeli?",opts:["Renge","+ ve - kutuplara","Boyuna","Ağırlığına"],ans:1,xp:8},
+  {id:"q_ele_3",topic:"Elektronik",q:"Kısa devre ne demektir?",opts:["Kabloyu kesmek","+ ve - direkt bağlamak (tehlikeli)","Pili çıkarmak","LED yakmak"],ans:1,xp:10},
+  {id:"q_ele_4",topic:"Elektronik",q:"Lehimleme için ne kullanılır?",opts:["Yapıştırıcı","Havya ve lehim teli","Bant","Vida"],ans:1,xp:8},
+
+  // ─── Sumo Robot ───
+  {id:"q_sumo_1",topic:"Sumo Robot",q:"Sumo robot yarışmasında amaç nedir?",opts:["En hızlı olmak","Rakibi ringden çıkarmak","En yüksek atlamak","En çok ses çıkarmak"],ans:1,xp:10},
+  {id:"q_sumo_2",topic:"Sumo Robot",q:"Sumo robotun ringten çıkmaması için hangi sensör kullanılır?",opts:["Ses sensörü","Sıcaklık","Çizgi/Renk sensörü","GPS"],ans:2,xp:10},
+  {id:"q_sumo_3",topic:"Sumo Robot",q:"Sumo ringinin sınırı genelde nasıldır?",opts:["Mavi çizgi","Beyaz çizgi","Hiç çizgi yok","Kırmızı çizgi"],ans:1,xp:8},
 ];
 
 // ─── KOD CHALLENGE (öğrencinin kodu seçmesi) ───
@@ -548,7 +586,7 @@ export default function App() {
   // Update browser tab title and favicon based on active kit
   useEffect(() => {
     const kitName = KITS[activeKit]?.name || "BerryBot";
-    document.title = `${kitName} LMS`;
+    document.title = `${kitName} LMS${DEMO_MODE ? " — DEMO" : ""}`;
     // Update favicon dynamically
     const link = document.querySelector("link[rel='icon']") || document.createElement('link');
     link.rel = 'icon';
@@ -575,7 +613,77 @@ export default function App() {
 
   console.log("[BB-RENDER] loading:", loading, "user:", user?.id, "kit:", activeKit);
 
+  // ═══════════════════════════════════════════════════════════════
+  // GLOBAL RESPONSIVE CSS — Mobil/tablet/desktop için
+  // ═══════════════════════════════════════════════════════════════
+  const globalResponsiveCSS = `
+    * { box-sizing: border-box; }
+    html, body { 
+      max-width: 100vw; 
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+    img, video { max-width: 100%; height: auto; }
+    
+    /* Touch optimizations */
+    button, a, [role="button"] { 
+      min-height: 36px; 
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    }
+    input, textarea, select { 
+      font-size: 16px !important;  /* iOS zoom fix */
+      max-width: 100%;
+    }
+    
+    /* Mobile (max-width: 640px) */
+    @media (max-width: 640px) {
+      body { font-size: 14px; }
+      
+      /* Topbar/Nav responsive */
+      nav { padding: 8px 10px !important; gap: 6px !important; }
+      nav h1, nav h2 { font-size: 16px !important; }
+      
+      /* Cards & containers */
+      .Card, [class*="Card"] { padding: 12px !important; }
+      
+      /* Hide expensive desktop-only decorations */
+      .hide-on-mobile, [data-hide-mobile] { display: none !important; }
+      
+      /* Grids collapse */
+      [style*="grid-template-columns"] { 
+        grid-template-columns: 1fr !important; 
+      }
+      
+      /* Buttons full width on mobile */
+      button { font-size: 13px !important; }
+      
+      /* Headings smaller */
+      h1 { font-size: 20px !important; }
+      h2 { font-size: 17px !important; }
+      h3 { font-size: 15px !important; }
+      
+      /* Reduce paddings */
+      [style*="padding:24px"], [style*="padding: 24px"] { padding: 14px !important; }
+      [style*="padding:30px"], [style*="padding: 30px"] { padding: 16px !important; }
+      [style*="padding:40px"], [style*="padding: 40px"] { padding: 18px !important; }
+    }
+    
+    /* Tablet (641-1024px) */
+    @media (min-width: 641px) and (max-width: 1024px) {
+      body { font-size: 15px; }
+    }
+    
+    /* Scrollbar polish */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+  `;
+
   if(loading)return(
+    <>
+    <style>{globalResponsiveCSS}</style>
     <div style={{
       background:T.bg,minHeight:"100vh",
       display:"flex",alignItems:"center",justifyContent:"center",
@@ -617,9 +725,20 @@ export default function App() {
           0% { left: -40%; }
           100% { left: 100%; }
         }
+        @keyframes demoPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
       `}</style>
     </div>
+    </>
   );
+  // DEMO MODE — sadece BerryBot, kit selector atla
+  if (DEMO_MODE && !user && !selectedKit) {
+    try { localStorage.setItem("bb_selected_kit", "berrybot"); } catch {}
+    setSelectedKit("berrybot");
+    return null;  // bir sonraki render'da LoginPage gösterilecek
+  }
   if(!user&&!selectedKit)return<KitSelector onSelect={handleKitSelect}/>;
   if(!user)return<LoginPage onLogin={handleLogin} kit={KITS[selectedKit]||KITS.berrybot} onChangeKit={handleResetKit}/>;
 
@@ -642,7 +761,8 @@ export default function App() {
       answer_image_url: t.answer_image_url || "",
     });
     const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === k);
-    if (k !== "berrybot") return dbTasks.map(fromDb).sort((a, b) => a.id - b.id);
+    // DEMO MODE: BerryBot da sadece DB'den okur (TASKS array bypass)
+    if (DEMO_MODE || k !== "berrybot") return dbTasks.map(fromDb).sort((a, b) => a.id - b.id);
     // BerryBot: TASKS base, DB overrides + extras above 36
     const dbMap = new Map(dbTasks.map(t => [t.task_id, t]));
     const merged = [];
@@ -665,7 +785,28 @@ export default function App() {
         
         /* ═══ GLOBAL RESPONSIVE RULES ═══ */
         * { box-sizing: border-box; }
-        html, body { overflow-x: hidden; max-width: 100vw; }
+        html, body { 
+          overflow-x: hidden; 
+          max-width: 100vw;
+          -webkit-text-size-adjust: 100%;
+        }
+        img, video { max-width: 100%; height: auto; }
+        
+        /* iOS zoom on input fix */
+        input, textarea, select { font-size: 16px; }
+        
+        /* Touch optimization */
+        button, a, [role="button"] {
+          min-height: 36px;
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+        }
+        
+        /* Scrollbar polish */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
         
         /* Tablet & Below (≤900px) */
         @media (max-width: 900px) {
@@ -680,23 +821,42 @@ export default function App() {
         /* Phone (≤600px) */
         @media (max-width: 600px) {
           main { padding: 10px !important; }
-          nav { padding: 10px 12px !important; gap: 6px !important; }
-          nav b { font-size: 18px !important; }
-          h1 { font-size: 18px !important; }
-          h2 { font-size: 16px !important; }
-          button, input, select, textarea { font-size: 14px !important; }
+          nav { padding: 8px 10px !important; gap: 4px !important; }
+          nav img { max-height: 36px !important; }
+          nav b { font-size: 16px !important; }
+          h1 { font-size: 17px !important; }
+          h2 { font-size: 15px !important; }
+          h3 { font-size: 14px !important; }
+          button { font-size: 13px !important; padding: 8px 12px !important; }
+          input, select, textarea { font-size: 16px !important; }
           .resp-hide-phone { display: none !important; }
           .resp-cv-stack > div { width: 100% !important; }
           /* Make all grids single-column on phone */
           [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
           /* Smaller cards padding */
           .Card-mobile, [style*="padding:18"], [style*="padding: 18"] { padding: 12px !important; }
+          [style*="padding:24"], [style*="padding: 24"] { padding: 14px !important; }
+          [style*="padding:30"], [style*="padding: 30"] { padding: 16px !important; }
+          /* Tables horizontal scroll */
+          table { display: block; overflow-x: auto; white-space: nowrap; }
+          /* Big buttons full width */
+          button[style*="padding: 14px"], button[style*="padding:14px"] { width: 100% !important; }
         }
         
         /* Very small (≤400px) */
         @media (max-width: 400px) {
           main { padding: 8px !important; }
-          nav { padding: 8px 10px !important; }
+          nav { padding: 6px 8px !important; }
+          h1 { font-size: 15px !important; }
+          h2 { font-size: 14px !important; }
+          nav img { max-height: 30px !important; }
+          button { padding: 6px 10px !important; font-size: 12px !important; }
+        }
+        
+        /* Print: Hide nav, show only content (for CV) */
+        @media print {
+          nav, .no-print { display: none !important; }
+          body { background: white !important; color: black !important; }
         }
       `}</style>
       <nav style={{background:T.card,borderBottom:`1px solid ${T.border}`,padding:"12px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
@@ -707,10 +867,26 @@ export default function App() {
             onError={(e) => { e.currentTarget.src = "/logos/berrybot.png"; }}
             style={{height:54,width:"auto",maxWidth:200,objectFit:"contain",filter:`drop-shadow(0 2px 8px ${T.orange}66)`}}/>
           <span style={{fontSize:16,background:`linear-gradient(135deg,${T.purple},${T.pd})`,color:"#fff",padding:"6px 16px",borderRadius:10,fontWeight:900,letterSpacing:2,boxShadow:`0 3px 12px ${T.purple}77`,border:`2px solid ${T.pl}66`}}>LMS</span>
+          {DEMO_MODE && (
+            <span style={{
+              fontSize: 11,
+              background: "linear-gradient(135deg, #FF8800, #6B3FA0)",
+              color: "#fff",
+              padding: "5px 12px",
+              borderRadius: 8,
+              fontWeight: 800,
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              animation: "demoPulse 2s ease-in-out infinite",
+            }}>
+              🎬 DEMO
+            </span>
+          )}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {user.role===ROLES.ADMIN&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Sınıf</NBtn><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="taskedit"} o={()=>nav("taskedit")}>📝 Görev Editörü</NBtn><NBtn a={page==="hwedit"} o={()=>nav("hwedit")}>📋 Ödev Şablonları</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
-          {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
+          {user.role===ROLES.ADMIN&&<><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="taskedit"} o={()=>nav("taskedit")}>📝 Görev Editörü</NBtn><NBtn a={page==="hwedit"} o={()=>nav("hwedit")}>📋 Ödev Şablonları</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
+          {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="class"} o={()=>nav("class")}>🪑 Sınıf Düzeni</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.STUDENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>🗺️ Görev</NBtn><NBtn a={page==="practice"} o={()=>nav("practice")}>🧠 Practice</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn></>}
           {user.role===ROLES.PARENT&&null}
         </div>
@@ -755,30 +931,30 @@ export default function App() {
       <main style={{padding:16,maxWidth:1400,margin:"0 auto"}}>
 
         {/* ──── ADMIN ──── */}
-        {user.role===ROLES.ADMIN&&page==="dash"&&<AdminClassroom users={users} prog={prog} classLayout={classLayout} saveLayout={handleSaveLayout} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sd");}}/>}
-        {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} onBack={()=>nav("dash")}/>}
-        {user.role===ROLES.ADMIN&&page==="users"&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo} onRefresh={refresh}/>}
+        {user.role===ROLES.ADMIN&&(page==="dash"||page==="users")&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo} onRefresh={refresh} customTasks={customTasks}/>}
+        {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} onBack={()=>nav("users")} customTasks={customTasks}/>}
         {user.role===ROLES.ADMIN&&page==="audit"&&<AuditLog logs={logs} users={users}/>}
         {user.role===ROLES.ADMIN&&page==="taskedit"&&<AdminTaskEditor customTasks={customTasks} onSave={saveCustomTask} onDelete={removeCustomTask} onUpload={uploadMedia} onRefresh={refresh} categories={categories} addNewCategory={addNewCategory}/>}
         {user.role===ROLES.ADMIN&&page==="hwedit"&&<AdminHomeworkEditor hwTemplates={hwTemplates} onSave={saveHwTemplate} onDelete={removeHwTemplate} onUpload={uploadHwMedia} onRefresh={refresh} categories={categories} addNewCategory={addNewCategory}/>}
-        {user.role===ROLES.ADMIN&&page==="tasks"&&<TaskBrowser showAns={false}/>}
+        {user.role===ROLES.ADMIN&&page==="tasks"&&<TaskBrowser showAns={false} customTasks={customTasks}/>}
 
         {/* ──── INSTRUCTOR ──── */}
         {user.role===ROLES.INSTRUCTOR&&page==="dash"&&<InstructorDash user={user} users={users} prog={prog} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
-        {user.role===ROLES.INSTRUCTOR&&page==="sdi"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} canReview onApprove={handleApprove} onReject={handleReject} onBack={()=>nav("dash")}/>}
-        {user.role===ROLES.INSTRUCTOR&&page==="pend"&&<PendingReviews user={user} users={users} prog={prog} onApprove={handleApprove} onReject={handleReject}/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="class"&&<AdminClassroom users={users} prog={prog} classLayout={classLayout} saveLayout={handleSaveLayout} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="sdi"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} canReview onApprove={handleApprove} onReject={handleReject} onBack={()=>nav("dash")} customTasks={customTasks}/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="pend"&&<PendingReviews user={user} users={users} prog={prog} onApprove={handleApprove} onReject={handleReject} customTasks={customTasks}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="show"&&<DailyShow users={users} prog={prog} logs={logs} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
-        {user.role===ROLES.INSTRUCTOR&&page==="tasks"&&<TaskBrowser showAns/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="tasks"&&<TaskBrowser showAns customTasks={customTasks}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="hw"&&<InstructorHomeworkV2 user={user} users={users} hwTemplates={hwTemplates} hwAssignments={hwAssignments} onAssign={assignHw} onReview={reviewHwV2} onUnlockAnswer={unlockHwAnswerKey} onRefresh={refresh}/>}
 
         {/* ──── STUDENT ──── */}
-        {user.role===ROLES.STUDENT&&page==="dash"&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)} customTasks={customTasks} activeKit={activeKit}/>}
+        {user.role===ROLES.STUDENT&&page==="dash"&&!selT&&<MissionBoard user={user} prog={prog} onSel={setSelT} onHelp={()=>handleHelp(user.id)} customTasks={customTasks} activeKit={activeKit} tasksLoading={customTasks === null}/>}
         {user.role===ROLES.STUDENT&&page==="dash"&&selT&&<StudentTaskView user={user} task={selT} prog={prog} answerUnlocks={answerUnlocks} onStart={()=>handleStartTask(user.id,selT.id)} onSubmit={p=>handleSubmitTask(user.id,selT.id,p)} onResub={()=>handleResubmit(user.id,selT.id)} onHelp={()=>handleHelp(user.id)} onBack={()=>setSelT(null)}/>}
         {user.role===ROLES.STUDENT&&page==="practice"&&<PracticeView user={user} practiceProg={practiceProg} onAnswer={recordPractice}/>}
         {user.role===ROLES.STUDENT&&page==="hw"&&<StudentHomeworkV2 user={user} hwTemplates={hwTemplates} hwAssignments={hwAssignments} onSubmit={submitHwV2} onUploadMedia={uploadHwMedia}/>}
 
         {/* ──── PARENT ──── */}
-        {user.role===ROLES.PARENT&&<ParentView parent={user} users={users} prog={prog} classLayout={classLayout} logs={logs} initialTab={page==="cv"?"cv":"class"}/>}
+        {user.role===ROLES.PARENT&&<ParentView parent={user} users={users} prog={prog} classLayout={classLayout} logs={logs} initialTab={page==="cv"?"cv":"class"} customTasks={customTasks}/>}
       </main>
     </div>
   );
@@ -1009,6 +1185,57 @@ function LoginPage({onLogin, kit, onChangeKit}){
               40%, 80% { transform: translateX(4px); }
             }
           `}</style>
+
+          {/* DEMO HESAPLAR — sadece DEMO_MODE'da görünür */}
+          {DEMO_MODE && (
+            <div style={{
+              marginTop: 16,
+              padding: 14,
+              background: `${kitColor}10`,
+              border: `1px solid ${kitColor}44`,
+              borderRadius: 12,
+              fontSize: 12,
+            }}>
+              <div style={{ fontWeight: 800, color: kitColor, marginBottom: 10, letterSpacing: 1, fontSize: 11, textTransform: "uppercase" }}>
+                🎬 Demo Hesapları (tıkla)
+              </div>
+              <div style={{ display: "grid", gap: 4 }}>
+                {[
+                  { e: "admin@demo.com", label: "👨‍💼 Admin" },
+                  { e: "ahmet@demo.com", label: "👨‍🏫 Eğitmen Ahmet" },
+                  { e: "ali@demo.com", label: "🎓 Öğrenci — Ali" },
+                  { e: "ayse@demo.com", label: "🎓 Öğrenci — Ayşe" },
+                  { e: "can@demo.com", label: "🎓 Öğrenci — Can" },
+                  { e: "deniz@demo.com", label: "🎓 Öğrenci — Deniz" },
+                  { e: "veli1@demo.com", label: "👨‍👩‍👧 Veli — Murat (Ali'nin babası)" },
+                  { e: "veli2@demo.com", label: "👨‍👩‍👧 Veli — Selin (Ayşe'nin annesi)" },
+                ].map(acc => (
+                  <button key={acc.e}
+                    onClick={() => { setE(acc.e); setP("demo123"); }}
+                    style={{
+                      background: "transparent",
+                      border: `1px solid ${T.border}55`,
+                      borderRadius: 6,
+                      padding: "6px 10px",
+                      textAlign: "left",
+                      color: T.tp,
+                      cursor: "pointer",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      transition: "all .15s",
+                    }}
+                    onMouseOver={e => { e.currentTarget.style.background = `${kitColor}22`; e.currentTarget.style.borderColor = kitColor; }}
+                    onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = `${T.border}55`; }}
+                  >
+                    {acc.label}
+                  </button>
+                ))}
+                <div style={{ marginTop: 6, paddingTop: 8, borderTop: `1px solid ${T.border}66`, fontSize: 11, color: T.tm, textAlign: "center" }}>
+                  🔑 Şifre: <strong style={{ color: kitColor }}>demo123</strong>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* SPONSOR LOGOS */}
@@ -1351,7 +1578,7 @@ function AdminClassroom({users,prog,classLayout,saveLayout,onClearHelp,onSel}){
 //  STUDENT: MISSION BOARD (GAME STYLE)
 // ═══════════════════════════════════════
 // ═══════════════════════════════════════
-function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit}){
+function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit,tasksLoading}){
   // Use activeKit if provided (multi-kit support), else fall back to user.kit
   const userKit = activeKit || user.kit || "berrybot";
 
@@ -1378,7 +1605,8 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit}){
 
     const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === userKit);
 
-    if (userKit !== "berrybot") {
+    // DEMO MODE: BerryBot bile sadece DB'den okur (hardcoded 36 TASKS bypass)
+    if (DEMO_MODE || userKit !== "berrybot") {
       return dbTasks.map(fromDb).sort((a, b) => a.id - b.id);
     }
 
@@ -1406,6 +1634,31 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit}){
   const cnt=kitTasks.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
   const lvProgress=nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100;
   const hasHelp=prog[user.id]?.helpRequest;
+
+  // LOADING STATE — görevler henüz yüklenmediyse
+  if (tasksLoading || (!customTasks)) {
+    return (
+      <div style={{padding:"80px 20px",textAlign:"center",maxWidth:500,margin:"0 auto"}}>
+        <div style={{fontSize:80,marginBottom:24,opacity:0.7,animation:"loadingPulse 1.5s ease-in-out infinite"}}>
+          {KITS[userKit]?.icon || "🤖"}
+        </div>
+        <div style={{fontSize:18,color:T.tp,fontWeight:800,marginBottom:8}}>Görevler yükleniyor...</div>
+        <div style={{fontSize:13,color:T.tm,marginBottom:20}}>Sabırlı ol, harika işler yaklaşıyor 🚀</div>
+        <div style={{height:6,background:T.card,borderRadius:3,overflow:"hidden",position:"relative"}}>
+          <div style={{
+            position:"absolute",height:"100%",width:"40%",
+            background:`linear-gradient(90deg,${KITS[userKit]?.primaryColor || T.purple},${KITS[userKit]?.accentColor || T.orange})`,
+            borderRadius:3,
+            animation:"loadingBar 1.5s ease-in-out infinite",
+          }}/>
+        </div>
+        <style>{`
+          @keyframes loadingPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+          @keyframes loadingBar { 0% { left: -40%; } 100% { left: 100%; } }
+        `}</style>
+      </div>
+    );
+  }
 
   // Empty state for Tank/PicoBricks when admin hasn't added tasks yet
   if (kitTasks.length === 0) {
@@ -3189,17 +3442,31 @@ function FilterPill({active,onClick,label,count,color,highlight}){
 // ═══════════════════════════════════════
 //  STUDENT DETAIL
 // ═══════════════════════════════════════
-function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,onApprove,onReject,onBack}){
+function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,onApprove,onReject,onBack,customTasks}){
   const[note,setNote]=useState("");
-  const sp=prog[s.id]||{};const cnt=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
-  const xp=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
+  // DB'den kit'e ait görevleri al
+  const kit = s.kit || "berrybot";
+  const fromDb = (t) => ({
+    id: t.task_id, title: t.title || "Görev", cat: t.category || "Genel",
+    diff: t.difficulty || 1, expectedMin: t.expected_min || 15, xp: t.xp || 10,
+    img: t.emoji || "📋", desc: t.description || "", answer: t.answer || "",
+    learnings: t.learnings || [],
+    image_url: t.image_url || "", video_url: t.video_url || "",
+    answer_image_url: t.answer_image_url || "",
+  });
+  const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === kit).map(fromDb).sort((a,b)=>a.id-b.id);
+  const TLIST = (DEMO_MODE || dbTasks.length > 0) ? dbTasks : TASKS;
+  const sp=prog[s.id]||{};
+  const cnt=TLIST.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
+  const xp=TLIST.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
+  const totalTasks = TLIST.length || 1;
   const unlockedSet=new Set(answerUnlocks.filter(au=>au.student_id===s.id).map(au=>au.task_id));
   return(<div>
     <button onClick={onBack} style={{fontSize:14,padding:"6px 14px",borderRadius:8,background:T.border,color:T.ts,border:"none",cursor:"pointer",marginBottom:12}}>← Geri</button>
     <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
       <div style={{width:52,height:52,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:700,background:T.orange+"15",color:T.orange}}>{s.name[0]}</div>
       <div><h2 style={{margin:0,fontSize:20}}>{s.name}</h2><div style={{fontSize:14,color:T.tm}}>{getLevel(xp).icon} Lv.{getLevel(xp).lv} • {xp} XP</div></div>
-      <div style={{marginLeft:"auto",fontSize:28,fontWeight:800,color:T.orange}}>{cnt}/36</div>
+      <div style={{marginLeft:"auto",fontSize:28,fontWeight:800,color:T.orange}}>{cnt}/{totalTasks}</div>
     </div>
 
     {canReview&&onToggleUnlock&&<div style={{marginBottom:12,padding:"10px 14px",borderRadius:10,background:`${T.purple}22`,border:`1px solid ${T.purple}55`,fontSize:13,color:T.ts,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
@@ -3208,13 +3475,18 @@ function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,o
       <span style={{fontSize:12,fontWeight:700,color:T.pl,padding:"3px 10px",borderRadius:8,background:T.purple+"33"}}>{unlockedSet.size} açık</span>
     </div>}
 
-    <Card>{TASKS.map(t=>{const tp=sp[t.id]||{};const lk=tp.status===TS.LOCKED;const pn=tp.status===TS.PENDING;
+    <Card>{TLIST.map(t=>{const tp=sp[t.id]||{};const lk=tp.status===TS.LOCKED;const pn=tp.status===TS.PENDING;
       const started=tp.startedAt;const completed=tp.completedAt||tp.approvedAt;
       const dur=(started&&completed)?fd(completed-started):null;
       const unlocked=unlockedSet.has(t.id);
       return(<div key={t.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:8,marginBottom:4,opacity:lk?.4:1,background:pn?T.purple+"15":"transparent"}}>
         <span style={{width:26,fontSize:13,fontFamily:"monospace",color:T.tm,textAlign:"center"}}>#{t.id}</span>
-        <TaskImage taskId={t.id} type="gorsel" size={30} fallbackEmoji={t.img} style={{borderRadius:5}}/>
+        {t.image_url ? (
+          <img src={t.image_url} alt="" style={{width:30,height:30,objectFit:"cover",borderRadius:5}}
+            onError={(e)=>{e.target.style.display="none";}} />
+        ) : (
+          <div style={{width:30,height:30,borderRadius:5,background:T.purple+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{t.img}</div>
+        )}
         <div style={{flex:1,minWidth:0}}>
           <span style={{fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{t.title}</span>
           {dur&&<span style={{fontSize:11,color:T.ok}}><I.Clock/> {dur}</span>}
@@ -3245,10 +3517,28 @@ function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,o
 // ═══════════════════════════════════════
 //  PENDING REVIEWS (with answer images)
 // ═══════════════════════════════════════
-function PendingReviews({user,users,prog,onApprove,onReject}){
+function PendingReviews({user,users,prog,onApprove,onReject,customTasks}){
   const[notes,setNotes]=useState({});const[zoomPhoto,setZoomPhoto]=useState(null);
   const my=users.filter(u=>u.role===ROLES.STUDENT);
-  const items=[];my.forEach(s=>TASKS.forEach(t=>{if(prog[s.id]?.[t.id]?.status===TS.PENDING)items.push({s,t,d:prog[s.id][t.id]});}));
+  
+  // DB'den dinamik görev listesi (DEMO_MODE ve production'da)
+  const fromDb = (t) => ({
+    id: t.task_id, title: t.title || "Görev", cat: t.category || "Genel",
+    diff: t.difficulty || 1, xp: t.xp || 10, img: t.emoji || "📋",
+    desc: t.description || "", answer: t.answer || "",
+    image_url: t.image_url || "", answer_image_url: t.answer_image_url || "",
+  });
+  
+  const items=[];
+  my.forEach(s=>{
+    const studentKit = s.kit || "berrybot";
+    const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === studentKit).map(fromDb).sort((a,b)=>a.id-b.id);
+    const taskList = (DEMO_MODE || dbTasks.length > 0) ? dbTasks : TASKS;
+    taskList.forEach(t=>{
+      if(prog[s.id]?.[t.id]?.status===TS.PENDING) items.push({s,t,d:prog[s.id][t.id]});
+    });
+  });
+  
   return(<div>
     <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 16px"}}>Onay Bekleyenler ({items.length})</h1>
 
@@ -3258,34 +3548,144 @@ function PendingReviews({user,users,prog,onApprove,onReject}){
     </div>}
 
     {items.length===0?<Card><div style={{textAlign:"center",padding:40,color:T.tm,fontSize:18}}>✓ Tüm görevler incelendi!</div></Card>:
-    items.map(({s,t,d})=>{const k=`${s.id}_${t.id}`;
+    items.map(({s,t,d})=>{
+      const k=`${s.id}_${t.id}`;
       const dur=(d.startedAt&&d.completedAt)?fd(d.completedAt-d.startedAt):null;
+      // Photo bir URL ise göster, yoksa fallback "öğrenci yükledi"
+      const hasPhotoUrl = d.photo && (d.photo.startsWith('http') || d.photo.startsWith('data:'));
+      const isUploading = d.photo === 'uploading';
+      
       return(
-      <Card key={k} style={{marginBottom:14,borderColor:T.purple+"44"}}>
-        <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
-          <TaskImage taskId={t.id} type="gorsel" size={60} fallbackEmoji={t.img}/>
-          <div style={{flex:1}}>
-            <div style={{marginBottom:4,fontSize:16}}><b>{s.name}</b> • Görev {t.id}: {t.title}</div>
-            <div style={{fontSize:13,color:T.tm,marginBottom:4}}>Bekleme: {fd(Date.now()-(d.completedAt||Date.now()))}</div>
-            {dur&&<div style={{fontSize:13,color:T.ok,marginBottom:6}}>⏱ Tamamlama süresi: {dur}</div>}
+      <Card key={k} style={{marginBottom:14,borderColor:T.purple+"44",padding:14}}>
+        <div style={{marginBottom:10,fontSize:16}}>
+          <b>{s.name}</b> • Görev #{t.id}: {t.title}
+          <div style={{fontSize:13,color:T.tm,marginTop:2}}>
+            Bekleme: {fd(Date.now()-(d.completedAt||Date.now()))}
+            {dur && <span style={{color:T.ok,marginLeft:10}}>• ⏱ Tamamlama: {dur}</span>}
+          </div>
+        </div>
 
-            {/* Student's photo is stored locally on their device */}
-            {d.photo&&<div style={{marginBottom:10,padding:"10px 14px",borderRadius:10,background:T.ok+"10",border:`1px solid ${T.ok}33`}}>
-              <div style={{fontSize:14,fontWeight:600,color:T.ok}}>📸 Öğrenci fotoğraf yükledi</div>
-              <div style={{fontSize:12,color:T.ts,marginTop:2}}>Fotoğraf öğrencinin cihazında. Kontrol etmek için öğrenciye gidin.</div>
-            </div>}
-
-            {/* Answer key */}
-            <details style={{marginBottom:8}}><summary style={{fontSize:13,color:T.pl,cursor:"pointer"}}><I.Key/> Cevap Anahtarı</summary><pre style={{fontSize:12,marginTop:4,padding:10,borderRadius:8,background:T.purple+"15",color:T.pl,fontFamily:"monospace",whiteSpace:"pre-wrap"}}>{t.answer}</pre>
-              <AnswerImage taskId={t.id}/>
-            </details>
-
-            <div style={{display:"flex",alignItems:"center",gap:6}}>
-              <input value={notes[k]||""} onChange={e=>setNotes(p=>({...p,[k]:e.target.value}))} placeholder="Not yaz..." style={{flex:1,padding:"8px 12px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none"}}/>
-              <button onClick={()=>{onApprove(s.id,t.id,notes[k]||"Onaylandı ✓");setNotes(p=>({...p,[k]:""}));}} style={{padding:"8px 18px",borderRadius:8,border:"none",background:"#1a4a2e",color:T.ok,cursor:"pointer",fontSize:14,fontWeight:700}}>✓ Onayla</button>
-              <button onClick={()=>{onReject(s.id,t.id,notes[k]||"Tekrar dene");setNotes(p=>({...p,[k]:""}));}} style={{padding:"8px 18px",borderRadius:8,border:"none",background:"#5c1a1a",color:T.err,cursor:"pointer",fontSize:14,fontWeight:700}}>✕ Reddet</button>
+        {/* ═══ YAN YANA KARŞILAŞTIRMA: Öğrenci Fotosu | Cevap Anahtarı ═══ */}
+        <div style={{
+          display:"grid",
+          gridTemplateColumns:"1fr 1fr",
+          gap:10,
+          marginBottom:12,
+        }} className="resp-grid-2">
+          {/* SOL: Öğrenci fotosu */}
+          <div style={{padding:8,borderRadius:10,background:T.ok+"10",border:`2px solid ${T.ok}55`}}>
+            <div style={{fontSize:12,fontWeight:800,color:T.ok,marginBottom:6,letterSpacing:1,textAlign:"center"}}>
+              📸 ÖĞRENCİNİN CEVABI
+            </div>
+            {hasPhotoUrl ? (
+              <img 
+                src={d.photo} 
+                onClick={()=>setZoomPhoto(d.photo)}
+                style={{
+                  width:"100%",
+                  height:240,
+                  objectFit:"contain",
+                  borderRadius:8,
+                  cursor:"zoom-in",
+                  background:T.dark,
+                }}
+                onError={(e)=>{
+                  e.target.style.display='none';
+                  e.target.nextSibling.style.display='flex';
+                }}
+              />
+            ) : null}
+            <div style={{
+              display: hasPhotoUrl ? "none" : "flex",
+              height:240,
+              flexDirection:"column",
+              alignItems:"center",
+              justifyContent:"center",
+              borderRadius:8,
+              background:T.dark,
+              color:T.tm,
+              fontSize:13,
+              textAlign:"center",
+              padding:10,
+            }}>
+              {isUploading ? (
+                <>
+                  <div style={{fontSize:36,marginBottom:8}}>⏳</div>
+                  <div>Foto yükleniyor...</div>
+                </>
+              ) : d.photo ? (
+                <>
+                  <div style={{fontSize:36,marginBottom:8}}>📷</div>
+                  <div>Öğrenci foto yükledi</div>
+                  <div style={{fontSize:11,marginTop:4,color:T.tm}}>(eski kayıt, lokal cihazda)</div>
+                </>
+              ) : (
+                <>
+                  <div style={{fontSize:36,marginBottom:8,opacity:0.3}}>📷</div>
+                  <div style={{opacity:0.5}}>Foto yok</div>
+                  <div style={{fontSize:11,marginTop:4}}>Öğrenci foto yüklemeden gönderdi</div>
+                </>
+              )}
             </div>
           </div>
+
+          {/* SAĞ: Cevap anahtarı */}
+          <div style={{padding:8,borderRadius:10,background:T.pl+"10",border:`2px solid ${T.pl}55`}}>
+            <div style={{fontSize:12,fontWeight:800,color:T.pl,marginBottom:6,letterSpacing:1,textAlign:"center"}}>
+              🗝️ CEVAP ANAHTARI
+            </div>
+            {t.answer_image_url ? (
+              <img 
+                src={t.answer_image_url}
+                onClick={()=>setZoomPhoto(t.answer_image_url)}
+                style={{
+                  width:"100%",
+                  height:240,
+                  objectFit:"contain",
+                  borderRadius:8,
+                  cursor:"zoom-in",
+                  background:T.dark,
+                }}
+                onError={(e)=>{e.target.style.display='none';}}
+              />
+            ) : (
+              <div style={{
+                height:240,
+                display:"flex",
+                flexDirection:"column",
+                alignItems:"center",
+                justifyContent:"center",
+                borderRadius:8,
+                background:T.dark,
+                color:T.tm,
+                fontSize:13,
+              }}>
+                <div style={{fontSize:36,marginBottom:8,opacity:0.3}}>🗝️</div>
+                <div style={{opacity:0.5}}>Cevap anahtarı yok</div>
+              </div>
+            )}
+            {t.answer && (
+              <pre style={{
+                fontSize:11,
+                marginTop:6,
+                padding:8,
+                borderRadius:6,
+                background:T.purple+"15",
+                color:T.pl,
+                fontFamily:"monospace",
+                whiteSpace:"pre-wrap",
+                maxHeight:120,
+                overflow:"auto",
+              }}>{t.answer}</pre>
+            )}
+          </div>
+        </div>
+
+        {/* Onay / Red butonları */}
+        <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+          <input value={notes[k]||""} onChange={e=>setNotes(p=>({...p,[k]:e.target.value}))} placeholder="Not yaz (opsiyonel)..." style={{flex:1,minWidth:200,padding:"10px 14px",borderRadius:10,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none"}}/>
+          <button onClick={()=>{onApprove(s.id,t.id,notes[k]||"Onaylandı ✓");setNotes(p=>({...p,[k]:""}));}} style={{padding:"10px 22px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.ok},#1a7a3a)`,color:"#fff",cursor:"pointer",fontSize:14,fontWeight:800,boxShadow:`0 3px 10px ${T.ok}44`}}>✓ Onayla</button>
+          <button onClick={()=>{onReject(s.id,t.id,notes[k]||"Tekrar dene");setNotes(p=>({...p,[k]:""}));}} style={{padding:"10px 22px",borderRadius:10,border:"none",background:`linear-gradient(135deg,${T.err},#7a1a1a)`,color:"#fff",cursor:"pointer",fontSize:14,fontWeight:800,boxShadow:`0 3px 10px ${T.err}44`}}>✕ Reddet</button>
         </div>
       </Card>);
     })}
@@ -3295,23 +3695,40 @@ function PendingReviews({user,users,prog,onApprove,onReject}){
 // ═══════════════════════════════════════
 //  TASK BROWSER (with answer images for instructors)
 // ═══════════════════════════════════════
-function TaskBrowser({showAns}){
-  const cats=[...new Set(TASKS.map(t=>t.cat))];
+function TaskBrowser({showAns, customTasks}){
+  // DEMO ve diğer modlarda DB'deki gerçek görevleri kullan
+  const fromDb = (t) => ({
+    id: t.task_id, title: t.title || "Görev", cat: t.category || "Genel",
+    diff: t.difficulty || 1, xp: t.xp || 10, img: t.emoji || "📋",
+    desc: t.description || "", answer: t.answer || "",
+    image_url: t.image_url || "", answer_image_url: t.answer_image_url || "",
+  });
+  const dbBerryBot = (customTasks || []).filter(t => (t.kit || "berrybot") === "berrybot").map(fromDb).sort((a,b)=>a.id-b.id);
+  // DEMO: sadece DB. Production: DB yoksa TASKS array fallback
+  const taskList = (DEMO_MODE || dbBerryBot.length > 0) ? dbBerryBot : TASKS;
+  const cats = [...new Set(taskList.map(t => t.cat))];
   return(<div>
-    <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 6px"}}>Görevler (36)</h1>
+    <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 6px"}}>Görevler ({taskList.length})</h1>
     {showAns&&<div style={{fontSize:14,color:T.pl,marginBottom:16}}><I.Key/> Cevap anahtarları + görseller görünür</div>}
-    {cats.map(cat=>(<div key={cat} style={{marginBottom:16}}>
+    {taskList.length === 0 ? (
+      <Card><div style={{padding:30,textAlign:"center",color:T.tm}}>Henüz görev yok</div></Card>
+    ) : cats.map(cat=>(<div key={cat} style={{marginBottom:16}}>
       <span style={{fontSize:15,fontWeight:700,color:T.ts,padding:"4px 10px",background:T.purple+"20",borderRadius:6,display:"inline-block",marginBottom:8}}>{cat}</span>
-      <Card>{TASKS.filter(t=>t.cat===cat).map(t=>(<div key={t.id} style={{padding:10,borderRadius:8,marginBottom:6,background:T.dark}}>
+      <Card>{taskList.filter(t=>t.cat===cat).map(t=>(<div key={t.id} style={{padding:10,borderRadius:8,marginBottom:6,background:T.dark}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <TaskImage taskId={t.id} type="gorsel" size={44} fallbackEmoji={t.img} style={{borderRadius:8}}/>
+          {t.image_url ? (
+            <img src={t.image_url} alt={t.title} style={{width:44,height:44,objectFit:"cover",borderRadius:8}}
+              onError={(e)=>{e.target.style.display="none";}} />
+          ) : (
+            <div style={{width:44,height:44,borderRadius:8,background:T.purple+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>{t.img}</div>
+          )}
           <div style={{flex:1}}><div style={{fontSize:15,fontWeight:600}}>#{t.id} {t.title}</div><div style={{fontSize:13,color:T.tm}}>{t.desc}</div></div>
           <span style={{fontSize:13,color:T.warn,fontWeight:600}}>+{t.xp}</span><Stars n={t.diff}/>
         </div>
-        {showAns&&<details style={{marginTop:6,marginLeft:54}}>
+        {showAns&&(t.answer||t.answer_image_url)&&<details style={{marginTop:6,marginLeft:54}}>
           <summary style={{fontSize:14,color:T.pl,cursor:"pointer"}}><I.Key/> Cevap</summary>
-          <pre style={{fontSize:13,marginTop:4,padding:10,borderRadius:8,background:T.purple+"15",color:T.pl,fontFamily:"monospace",whiteSpace:"pre-wrap"}}>{t.answer}</pre>
-          <AnswerImage taskId={t.id}/>
+          {t.answer && <pre style={{fontSize:13,marginTop:4,padding:10,borderRadius:8,background:T.purple+"15",color:T.pl,fontFamily:"monospace",whiteSpace:"pre-wrap"}}>{t.answer}</pre>}
+          {t.answer_image_url && <img src={t.answer_image_url} alt="cevap" style={{maxWidth:"100%",maxHeight:300,borderRadius:8,marginTop:6}} />}
         </details>}
       </div>))}</Card>
     </div>))}
@@ -3344,7 +3761,7 @@ function AuditLog({logs,users}){
 // ═══════════════════════════════════════
 //  ADMIN: USER MANAGER
 // ═══════════════════════════════════════
-function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
+function UserManager({users,prog,onAddUser,onSetProgress,onRefresh,customTasks}){
   const[showForm,setShowForm]=useState(false);
   const[name,setName]=useState("");const[email,setEmail]=useState("");const[pw,setPw]=useState("");
   const[role,setRole]=useState("student");const[grup,setGrup]=useState("Büyük");
@@ -3356,6 +3773,22 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
   const[selTask,setSelTask]=useState(1);
   const[progMsg,setProgMsg]=useState(null);
   const[progBusy,setProgBusy]=useState(false);
+
+  // Seçili öğrencinin kit'ine göre görev listesi (DB-driven)
+  const getStudentTasks = (student) => {
+    if (!student) return [];
+    const studentKit = student.kit || "berrybot";
+    const fromDb = (t) => ({
+      id: t.task_id, title: t.title || "Görev", img: t.emoji || "📋",
+    });
+    const dbTasks = (customTasks || [])
+      .filter(t => (t.kit || "berrybot") === studentKit)
+      .map(fromDb)
+      .sort((a,b) => a.id - b.id);
+    return (DEMO_MODE || dbTasks.length > 0) ? dbTasks : TASKS;
+  };
+  const tasksForSelStudent = getStudentTasks(selStudent);
+  const totalTasksForStudent = tasksForSelStudent.length || 36;
 
   const handleAdd=async()=>{
     if(!name.trim()||!email.trim()||!pw.trim()){setMsg("Tüm alanları doldur!");return;}
@@ -3380,17 +3813,28 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
   const admins=users.filter(u=>u.role==="admin");
   const parents=users.filter(u=>u.role==="parent");
 
-  // Get current task for a student
+  // Get current task for a student (DB-driven)
   const getCurrentTask=(sid)=>{
     const sp=prog[sid]||{};
-    for(let i=1;i<=36;i++){
-      const st=sp[i]?.status;
-      if(!st||st===TS.LOCKED)return i;
-      if(st===TS.ACTIVE||st===TS.IN_PROGRESS||st===TS.PENDING||st===TS.REJECTED)return i;
+    const student = users.find(u => u.id === sid);
+    const tList = getStudentTasks(student);
+    if (tList.length === 0) return 1;
+    for (const t of tList) {
+      const st = sp[t.id]?.status;
+      if (!st || st === TS.LOCKED) return t.id;
+      if (st === TS.ACTIVE || st === TS.IN_PROGRESS || st === TS.PENDING || st === TS.REJECTED) return t.id;
     }
-    return 36;
+    return tList[tList.length - 1].id;
   };
-  const getApprovedCount=(sid)=>TASKS.filter(t=>prog[sid]?.[t.id]?.status===TS.APPROVED).length;
+  const getApprovedCount = (sid) => {
+    const student = users.find(u => u.id === sid);
+    const tList = getStudentTasks(student);
+    return tList.filter(t => prog[sid]?.[t.id]?.status === TS.APPROVED).length;
+  };
+  const getStudentTotal = (sid) => {
+    const student = users.find(u => u.id === sid);
+    return getStudentTasks(student).length || 36;
+  };
 
   return(<div>
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
@@ -3412,8 +3856,8 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
         </select>}
         {role==="student"&&<select value={kit} onChange={e=>setKit(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`2px solid ${KITS[kit]?.primaryColor||T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",fontWeight:700,gridColumn:"span 2"}}>
           <option value="berrybot">🍓 BerryBot</option>
-          <option value="tank">🪖 Tank Robot</option>
-          <option value="picobricks">🧱 PicoBricks</option>
+          <option value="tank" disabled={DEMO_MODE}>🪖 Tank Robot{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+          <option value="picobricks" disabled={DEMO_MODE}>🧱 PicoBricks{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
         </select>}
         {role==="parent"&&<select value={childId} onChange={e=>setChildId(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",gridColumn:"span 2"}}>
           <option value="">Çocuk seç...</option>
@@ -3441,7 +3885,7 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
               <button key={s.id} onClick={()=>{setSelStudent(s);setSelTask(cur);setProgMsg(null);}} style={{width:"100%",padding:"10px 14px",border:"none",borderBottom:`1px solid ${T.border}22`,background:"transparent",color:T.tp,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,fontSize:14}}>
                 <div style={{width:34,height:34,borderRadius:"50%",background:T.orange+"20",color:T.orange,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,flexShrink:0}}>{s.name[0]}</div>
                 <div style={{flex:1}}><div style={{fontWeight:600}}>{s.name}</div><div style={{fontSize:12,color:T.tm}}>{s.email}</div></div>
-                <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:700,color:T.orange}}>{cnt}/36</div><div style={{fontSize:11,color:T.tm}}>Görev {cur}</div></div>
+                <div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:700,color:T.orange}}>{cnt}/{getStudentTotal(s.id)}</div><div style={{fontSize:11,color:T.tm}}>Görev {cur}</div></div>
               </button>
             );
           })}
@@ -3449,7 +3893,7 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
       ) : (
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,padding:"10px 14px",borderRadius:10,background:T.dark,border:`1px solid ${T.orange}44`}}>
           <div style={{width:40,height:40,borderRadius:"50%",background:T.orange+"20",color:T.orange,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18}}>{selStudent.name[0]}</div>
-          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selStudent.name}</div><div style={{fontSize:13,color:T.tm}}>Şu an: {getApprovedCount(selStudent.id)}/36 onaylı — Görev {getCurrentTask(selStudent.id)}'de</div></div>
+          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selStudent.name}</div><div style={{fontSize:13,color:T.tm}}>Şu an: {getApprovedCount(selStudent.id)}/{totalTasksForStudent} onaylı — Görev {getCurrentTask(selStudent.id)}'de</div></div>
           <button onClick={()=>{setSelStudent(null);setProgMsg(null);}} style={{padding:"6px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:"transparent",color:T.ts,cursor:"pointer",fontSize:13}}>Değiştir</button>
         </div>
       )}
@@ -3459,16 +3903,24 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
         <div style={{fontSize:14,fontWeight:600,color:T.ts,marginBottom:6}}>2. Hangi Görevden Devam Etsin?</div>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
           <select value={selTask} onChange={e=>setSelTask(Number(e.target.value))} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:16,outline:"none",minWidth:200}}>
-            {TASKS.map(t=><option key={t.id} value={t.id}>Görev {t.id}: {t.title}</option>)}
+            {tasksForSelStudent.map(t=><option key={t.id} value={t.id}>Görev {t.id}: {t.title}</option>)}
           </select>
-          <span style={{fontSize:14,color:T.tm}}>→ Görev 1-{selTask-1} onaylanır, {selTask} aktif olur</span>
+          <span style={{fontSize:14,color:T.tm}}>→ Önceki görevler onaylanır, {selTask} aktif olur</span>
         </div>
 
-        {/* Quick buttons */}
+        {/* Quick buttons - dinamik */}
         <div style={{display:"flex",gap:4,marginBottom:12,flexWrap:"wrap"}}>
-          {[1,5,10,15,20,25,30,33,36].map(n=>(
-            <button key={n} onClick={()=>setSelTask(n)} style={{padding:"6px 12px",borderRadius:6,border:selTask===n?`2px solid ${T.orange}`:`1px solid ${T.border}`,background:selTask===n?T.orange+"20":"transparent",color:selTask===n?T.orange:T.ts,cursor:"pointer",fontSize:13,fontWeight:selTask===n?700:400}}>G.{n}</button>
-          ))}
+          {tasksForSelStudent.length > 0 && (() => {
+            // İlk, son, ve aralarda 5'er ölçekli butonlar
+            const ids = tasksForSelStudent.map(t => t.id);
+            const total = ids.length;
+            const quickIds = total <= 10 
+              ? ids 
+              : [ids[0], ids[Math.floor(total*0.2)], ids[Math.floor(total*0.4)], ids[Math.floor(total*0.6)], ids[Math.floor(total*0.8)], ids[total-1]];
+            return quickIds.map(n => (
+              <button key={n} onClick={()=>setSelTask(n)} style={{padding:"6px 12px",borderRadius:6,border:selTask===n?`2px solid ${T.orange}`:`1px solid ${T.border}`,background:selTask===n?T.orange+"20":"transparent",color:selTask===n?T.orange:T.ts,cursor:"pointer",fontSize:13,fontWeight:selTask===n?700:400}}>G.{n}</button>
+            ));
+          })()}
         </div>
 
         <div style={{display:"flex",gap:10,alignItems:"center"}}>
@@ -3502,7 +3954,7 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh}){
     <Card>
       <div style={{maxHeight:560,overflowY:"auto"}}>
         {students.map((u,i)=>{
-          const cnt=getApprovedCount(u.id);const pct=Math.round(cnt/36*100);
+          const cnt=getApprovedCount(u.id);const totalForStudent=getStudentTotal(u.id);const pct=Math.round(cnt/totalForStudent*100);
           const enrolledKits = Array.isArray(u.kits) && u.kits.length > 0 
             ? u.kits 
             : (u.kit ? [u.kit] : []);
@@ -3872,7 +4324,7 @@ function DailyShow({users,prog,logs,onSel}){
 // ═══════════════════════════════════════════════════════════════
 // PARENT VIEW — Tabs at top, hero card below with current task
 // ═══════════════════════════════════════════════════════════════
-function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
+function ParentView({parent,users,prog,classLayout,logs,initialTab="class",customTasks}){
   const[tab,setTab]=useState(initialTab);
   const child=users.find(u=>u.id===parent.childId);
 
@@ -3882,17 +4334,32 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
     <div style={{fontSize:14,color:T.ts,lineHeight:1.6}}>Henüz hesabınıza bir öğrenci atanmamış görünüyor. Lütfen okul yönetimi veya BerryBot ekibiyle iletişime geçin.</div>
   </div>);
 
+  // DB'den çocuğun kit'ine ait görevleri al (DEMO ve production'da çalışır)
+  const kit = child.kit || "berrybot";
+  const fromDb = (t) => ({
+    id: t.task_id, title: t.title || "Görev", cat: t.category || "Genel",
+    diff: t.difficulty || 1, expectedMin: t.expected_min || 15, xp: t.xp || 10,
+    img: t.emoji || "📋", desc: t.description || "", answer: t.answer || "",
+    learnings: t.learnings || [],
+    image_url: t.image_url || "", video_url: t.video_url || "",
+    answer_image_url: t.answer_image_url || "",
+  });
+  const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === kit).map(fromDb).sort((a,b)=>a.id-b.id);
+  // DEMO veya DB doluysa DB; production'da DB boşsa TASKS fallback
+  const childTasks = (DEMO_MODE || dbTasks.length > 0) ? dbTasks : TASKS;
+
   const sp=prog[child.id]||{};
-  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+  const completed=childTasks.filter(t=>sp[t.id]?.status===TS.APPROVED);
   const xp=completed.reduce((a,t)=>a+t.xp,0);
   const lv=getLevel(xp);
   const nlv=getNextLevel(xp);
   const lvProgress=nlv?((xp-lv.min)/(nlv.min-lv.min))*100:100;
   const cnt=completed.length;
-  const pct=Math.round(cnt/36*100);
+  const totalTasks=childTasks.length || 1;
+  const pct=Math.round(cnt/totalTasks*100);
   const avgScore=calcAvgScore(sp);
   const isOnline=child.online||(prog[child.id]?.online);
-  const currentTask=TASKS.find(t=>sp[t.id]?.status===TS.ACTIVE||sp[t.id]?.status===TS.IN_PROGRESS||sp[t.id]?.status===TS.PENDING);
+  const currentTask=childTasks.find(t=>sp[t.id]?.status===TS.ACTIVE||sp[t.id]?.status===TS.IN_PROGRESS||sp[t.id]?.status===TS.PENDING);
 
   // Today's progress
   const dayStart=new Date();dayStart.setHours(0,0,0,0);
@@ -4103,9 +4570,9 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class"}){
 
     {/* ═══ CONTENT ═══ */}
     <div className="pv-content" key={tab}>
-      {tab==="class"&&<ParentClassroomView child={child} sp={sp} classLayout={classLayout} logs={logs} prog={prog}/>}
-      {tab==="learnings"&&<ParentLearningsView child={child} sp={sp}/>}
-      {tab==="cv"&&<ParentCVView child={child} sp={sp}/>}
+      {tab==="class"&&<ParentClassroomView child={child} sp={sp} classLayout={classLayout} logs={logs} prog={prog} childTasks={childTasks}/>}
+      {tab==="learnings"&&<ParentLearningsView child={child} sp={sp} childTasks={childTasks}/>}
+      {tab==="cv"&&<ParentCVView child={child} sp={sp} childTasks={childTasks}/>}
     </div>
   </div>);
 }
@@ -4127,7 +4594,8 @@ function PVStat({icon,label,value,unit,color,highlight}){
 // ═══════════════════════════════════════════════════════════════
 // TAB 1: SINIF & AKTİVİTE — Yenilenmiş, ekran yerleşimi + aktivite üstte
 // ═══════════════════════════════════════════════════════════════
-function ParentClassroomView({child,sp,classLayout,logs,prog}){
+function ParentClassroomView({child,sp,classLayout,logs,prog,childTasks}){
+  const TLIST = (childTasks && childTasks.length) ? childTasks : TASKS;
   const[showLayout,setShowLayout]=useState(true); // Veli isterse gizleyebilir
 
   // Find which class & seat
@@ -4141,7 +4609,7 @@ function ParentClassroomView({child,sp,classLayout,logs,prog}){
     if(myClass)break;
   }
 
-  const current=TASKS.find(t=>sp[t.id]?.status===TS.ACTIVE||sp[t.id]?.status===TS.IN_PROGRESS||sp[t.id]?.status===TS.PENDING);
+  const current=TLIST.find(t=>sp[t.id]?.status===TS.ACTIVE||sp[t.id]?.status===TS.IN_PROGRESS||sp[t.id]?.status===TS.PENDING);
   const childLogs=(logs||[]).filter(l=>l.userId===child.id||l.targetUser===child.id).slice(0,30);
   const currentPage=prog[child.id]?.currentPage;
   const currentTaskId=prog[child.id]?.currentTaskId;
@@ -4451,8 +4919,9 @@ function ParentMiniClassroom({myClass,childId}){
   </div>);
 }
 
-function ParentLearningsView({child,sp}){
-  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+function ParentLearningsView({child,sp,childTasks}){
+  const TLIST = (childTasks && childTasks.length) ? childTasks : TASKS;
+  const completed=TLIST.filter(t=>sp[t.id]?.status===TS.APPROVED);
   const xp=completed.reduce((a,t)=>a+t.xp,0);
   let totalMs=0;
   completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
@@ -4465,25 +4934,29 @@ function ParentLearningsView({child,sp}){
       color:T.warn,
       bg:`linear-gradient(135deg,${T.warn}22,${T.card})`,
       border:T.warn,
-      keywords:["motor","tekerlek","servo","mekanik","montaj","yapı","robot","araç","gövde","hareket","yön","döner","sürüş"],
-      tasks:["Motor","Mesafe/Navigasyon","Sumo Robot","Engel Algılama"],
-      desc:"Robotun fiziksel parçalarını ve hareket sistemlerini öğrendi",
+      keywords:["motor","tekerlek","servo","mekanik","montaj","yapı","robot","araç","gövde","hareket","yön","döner","sürüş","matkap","metrik","havya","tornavida","vida","cıvata","somun","lehim","kablo","akım","voltaj"],
+      tasks:["Motor","Mesafe/Navigasyon","Sumo Robot","Engel Algılama","Montaj","Mesafe Sensörü"],
+      desc:"Robotun fiziksel parçalarını monte etti, matkap-tornavida-metrik-havya gibi donanım aletlerini öğrendi",
+      tools:["🔩 Matkap & Uçlar","🛠️ Tornavida Seti (Metrik/İmperyal)","⚡ Havya & Lehim Teli","🔧 Cırcırlı Anahtar","📏 Kumpas & Cetvel","🧰 Pense & Kerpeten"],
     },
     "💻 Yazılım & Algoritma":{
       color:T.cyan,
       bg:`linear-gradient(135deg,${T.cyan}22,${T.card})`,
       border:T.cyan,
-      keywords:["fonksiyon","döngü","koşul","kod","program","algoritma","blok","mantık","değişken","if","while","for","komut"],
-      tasks:["Fonksiyon","Çizgi Takip","Sumo Robot","Işık Takip"],
-      desc:"Robotunu kontrol etmek için kod yazmayı öğrendi",
+      keywords:["fonksiyon","döngü","koşul","kod","program","algoritma","blok","mantık","değişken","if","while","for","komut","forever","interval","milisaniye","saniye","wait","repeat","tekrar","serial"],
+      // Her görev kod gerektirir — TÜM kategorileri kapsayalım
+      tasks:["RGB LED","Motor","Buzzer","Sensör+LED+Buzzer","IR Kumanda","Engel Algılama","Sumo Robot","Fonksiyon","Çizgi Takip","Işık Takip","Mesafe Sensörü"],
+      desc:"Robotunu kontrol etmek için blok kod yazdı, algoritma kurguladı, koşullar ve döngülerle çalıştı",
+      tools:["🧩 MakeCode Blokları","⚙️ Forever Döngüsü","🔀 IF / ELSE Koşulları","🔁 Repeat & Wait","📤 Serial Komutları","📐 Algoritma Tasarımı"],
     },
     "⚡ Elektronik & Sensörler":{
       color:T.pl,
       bg:`linear-gradient(135deg,${T.purple}22,${T.card})`,
       border:T.pl,
-      keywords:["sensör","led","buzzer","kızılötesi","ışık","mesafe","ultrasonik","ldr","ir","rgb","pin","analog","dijital","sinyal","devre","elektrik"],
-      tasks:["RGB LED","Sensör+LED+Buzzer","Işık Sensörü","IR Kumanda","Işık Takip"],
-      desc:"Sensörler ve elektronik bileşenlerle nasıl çalışılacağını öğrendi",
+      keywords:["sensör","led","buzzer","kızılötesi","ışık","mesafe","ultrasonik","ldr","ir","rgb","pin","analog","dijital","sinyal","devre","elektrik","ses","frekans"],
+      tasks:["RGB LED","Sensör+LED+Buzzer","Işık Sensörü","IR Kumanda","Işık Takip","Buzzer","Mesafe Sensörü"],
+      desc:"Sensörler, LED'ler ve elektronik bileşenlerle nasıl çalışılacağını öğrendi",
+      tools:["💡 RGB LED Devresi","🔊 Buzzer & Frekans","📡 IR Alıcı","📏 Ultrasonik Sensör","🔵 LDR Işık Sensörü","⚪ Çizgi Sensörü"],
     },
   };
 
@@ -4495,10 +4968,29 @@ function ParentLearningsView({child,sp}){
       const lower=lr.toLowerCase();
       return catDef.keywords.some(kw=>lower.includes(kw));
     });
+    
+    // Yazılım kategorisi için: ANY task tamamlandıysa, default kazanımlar ekle
+    let finalLearnings = [...new Set(matchingLearnings)];
+    if (catName === "💻 Yazılım & Algoritma" && matchingTasks.length > 0) {
+      const defaultSwLearnings = [
+        "Blok tabanlı programlama yapısını öğrendi",
+        "Algoritma kurgusu ve sıralı işlemler kavradı",
+        "Forever (sonsuz döngü) yapısını kullandı",
+        "Koşullu yapılar (if/else) ile karar verme öğrendi",
+        "Zamanlama bloklarıyla (wait, interval) sıralama yaptı",
+      ];
+      // Eksik olan default kazanımları ekle
+      defaultSwLearnings.forEach(d => {
+        if (!finalLearnings.some(l => l.toLowerCase().includes(d.toLowerCase().substring(0, 15)))) {
+          finalLearnings.push(d);
+        }
+      });
+    }
+    
     categorized[catName]={
       ...catDef,
       tasks:matchingTasks,
-      learnings:[...new Set(matchingLearnings)],
+      learnings:finalLearnings,
       taskCount:matchingTasks.length,
       xpEarned:matchingTasks.reduce((a,t)=>a+t.xp,0),
     };
@@ -4524,7 +5016,7 @@ function ParentLearningsView({child,sp}){
         <div style={{fontSize:11,color:T.ts,fontWeight:600,marginTop:4}}>📚 KAZANIM</div>
       </div>
       <div style={{padding:14,borderRadius:14,background:`linear-gradient(135deg,${T.ok}22,${T.card})`,border:`1px solid ${T.ok}44`,textAlign:"center"}}>
-        <div style={{fontSize:22,fontWeight:900,color:T.ok,lineHeight:1}}>{Math.round(completed.length/36*100)}%</div>
+        <div style={{fontSize:22,fontWeight:900,color:T.ok,lineHeight:1}}>{Math.round(completed.length/(TLIST.length || 1)*100)}%</div>
         <div style={{fontSize:11,color:T.ts,fontWeight:600,marginTop:4}}>📊 İLERLEME</div>
       </div>
       {avgScore!==null&&<div style={{padding:14,borderRadius:14,background:`${gradeColor(avgScore)}22`,border:`2px solid ${gradeColor(avgScore)}66`,textAlign:"center"}}>
@@ -4621,6 +5113,24 @@ function ParentLearningsView({child,sp}){
                   ))}
                 </div>
               </>}
+              {/* MEKANIK alanı için araç-gereç listesi */}
+              {cat.tools && cat.tools.length > 0 && (
+                <div style={{marginTop: 14, padding: 12, borderRadius: 10, background: T.dark, border: `1px solid ${cat.color}33`}}>
+                  <div style={{fontSize: 11, color: cat.color, fontWeight: 800, letterSpacing: 1, marginBottom: 8, textTransform: "uppercase"}}>
+                    🛠️ Kullandığı Donanım & Aletler
+                  </div>
+                  <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 6}}>
+                    {cat.tools.map((tool, i) => (
+                      <div key={i} style={{
+                        padding: "6px 10px", borderRadius: 8,
+                        background: cat.color + "15",
+                        border: `1px solid ${cat.color}33`,
+                        fontSize: 12, color: T.tp, fontWeight: 600,
+                      }}>{tool}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ):(
             <div style={{padding:14,textAlign:"center",borderRadius:10,background:T.dark,border:`1px dashed ${cat.color}33`}}>
@@ -4667,8 +5177,9 @@ function ParentLearningsView({child,sp}){
 // ═══════════════════════════════════════════════════════════════
 // TAB 3: CV / SERTİFİKA — Mekanik / Yazılım / Elektronik vurgulu
 // ═══════════════════════════════════════════════════════════════
-function ParentCVView({child,sp}){
-  const completed=TASKS.filter(t=>sp[t.id]?.status===TS.APPROVED);
+function ParentCVView({child,sp,childTasks}){
+  const TLIST = (childTasks && childTasks.length) ? childTasks : TASKS;
+  const completed=TLIST.filter(t=>sp[t.id]?.status===TS.APPROVED);
   const xp=completed.reduce((a,t)=>a+t.xp,0);
   const lv=getLevel(xp);
   let totalMs=0;
@@ -4896,11 +5407,28 @@ function PracticeView({user,practiceProg,onAnswer}){
   const[selectedOpt,setSelectedOpt]=useState(null);
   const[showResult,setShowResult]=useState(false);
   const[startTime,setStartTime]=useState(null);
+  const[streak,setStreak]=useState(0);
 
   // Stats
   const quizStats={total:QUIZ.length,correct:practiceProg.filter(p=>p.category==="quiz"&&p.correct>0).length};
   const codeStats={total:CODE_CHALLENGES.length,correct:practiceProg.filter(p=>p.category==="code"&&p.correct>0).length};
   const totalXP=practiceProg.reduce((a,p)=>a+(p.xp_earned||0),0);
+
+  // Shuffle options + track new correct index (cevapların hep ilk sırada gözükmesini önler)
+  const shuffleOptions = (q) => {
+    const indexedOpts = q.opts.map((opt, idx) => ({ opt, originalIdx: idx }));
+    // Fisher-Yates shuffle
+    for (let i = indexedOpts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indexedOpts[i], indexedOpts[j]] = [indexedOpts[j], indexedOpts[i]];
+    }
+    const newAnsIdx = indexedOpts.findIndex(x => x.originalIdx === q.ans);
+    return {
+      ...q,
+      opts: indexedOpts.map(x => x.opt),
+      ans: newAnsIdx,
+    };
+  };
 
   const startRandom=(category)=>{
     const pool=category==="quiz"?QUIZ:CODE_CHALLENGES;
@@ -4910,7 +5438,8 @@ function PracticeView({user,practiceProg,onAnswer}){
       return !pp||pp.correct===0;
     });
     const target=unsolved.length>0?unsolved:pool;
-    const q=target[Math.floor(Math.random()*target.length)];
+    const rawQ=target[Math.floor(Math.random()*target.length)];
+    const q=shuffleOptions(rawQ);  // ★ Karıştır!
     setCurrentQ({...q,category});
     setSelectedOpt(null);
     setShowResult(false);
@@ -4922,6 +5451,7 @@ function PracticeView({user,practiceProg,onAnswer}){
     if(selectedOpt===null||!currentQ)return;
     const isCorrect=selectedOpt===currentQ.ans;
     setShowResult(true);
+    setStreak(isCorrect ? streak + 1 : 0);
     onAnswer({
       questionId:currentQ.id,
       category:currentQ.category,
@@ -5893,8 +6423,9 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, c
       .filter(t => (t.kit || "berrybot") === selKit)
       .sort((a, b) => a.task_id - b.task_id);
 
+    // DEMO MODE: BerryBot da sadece DB'den okur (36 hardcoded TASKS bypass)
     // For non-berrybot kits, show only DB-saved tasks (clean slate)
-    if (selKit !== "berrybot") {
+    if (DEMO_MODE || selKit !== "berrybot") {
       return dbTasks;
     }
 
@@ -6100,8 +6631,8 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, c
               style={{ ...inputStyle, fontWeight: 700, fontSize: 16, color: KITS[editing.kit]?.primaryColor || T.tp, borderColor: KITS[editing.kit]?.primaryColor || T.border }}
             >
               <option value="berrybot">🍓 BerryBot</option>
-              <option value="tank">🪖 Tank Robot</option>
-              <option value="picobricks">🧱 PicoBricks</option>
+              <option value="tank" disabled={DEMO_MODE}>🪖 Tank Robot{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+              <option value="picobricks" disabled={DEMO_MODE}>🧱 PicoBricks{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
             </select>
           </div>
           {/* Basic info */}
@@ -6458,8 +6989,8 @@ function AdminHomeworkEditor({ hwTemplates, onSave, onDelete, onUpload, onRefres
               <select value={editing.kit} onChange={e => setEditing({ ...editing, kit: e.target.value })}
                 style={{ ...inputStyle, fontWeight: 700, fontSize: 16 }}>
                 <option value="berrybot">🍓 BerryBot</option>
-                <option value="tank">🪖 Tank Robot</option>
-                <option value="picobricks">🧱 PicoBricks</option>
+                <option value="tank" disabled={DEMO_MODE}>🪖 Tank Robot{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+                <option value="picobricks" disabled={DEMO_MODE}>🧱 PicoBricks{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
               </select>
             </div>
 
