@@ -22,13 +22,6 @@ export default function PicoBricks3D({
   style = {},
   interactive = true,
   modelUrl = "/picobricks.glb",
-  // Modelin başlangıç oryantasyonu (radyan) — GLB eğik geldiyse düzeltmek için.
-  // PicoBricks GLB'si ~42° eğik geliyor. Aşağıdaki X değeri PCA düzeltmesi (-0.2659)
-  // + hafif öne eğme (-0.5) içerir: kart yüzü kameraya perspektifle bakar, yatık tabak
-  // gibi görünmez. Kamera da yukarıdan baktığı için (camPhi) kartın yüzü net görünür.
-  modelRotX = -0.766,
-  modelRotY = -0.3452,
-  modelRotZ = 0.607,
 }) {
   const mountRef = useRef(null);
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -153,11 +146,21 @@ export default function PicoBricks3D({
           }
         });
 
-        // ── ADIM 1: modeli bir iç gruba koy ve oryantasyonu uygula ──
-        // GLB eğik/yan geldiği için önce düz duruşa çeviriyoruz.
+        // ── ADIM 1: modeli bir iç gruba koy ve oryantasyonu düzelt ──
+        // PicoBricks GLB'si eğik/köşegen geliyor. Aşağıdaki döndürme matrisi
+        // modelin vertex bulutundan PCA (kovaryans analizi) ile hesaplandı:
+        // kartı tam düz yatırır (kalınlık ekseni dikey, en uzun kenar yatay).
         const modelInner = new THREE.Group();
         modelInner.add(model);
-        modelInner.rotation.set(modelRotX, modelRotY, modelRotZ);
+
+        const duzeltmeMatrisi = new THREE.Matrix4();
+        duzeltmeMatrisi.set(
+          0.102301, -0.390481,  0.914909, 0,
+          0.627646,  0.738884,  0.245173, 0,
+          -0.771748,  0.549158,  0.320672, 0,
+          0,         0,         0,        1
+        );
+        modelInner.quaternion.setFromRotationMatrix(duzeltmeMatrisi);
 
         // ── ADIM 2: DÖNDÜRÜLMÜŞ haline göre ortala ──
         // (önce dünya matrislerini güncelle ki box doğru çıksın)
@@ -340,7 +343,7 @@ export default function PicoBricks3D({
         container.removeChild(renderer.domElement);
       }
     };
-  }, [height, autoRotate, background, interactive, modelUrl, modelRotX, modelRotY, modelRotZ]);
+  }, [height, autoRotate, background, interactive, modelUrl]);
 
   // ─── JSX ──────────────────────────────────────────────────────
   return (
