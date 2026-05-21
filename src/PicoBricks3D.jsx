@@ -45,8 +45,8 @@ export default function PicoBricks3D({
 
     // küresel koordinatlarla yörünge kamerası
     let camR = 9;            // mesafe — model yüklenince otomatik ayarlanır
-    let camTheta = 0.6;      // yatay açı
-    let camPhi = 0.5;        // dikey açı
+    let camTheta = 0;        // yatay açı — 0 = tam karşıdan bakar
+    let camPhi = 0.32;       // dikey açı — hafif yukarıdan
     const hedef = new THREE.Vector3(0, 0, 0);
 
     function updateCam() {
@@ -200,12 +200,10 @@ export default function PicoBricks3D({
     let suruklemede = false;
     let sonX = 0;
     let sonY = 0;
-    let kullaniciDokundu = false;
 
     function pointerDown(e) {
       if (!interactive) return;
       suruklemede = true;
-      kullaniciDokundu = true;
       const p = e.touches ? e.touches[0] : e;
       sonX = p.clientX;
       sonY = p.clientY;
@@ -218,13 +216,19 @@ export default function PicoBricks3D({
       const dy = p.clientY - sonY;
       sonX = p.clientX;
       sonY = p.clientY;
-      camTheta -= dx * 0.01;
-      camPhi += dy * 0.01;
+      camTheta -= dx * 0.008;
+      camPhi += dy * 0.005;
+      // sabit karşıya bakar — yalnızca hafif sağa-sola (±25°) izin ver
+      const LIMIT = 0.44; // ~25 derece
+      camTheta = Math.max(-LIMIT, Math.min(LIMIT, camTheta));
+      // dikey açı da dar bir bantta kalsın
+      camPhi = Math.max(0.12, Math.min(0.6, camPhi));
       updateCam();
     }
     function pointerUp() {
       suruklemede = false;
       renderer.domElement.style.cursor = interactive ? "grab" : "default";
+      // kullanıcı bırakınca kısa süre sonra hafif salınım geri gelsin
     }
     function wheel(e) {
       if (!interactive) return;
@@ -247,15 +251,25 @@ export default function PicoBricks3D({
     // ─── Animasyon döngüsü ──────────────────────────────────────
     const saat = new THREE.Clock();
     let raf = 0;
+    let gecenSure = 0;   // salınım için biriken süre
 
     function animate() {
       if (!aktif) return;
       raf = requestAnimationFrame(animate);
       const dt = saat.getDelta();
 
-      // otomatik döndür — kullanıcı dokunmadıysa
-      if (autoRotate && !suruklemede && !(interactive && kullaniciDokundu)) {
-        modelGroup.rotation.y += dt * 0.5;
+      // hafif sağa-sola salınım — sabit karşıya bakar, kendi etrafında DÖNMEZ
+      if (!suruklemede) {
+        if (autoRotate) {
+          gecenSure += dt;
+          // ±0.18 radyan (~10°) genlikte yumuşak yalpalama hedefi
+          const hedefAci = Math.sin(gecenSure * 0.7) * 0.18;
+          // o anki açıdan hedefe yumuşak geçiş — zıplama olmaz
+          modelGroup.rotation.y += (hedefAci - modelGroup.rotation.y) * Math.min(1, dt * 2.5);
+        } else {
+          // autoRotate kapalıysa yavaşça karşıya (0) dönsün
+          modelGroup.rotation.y += (0 - modelGroup.rotation.y) * Math.min(1, dt * 3);
+        }
       }
 
       renderer.render(scene, camera);
