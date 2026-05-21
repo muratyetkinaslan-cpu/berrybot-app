@@ -23,9 +23,10 @@ export default function PicoBricks3D({
   interactive = true,
   modelUrl = "/picobricks.glb",
   // Modelin başlangıç oryantasyonu (radyan) — GLB eğik geldiyse düzeltmek için.
-  // PicoBricks GLB'si ~42° eğik geliyor; aşağıdaki değerler (PCA ile hesaplandı)
-  // kartı tam düz yatırıp kameraya karşı bakacak hale getiriyor.
-  modelRotX = -0.2659,
+  // PicoBricks GLB'si ~42° eğik geliyor. Aşağıdaki X değeri PCA düzeltmesi (-0.2659)
+  // + hafif öne eğme (-0.5) içerir: kart yüzü kameraya perspektifle bakar, yatık tabak
+  // gibi görünmez. Kamera da yukarıdan baktığı için (camPhi) kartın yüzü net görünür.
+  modelRotX = -0.766,
   modelRotY = -0.3452,
   modelRotZ = 0.607,
 }) {
@@ -52,7 +53,7 @@ export default function PicoBricks3D({
     // küresel koordinatlarla yörünge kamerası
     let camR = 9;            // mesafe — model yüklenince otomatik ayarlanır
     let camTheta = 0;        // yatay açı — 0 = tam karşıdan bakar
-    let camPhi = 0.32;       // dikey açı — hafif yukarıdan
+    let camPhi = 0.78;       // dikey açı — yukarıdan bakar ki kartın yüzü görünsün
     const hedef = new THREE.Vector3(0, 0, 0);
 
     function updateCam() {
@@ -236,8 +237,8 @@ export default function PicoBricks3D({
       // sabit karşıya bakar — yalnızca hafif sağa-sola (±25°) izin ver
       const LIMIT = 0.44; // ~25 derece
       camTheta = Math.max(-LIMIT, Math.min(LIMIT, camTheta));
-      // dikey açı da dar bir bantta kalsın
-      camPhi = Math.max(0.12, Math.min(0.6, camPhi));
+      // dikey açı dar bir bantta kalsın — başlangıç 0.78 civarında
+      camPhi = Math.max(0.5, Math.min(1.05, camPhi));
       updateCam();
     }
     function pointerUp() {
