@@ -22,6 +22,12 @@ export default function PicoBricks3D({
   style = {},
   interactive = true,
   modelUrl = "/picobricks.glb",
+  // Modelin başlangıç oryantasyonu (radyan) — GLB eğik geldiyse düzeltmek için.
+  // PicoBricks GLB'si ~42° eğik geliyor; aşağıdaki değerler (PCA ile hesaplandı)
+  // kartı tam düz yatırıp kameraya karşı bakacak hale getiriyor.
+  modelRotX = -0.2659,
+  modelRotY = -0.3452,
+  modelRotZ = 0.607,
 }) {
   const mountRef = useRef(null);
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -146,22 +152,31 @@ export default function PicoBricks3D({
           }
         });
 
-        // ── modeli ortala ve ölçekle ──
-        const box = new THREE.Box3().setFromObject(model);
+        // ── ADIM 1: modeli bir iç gruba koy ve oryantasyonu uygula ──
+        // GLB eğik/yan geldiği için önce düz duruşa çeviriyoruz.
+        const modelInner = new THREE.Group();
+        modelInner.add(model);
+        modelInner.rotation.set(modelRotX, modelRotY, modelRotZ);
+
+        // ── ADIM 2: DÖNDÜRÜLMÜŞ haline göre ortala ──
+        // (önce dünya matrislerini güncelle ki box doğru çıksın)
+        modelInner.updateMatrixWorld(true);
+        const box = new THREE.Box3().setFromObject(modelInner);
         const boyut = box.getSize(new THREE.Vector3());
         const merkez = box.getCenter(new THREE.Vector3());
 
-        // merkeze taşı, tabanını y=0'a oturt
+        // iç modeli, döndürülmüş kutusunun merkezi orijine gelecek
+        // ve tabanı y=0'a oturacak şekilde kaydır
         model.position.x -= merkez.x;
         model.position.z -= merkez.z;
         model.position.y -= box.min.y;
 
-        // sabit görsel boyuta normalize et (en büyük kenar ~5 birim)
+        // ── ADIM 3: sabit görsel boyuta normalize et ──
         const enBuyukKenar = Math.max(boyut.x, boyut.y, boyut.z);
         const olcek = enBuyukKenar > 0 ? 5 / enBuyukKenar : 1;
-        model.scale.setScalar(olcek);
+        modelInner.scale.setScalar(olcek);
 
-        modelGroup.add(model);
+        modelGroup.add(modelInner);
 
         // ölçeklenmiş yeni kutu — kamera ve zemin için
         const box2 = new THREE.Box3().setFromObject(modelGroup);
@@ -324,7 +339,7 @@ export default function PicoBricks3D({
         container.removeChild(renderer.domElement);
       }
     };
-  }, [height, autoRotate, background, interactive, modelUrl]);
+  }, [height, autoRotate, background, interactive, modelUrl, modelRotX, modelRotY, modelRotZ]);
 
   // ─── JSX ──────────────────────────────────────────────────────
   return (
