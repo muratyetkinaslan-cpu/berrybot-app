@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = "https://byjxolgvqetwoxhcaemv.supabase.co";
+import { createClient } from '@supabase/supabase-js';
+const SUPABASE_URL = "https://byjxolgvqetwoxhcaemv.spabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hCkrcWh7auiz-tdqEfUp5Q_xgOWOMYz"
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -654,6 +654,7 @@ export async function unlockAnswer({ studentId, taskId, instructorId }) {
   const { error } = await supabase.from('bb_answer_unlock').insert({
     student_id: studentId,
     task_id: taskId,
+    unlocked_by: instructorId || studentId,
     unlocked_at: Date.now(),
   });
   if (error) {
