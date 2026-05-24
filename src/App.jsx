@@ -204,6 +204,27 @@ const TASKS=[
   {id:36,title:"Final Projesi",cat:"Işık Takip",diff:5,expectedMin:60,xp:50,img:"🎓",desc:"Tüm becerileri birleştiren proje.",answer:"combined autonomous robot",learnings:["Sistem entegrasyonu","Proje tasarımı","Sunum becerileri","Otonom robot"]},
 ];
 
+// ─── GÖREV LİSTESİ BİRLEŞTİRME (tek kaynak) ──────────────────────
+// Tüm bileşenler bunu kullanır — böylece her yerde aynı görev listesi.
+//  BerryBot: 36 hardcoded TASKS + DB override + 36 üstü ekstralar
+//  Diğer kitler: yalnızca DB görevleri
+// dbToTask: DB satırını TASKS formatına çeviren fonksiyon (her bileşen kendi alanlarını seçebilir)
+function buildKitTaskList(kit, customTasks, dbToTask) {
+  const k = kit || "berrybot";
+  const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === k);
+  if (DEMO_MODE || k !== "berrybot") {
+    return dbTasks.map(dbToTask).sort((a, b) => a.id - b.id);
+  }
+  const dbMap = new Map(dbTasks.map(t => [t.task_id, t]));
+  const merged = [];
+  for (const t of TASKS) {
+    const dbVer = dbMap.get(t.id);
+    merged.push(dbVer ? dbToTask(dbVer) : t);
+  }
+  dbTasks.filter(t => t.task_id > TASKS.length).forEach(t => merged.push(dbToTask(t)));
+  return merged.sort((a, b) => a.id - b.id);
+}
+
 // ─── LEVELS ───
 const LEVELS=[
   {lv:1,name:"Steve Wozniak",min:0,icon:"🔧",color:"#94a3b8",title:"Apple Kurucu Mühendisi",fact:"İlk kişisel bilgisayarı garajında yaptı"},
@@ -3454,8 +3475,24 @@ function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,o
     image_url: t.image_url || "", video_url: t.video_url || "",
     answer_image_url: t.answer_image_url || "",
   });
-  const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === kit).map(fromDb).sort((a,b)=>a.id-b.id);
-  const TLIST = (DEMO_MODE || dbTasks.length > 0) ? dbTasks : TASKS;
+  // Görev listesi — ana kitTasks ile AYNI mantık:
+  //  BerryBot: 36 hardcoded TASKS + DB override + 36 üstü ekstralar
+  //  Diğer kitler: yalnızca DB görevleri
+  const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === kit);
+  const TLIST = (() => {
+    if (DEMO_MODE || kit !== "berrybot") {
+      return dbTasks.map(fromDb).sort((a,b)=>a.id-b.id);
+    }
+    // BerryBot: 36 hardcoded base, DB ile override, 36 üstü extralar eklenir
+    const dbMap = new Map(dbTasks.map(t => [t.task_id, t]));
+    const merged = [];
+    for (const t of TASKS) {
+      const dbVer = dbMap.get(t.id);
+      merged.push(dbVer ? fromDb(dbVer) : t);
+    }
+    dbTasks.filter(t => t.task_id > TASKS.length).forEach(t => merged.push(fromDb(t)));
+    return merged.sort((a,b)=>a.id-b.id);
+  })();
   const sp=prog[s.id]||{};
   const cnt=TLIST.filter(t=>sp[t.id]?.status===TS.APPROVED).length;
   const xp=TLIST.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
@@ -3531,9 +3568,7 @@ function PendingReviews({user,users,prog,onApprove,onReject,customTasks}){
   
   const items=[];
   my.forEach(s=>{
-    const studentKit = s.kit || "berrybot";
-    const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === studentKit).map(fromDb).sort((a,b)=>a.id-b.id);
-    const taskList = (DEMO_MODE || dbTasks.length > 0) ? dbTasks : TASKS;
+    const taskList = buildKitTaskList(s.kit, customTasks, fromDb);
     taskList.forEach(t=>{
       if(prog[s.id]?.[t.id]?.status===TS.PENDING) items.push({s,t,d:prog[s.id][t.id]});
     });
@@ -3703,9 +3738,8 @@ function TaskBrowser({showAns, customTasks}){
     desc: t.description || "", answer: t.answer || "",
     image_url: t.image_url || "", answer_image_url: t.answer_image_url || "",
   });
-  const dbBerryBot = (customTasks || []).filter(t => (t.kit || "berrybot") === "berrybot").map(fromDb).sort((a,b)=>a.id-b.id);
-  // DEMO: sadece DB. Production: DB yoksa TASKS array fallback
-  const taskList = (DEMO_MODE || dbBerryBot.length > 0) ? dbBerryBot : TASKS;
+  // BerryBot: 36 hardcoded + DB extras (buildKitTaskList ile)
+  const taskList = buildKitTaskList("berrybot", customTasks, fromDb);
   const cats = [...new Set(taskList.map(t => t.cat))];
   return(<div>
     <h1 style={{fontSize:22,fontWeight:800,color:T.orange,margin:"0 0 6px"}}>Görevler ({taskList.length})</h1>
@@ -3774,7 +3808,9 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh,customTasks})
   const[progMsg,setProgMsg]=useState(null);
   const[progBusy,setProgBusy]=useState(false);
 
-  // Seçili öğrencinin kit'ine göre görev listesi (DB-driven)
+  // Seçili öğrencinin kit'ine göre görev listesi
+  //  BerryBot: 36 hardcoded + DB override + 36 üstü ekstralar
+  //  Diğer kitler: yalnızca DB görevleri
   const getStudentTasks = (student) => {
     if (!student) return [];
     const studentKit = student.kit || "berrybot";
@@ -3782,10 +3818,19 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh,customTasks})
       id: t.task_id, title: t.title || "Görev", img: t.emoji || "📋",
     });
     const dbTasks = (customTasks || [])
-      .filter(t => (t.kit || "berrybot") === studentKit)
-      .map(fromDb)
-      .sort((a,b) => a.id - b.id);
-    return (DEMO_MODE || dbTasks.length > 0) ? dbTasks : TASKS;
+      .filter(t => (t.kit || "berrybot") === studentKit);
+    if (DEMO_MODE || studentKit !== "berrybot") {
+      return dbTasks.map(fromDb).sort((a,b) => a.id - b.id);
+    }
+    // BerryBot: 36 hardcoded base, DB override, 36 üstü extralar
+    const dbMap = new Map(dbTasks.map(t => [t.task_id, t]));
+    const merged = [];
+    for (const t of TASKS) {
+      const dbVer = dbMap.get(t.id);
+      merged.push(dbVer ? fromDb(dbVer) : { id: t.id, title: t.title, img: t.img });
+    }
+    dbTasks.filter(t => t.task_id > TASKS.length).forEach(t => merged.push(fromDb(t)));
+    return merged.sort((a,b) => a.id - b.id);
   };
   const tasksForSelStudent = getStudentTasks(selStudent);
   const totalTasksForStudent = tasksForSelStudent.length || 36;
@@ -4344,9 +4389,8 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class",custo
     image_url: t.image_url || "", video_url: t.video_url || "",
     answer_image_url: t.answer_image_url || "",
   });
-  const dbTasks = (customTasks || []).filter(t => (t.kit || "berrybot") === kit).map(fromDb).sort((a,b)=>a.id-b.id);
-  // DEMO veya DB doluysa DB; production'da DB boşsa TASKS fallback
-  const childTasks = (DEMO_MODE || dbTasks.length > 0) ? dbTasks : TASKS;
+  // BerryBot: 36 hardcoded + DB extras; diğer kitler DB-driven
+  const childTasks = buildKitTaskList(kit, customTasks, fromDb);
 
   const sp=prog[child.id]||{};
   const completed=childTasks.filter(t=>sp[t.id]?.status===TS.APPROVED);
