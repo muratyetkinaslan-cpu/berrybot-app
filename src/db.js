@@ -1,5 +1,5 @@
-
 import { createClient } from '@supabase/supabase-js';
+
 const SUPABASE_URL = "https://byjxolgvqetwoxhcaemv.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hCkrcWh7auiz-tdqEfUp5Q_xgOWOMYz"
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -35,11 +35,22 @@ export async function createUser(userData) {
   }).select().single();
   if (error) { console.error('createUser:', error); return null; }
   if (userData.role === 'student') {
-    // Seed progress rows from the ACTUAL tasks in this kit (DB-driven, not hardcoded)
+    // Seed progress rows.
+    // BerryBot: 36 hardcoded görev (id 1-36) HER ZAMAN seed edilir,
+    //   + bb_tasks'taki 36'nın üstündeki ekstra görevler de eklenir.
+    // Diğer kitler: yalnızca bb_tasks'taki görevler (DB-driven).
     const { data: kitTasks } = await supabase.from('bb_tasks')
       .select('task_id').eq('kit', kit).eq('active', true)
       .order('task_id', { ascending: true });
-    const taskIds = (kitTasks || []).map(t => t.task_id);
+    let taskIds = (kitTasks || []).map(t => t.task_id);
+
+    if (kit === 'berrybot') {
+      // 1-36 hardcoded + DB'deki 36 üstü ekstralar — tekrarsız birleştir
+      const hardcoded = Array.from({ length: 36 }, (_, i) => i + 1);
+      const extras = taskIds.filter(id => id > 36);
+      taskIds = [...new Set([...hardcoded, ...extras])].sort((a, b) => a - b);
+    }
+
     if (taskIds.length > 0) {
       const rows = taskIds.map((tid, idx) => ({
         student_id: id, task_id: tid,
@@ -728,10 +739,15 @@ export async function addKitToUser(userId, kitToAdd) {
     const { data: existing } = await supabase.from('bb_progress')
       .select('task_id').eq('student_id', userId).eq('kit', 'berrybot').limit(1);
     if (!existing || existing.length === 0) {
-      const rows = [];
-      for (let i = 1; i <= 36; i++) {
-        rows.push({ student_id: userId, task_id: i, status: i === 1 ? 'active' : 'locked', kit: 'berrybot' });
-      }
+      // 1-36 hardcoded + bb_tasks'taki 36 üstü ekstralar
+      const { data: dbT } = await supabase.from('bb_tasks')
+        .select('task_id').eq('kit', 'berrybot').eq('active', true);
+      const extras = (dbT || []).map(x => parseInt(x.task_id)).filter(id => id > 36);
+      const allIds = [...new Set([...Array.from({ length: 36 }, (_, i) => i + 1), ...extras])]
+        .sort((a, b) => a - b);
+      const rows = allIds.map((tid, i) => ({
+        student_id: userId, task_id: tid, status: i === 0 ? 'active' : 'locked', kit: 'berrybot',
+      }));
       await supabase.from('bb_progress').upsert(rows, { onConflict: 'student_id,task_id', ignoreDuplicates: true });
     }
   } else {
@@ -904,8 +920,15 @@ export async function upsertTask(t) {
           .map(x => Number(x.task_id))   // supports decimals like 2.5
           .filter(n => !isNaN(n));
 
-        // All task IDs are DB-driven (no hardcoded 36 for BerryBot anymore)
-        const taskIds = dbIds.sort((a, b) => a - b);  // ascending
+        // BerryBot: 1-36 hardcoded HER ZAMAN dahil + DB'deki ekstralar.
+        // Diğer kitler: yalnızca DB görevleri.
+        let taskIds;
+        if (t.kit === 'berrybot') {
+          const hardcoded = Array.from({ length: 36 }, (_, i) => i + 1);
+          taskIds = [...new Set([...hardcoded, ...dbIds])].sort((a, b) => a - b);
+        } else {
+          taskIds = dbIds.sort((a, b) => a - b);
+        }
         console.log('💾 Auto-seed task_ids (sorted):', taskIds);
 
         const PRESERVE = new Set(['approved', 'in_progress', 'pending_review', 'rejected']);
