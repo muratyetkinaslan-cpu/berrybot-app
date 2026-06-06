@@ -1,7 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
-
 const SUPABASE_URL = "https://byjxolgvqetwoxhcaemv.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hCkrcWh7auiz-tdqEfUp5Q_xgOWOMYz"
+
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ═══ USERS ═══
@@ -355,16 +358,20 @@ export async function setStudentProgressTo(studentId, fromTask) {
   const now = Date.now();
   const ts = new Date().toISOString();
   
-  // Öğrencinin kit'ini ve gerçek görev ID'lerini bul
+  // Öğrencinin kit'ini bul
   const { data: studentRow } = await supabase.from('bb_users')
     .select('kit').eq('id', studentId).maybeSingle();
   const kit = studentRow?.kit || 'berrybot';
-  const { data: kitTasks } = await supabase.from('bb_tasks')
-    .select('task_id').eq('kit', kit).eq('active', true).order('task_id');
-  const taskIds = (kitTasks || []).map(t => t.task_id);
-  
+
+  // Görev ID'lerini bb_progress'ten al (BerryBot için 1-36 hardcoded
+  // görevler bb_tasks'ta olmayabilir, ama progress'te SEED edildi)
+  const { data: progRows } = await supabase.from('bb_progress')
+    .select('task_id').eq('student_id', studentId).eq('kit', kit)
+    .order('task_id', { ascending: true });
+  const taskIds = (progRows || []).map(t => t.task_id);
+
   if (taskIds.length === 0) {
-    console.warn('setStudentProgressTo: kit için görev yok');
+    console.warn('setStudentProgressTo: öğrenci için progress satırı yok');
     return;
   }
 
