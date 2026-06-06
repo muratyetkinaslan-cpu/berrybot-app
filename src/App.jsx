@@ -5,6 +5,7 @@ import BerryBot3D from "./BerryBot3D";
 import TankRobot3D from "./TankRobot3D";
 import PicoBricks3D from "./PicoBricks3D";
 
+
 // ═══════════════════════════════════════════════════════════
 //  BerryBot LMS — Production (Supabase)
 //  Görseller: public/tasks/gorev_1/ ... gorev_36/
@@ -219,7 +220,21 @@ function buildKitTaskList(kit, customTasks, dbToTask) {
   const merged = [];
   for (const t of TASKS) {
     const dbVer = dbMap.get(t.id);
-    merged.push(dbVer ? dbToTask(dbVer) : t);
+    if (dbVer) {
+      // hardcoded'u BASE al, DB'den gelen dolu alanları üzerine yaz
+      // (DB'de boş/null olanlar hardcoded'dan gelir — açıklama vb. kaybolmaz)
+      const dbObj = dbToTask(dbVer);
+      const filled = { ...t };
+      for (const key of Object.keys(dbObj)) {
+        const v = dbObj[key];
+        if (v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0)) {
+          filled[key] = v;
+        }
+      }
+      merged.push(filled);
+    } else {
+      merged.push(t);
+    }
   }
   dbTasks.filter(t => t.task_id > TASKS.length).forEach(t => merged.push(dbToTask(t)));
   return merged.sort((a, b) => a.id - b.id);
