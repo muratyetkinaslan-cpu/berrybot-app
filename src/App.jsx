@@ -107,10 +107,11 @@ const applyKitTheme = (kitId) => {
 function TaskImage({ taskId, type = "gorsel", size = 60, fallbackEmoji = "📋", style = {}, customUrl = null, kit = "berrybot" }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  // Priority: customUrl > public/tasks fallback (BerryBot only) > emoji
-  const src = customUrl
-    ? customUrl
-    : (kit === "berrybot" ? `/tasks/gorev_${taskId}/${type}.jpg` : null);
+  // Priority: customUrl (DB) > Supabase Storage fallback > emoji
+  // Storage path: task-media/{kit}/{taskId}/image.png (gorsel) or answer.png (cevap)
+  const fileName = type === "gorsel" ? "image.png" : (type === "cevap" ? "answer.png" : `${type}.png`);
+  const storageUrl = `https://byjxolgvqetwoxhcaemv.supabase.co/storage/v1/object/public/task-media/${kit}/${taskId}/${fileName}`;
+  const src = customUrl || storageUrl;
 
   if (!src || error) {
     return (
@@ -139,9 +140,8 @@ function TaskImage({ taskId, type = "gorsel", size = 60, fallbackEmoji = "📋",
 function AnswerImage({ taskId, customUrl = null, kit = "berrybot" }) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
-  const src = customUrl
-    ? customUrl
-    : (kit === "berrybot" ? `/tasks/gorev_${taskId}/cevap.jpg` : null);
+  const storageUrl = `https://byjxolgvqetwoxhcaemv.supabase.co/storage/v1/object/public/task-media/${kit}/${taskId}/answer.png`;
+  const src = customUrl || storageUrl;
   if (!src || error) return null;
   return (
     <div style={{ marginTop: 6, borderRadius: 8, overflow: "hidden", border: `1px solid ${T.purple}44`, maxWidth: 400 }}>
@@ -2407,10 +2407,11 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
   const[answerZoom,setAnswerZoom]=useState(false);
   const tp=prog[user.id]?.[t.id]||{};
   const userKit = user.kit || "berrybot";
-  // Priority: custom URL from admin → BerryBot legacy /tasks folder (only for berrybot kit) → empty
-  const imgSrc = t.image_url || (userKit === "berrybot" ? `/tasks/gorev_${t.id}/gorsel.jpg` : "");
-  const videoSrc = t.video_url || (userKit === "berrybot" ? `/tasks/gorev_${t.id}/cozum.mp4` : "");
-  const answerSrc = t.answer_image_url || (userKit === "berrybot" ? `/tasks/gorev_${t.id}/cevap.jpg` : "");
+  // Priority: custom URL from DB → Supabase Storage fallback (task-media/{kit}/{taskId}/...)
+  const STORAGE = `https://byjxolgvqetwoxhcaemv.supabase.co/storage/v1/object/public/task-media/${userKit}/${t.id}`;
+  const imgSrc = t.image_url || `${STORAGE}/image.png`;
+  const videoSrc = t.video_url || `${STORAGE}/video.mp4`;
+  const answerSrc = t.answer_image_url || `${STORAGE}/answer.png`;
   const hasImg = !!imgSrc;
   const hasVideo = !!videoSrc;
   const hasAnswer = !!answerSrc;
