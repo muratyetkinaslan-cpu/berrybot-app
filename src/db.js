@@ -202,12 +202,17 @@ export async function approveTask(instructorId, studentId, taskId, note) {
     .select('kit').eq('id', studentId).maybeSingle();
   const kit = studentRow?.kit || 'berrybot';
 
-  // Find the next task_id for this kit (next higher than current, in active tasks) — DB-driven
+  // Find the next task_id — bb_progress üzerinden (1-36 hardcoded BerryBot
+  // görevleri bb_tasks'ta olmayabilir, ama progress'te SEED edildi)
   let nextId = null;
-  const { data: nextTask } = await supabase.from('bb_tasks')
-    .select('task_id').eq('kit', kit).eq('active', true)
-    .gt('task_id', taskId).order('task_id').limit(1).maybeSingle();
-  if (nextTask) nextId = nextTask.task_id;
+  const { data: nextProg } = await supabase.from('bb_progress')
+    .select('task_id, status').eq('student_id', studentId).eq('kit', kit)
+    .gt('task_id', taskId).order('task_id', { ascending: true });
+  if (nextProg && nextProg.length > 0) {
+    // İlk approved/in_progress/pending_review OLMAYAN satırı bul → active yap
+    const next = nextProg.find(p => !['approved','in_progress','pending_review'].includes(p.status));
+    if (next) nextId = next.task_id;
+  }
 
   if (nextId !== null) {
     // First try update (task row should exist from seed)
