@@ -182,12 +182,31 @@ export function useData() {
     })();
   }, []);
 
-  // Poll every 3s when logged in + realtime subscription
+  // Poll every 3s when logged in + realtime + refetch on focus/visibility
   useEffect(() => {
     if (!currentUser) return;
-    const iv = setInterval(() => loadAll(), 3000);
-    const unsub = db.subscribeToAll(() => loadAll());
-    return () => { clearInterval(iv); unsub(); };
+    let alive = true;
+    const tick = () => { if (alive) loadAll(); };
+    tick(); // hemen bir kez çek
+    const iv = setInterval(tick, 3000);
+
+    // sekmeye geri dönünce / pencere odaklanınca ANINDA tazele
+    const onFocus = () => tick();
+    const onVis = () => { if (document.visibilityState === 'visible') tick(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVis);
+
+    // realtime opsiyonel — unhealthy olsa bile polling'i ASLA bozmasın
+    let unsub = () => {};
+    try { unsub = db.subscribeToAll(() => tick()); } catch (e) { console.warn('realtime off:', e); }
+
+    return () => {
+      alive = false;
+      clearInterval(iv);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVis);
+      try { unsub(); } catch {}
+    };
   }, [currentUser, loadAll]);
 
   // Auth
