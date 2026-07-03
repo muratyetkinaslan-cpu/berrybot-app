@@ -66,7 +66,7 @@ export function useData() {
     try {
       if (u?.role === 'student') {
         const studentKit = u.kit || 'berrybot';
-        const [sp, m, pp, hw, hs, au, ct] = await Promise.all([
+        const [sp, m, pp, hw, hs, au, ct, hwt, hwa, cats] = await Promise.all([
           db.getStudentProgress(u.id),
           db.getAllMeta(),
           db.fetchPracticeProgress(u.id),
@@ -74,6 +74,9 @@ export function useData() {
           db.fetchHomeworkSubmissions(),
           db.fetchAnswerUnlocks(u.id),
           db.fetchCustomTasks(studentKit),
+          db.fetchHomeworkTemplates(),
+          db.fetchAssignments({ studentId: u.id }),
+          db.fetchCategories(),
         ]);
         setProgress(prev => ({ ...prev, [u.id]: sp }));
         setMeta(m);
@@ -82,31 +85,46 @@ export function useData() {
         setHomeworkSubs(hs.filter(s => s.student_id === u.id));
         setAnswerUnlocks(au);
         setCustomTasks(ct);
+        setHwTemplates(hwt);
+        setHwAssignments(hwa);
+        setCategories(cats);
       } else if (u?.role === 'parent' && u.childId) {
-        const [sp, m, l, hw, hs] = await Promise.all([
+        const [sp, m, l, hw, hs, hwt, hwa, cats] = await Promise.all([
           db.getStudentProgress(u.childId),
           db.getAllMeta(),
           db.getLogs(500),
           db.fetchHomework(),
           db.fetchHomeworkSubmissions(),
+          db.fetchHomeworkTemplates(),
+          db.fetchAssignments({ studentId: u.childId }),
+          db.fetchCategories(),
         ]);
         setProgress(prev => ({ ...prev, [u.childId]: sp }));
         setMeta(m);
         setLogs(l.filter(lg => lg.userId === u.childId || lg.targetUser === u.childId));
         setHomeworks(hw);
         setHomeworkSubs(hs.filter(s => s.student_id === u.childId));
+        setHwTemplates(hwt);
+        setHwAssignments(hwa);
+        setCategories(cats);
       } else {
         // Admin/instructor: fetch everything
-        const [us, p, m, l, cl, hw, hs, au, ct] = await Promise.all([
+        const [us, p, m, l, cl, hw, hs, au, ct, hwt, hwa, cats] = await Promise.all([
           db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
           db.fetchHomework(), db.fetchHomeworkSubmissions(),
           db.fetchAnswerUnlocks(),
           db.fetchCustomTasks(),
+          db.fetchHomeworkTemplates(),
+          db.fetchAssignments(),
+          db.fetchCategories(),
         ]);
         setUsers(us); setProgress(p); setMeta(m); setLogs(l);
         setHomeworks(hw); setHomeworkSubs(hs);
         setAnswerUnlocks(au);
         setCustomTasks(ct);
+        setHwTemplates(hwt);
+        setHwAssignments(hwa);
+        setCategories(cats);
         if (cl.length > 0) setClassLayout(cl);
       }
     } catch (e) { console.error('loadAll:', e); }
