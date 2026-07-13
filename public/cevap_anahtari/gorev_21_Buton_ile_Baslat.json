@@ -1,0 +1,301 @@
+{
+  "id": "9e1ff59d-8835-40ec-9298-420221089771",
+  "name": "Görev 21 — Buton ile Başlat",
+  "filename": "gorev_21_Buton_ile_Baslat",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "selam_ver"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_servo_angle",
+                "fields": {
+                  "PIN": 5
+                },
+                "inputs": {
+                  "ANGLE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 60
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "controls_repeat_ext",
+                    "inputs": {
+                      "TIMES": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 3
+                          }
+                        }
+                      },
+                      "DO": {
+                        "block": {
+                          "type": "rx_servo_angle",
+                          "fields": {
+                            "PIN": 6
+                          },
+                          "inputs": {
+                            "ANGLE": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 60
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "rx_delay_ms",
+                              "inputs": {
+                                "MS": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 300
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_servo_angle",
+                                  "fields": {
+                                    "PIN": 6
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 120
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_delay_ms",
+                                      "inputs": {
+                                        "MS": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 300
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_servo_angle",
+                        "fields": {
+                          "PIN": 5
+                        },
+                        "inputs": {
+                          "ANGLE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 90
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_angle",
+                            "fields": {
+                              "PIN": 6
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 40
+        },
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_servo_angle",
+                "fields": {
+                  "PIN": 4
+                },
+                "inputs": {
+                  "ANGLE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 90
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_servo_angle",
+                    "fields": {
+                      "PIN": 5
+                    },
+                    "inputs": {
+                      "ANGLE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 90
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_servo_angle",
+                        "fields": {
+                          "PIN": 6
+                        },
+                        "inputs": {
+                          "ANGLE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 90
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_angle",
+                            "fields": {
+                              "PIN": 7
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_forever",
+                                "inputs": {
+                                  "DO": {
+                                    "block": {
+                                      "type": "controls_if",
+                                      "inputs": {
+                                        "IF0": {
+                                          "block": {
+                                            "type": "rx_button_pressed",
+                                            "fields": {
+                                              "PIN": 2
+                                            }
+                                          }
+                                        },
+                                        "DO0": {
+                                          "block": {
+                                            "type": "procedures_callnoreturn",
+                                            "extraState": {
+                                              "name": "selam_ver"
+                                            },
+                                            "inputs": {},
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_delay_ms",
+                                                "inputs": {
+                                                  "MS": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 300
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_delay_ms",
+                                          "inputs": {
+                                            "MS": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 50
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": null,
+  "createdAt": 1783960917186,
+  "updatedAt": 1783960917186
+}

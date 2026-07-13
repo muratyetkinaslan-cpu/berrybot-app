@@ -1,0 +1,928 @@
+{
+  "id": "d067ce1d-e52f-4d24-99c5-cfadb9871fc6",
+  "name": "Görev 61 — Pot ile Oynatma Hızı",
+  "filename": "gorev_61_Pot_ile_Oynatma_Hizi",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "variables_set",
+                "fields": {
+                  "VAR": {
+                    "id": "vid_t1",
+                    "name": "t1",
+                    "type": ""
+                  }
+                },
+                "inputs": {
+                  "VALUE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 60
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "vid_o1",
+                        "name": "o1",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 70
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "variables_set",
+                        "fields": {
+                          "VAR": {
+                            "id": "vid_d1",
+                            "name": "d1",
+                            "type": ""
+                          }
+                        },
+                        "inputs": {
+                          "VALUE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 120
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "variables_set",
+                            "fields": {
+                              "VAR": {
+                                "id": "vid_t2",
+                                "name": "t2",
+                                "type": ""
+                              }
+                            },
+                            "inputs": {
+                              "VALUE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "variables_set",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "vid_o2",
+                                    "name": "o2",
+                                    "type": ""
+                                  }
+                                },
+                                "inputs": {
+                                  "VALUE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 110
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "variables_set",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "vid_d2",
+                                        "name": "d2",
+                                        "type": ""
+                                      }
+                                    },
+                                    "inputs": {
+                                      "VALUE": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 90
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "variables_set",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "vid_t3",
+                                            "name": "t3",
+                                            "type": ""
+                                          }
+                                        },
+                                        "inputs": {
+                                          "VALUE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 130
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "variables_set",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "vid_o3",
+                                                "name": "o3",
+                                                "type": ""
+                                              }
+                                            },
+                                            "inputs": {
+                                              "VALUE": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 70
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "variables_set",
+                                                "fields": {
+                                                  "VAR": {
+                                                    "id": "vid_d3",
+                                                    "name": "d3",
+                                                    "type": ""
+                                                  }
+                                                },
+                                                "inputs": {
+                                                  "VALUE": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 120
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "variables_set",
+                                                    "fields": {
+                                                      "VAR": {
+                                                        "id": "vid_tur",
+                                                        "name": "tur",
+                                                        "type": ""
+                                                      }
+                                                    },
+                                                    "inputs": {
+                                                      "VALUE": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 0
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "rx_forever",
+                                                        "inputs": {
+                                                          "DO": {
+                                                            "block": {
+                                                              "type": "variables_set",
+                                                              "fields": {
+                                                                "VAR": {
+                                                                  "id": "vid_bekleme",
+                                                                  "name": "bekleme",
+                                                                  "type": ""
+                                                                }
+                                                              },
+                                                              "inputs": {
+                                                                "VALUE": {
+                                                                  "block": {
+                                                                    "type": "rx_map",
+                                                                    "inputs": {
+                                                                      "VALUE": {
+                                                                        "block": {
+                                                                          "type": "rx_potentiometer",
+                                                                          "fields": {
+                                                                            "PIN": "26"
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "FROM_LOW": {
+                                                                        "block": {
+                                                                          "type": "math_number",
+                                                                          "fields": {
+                                                                            "NUM": 0
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "FROM_HIGH": {
+                                                                        "block": {
+                                                                          "type": "math_number",
+                                                                          "fields": {
+                                                                            "NUM": 100
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "TO_LOW": {
+                                                                        "block": {
+                                                                          "type": "math_number",
+                                                                          "fields": {
+                                                                            "NUM": 2000
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "TO_HIGH": {
+                                                                        "block": {
+                                                                          "type": "math_number",
+                                                                          "fields": {
+                                                                            "NUM": 200
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              },
+                                                              "next": {
+                                                                "block": {
+                                                                  "type": "variables_set",
+                                                                  "fields": {
+                                                                    "VAR": {
+                                                                      "id": "vid_tur",
+                                                                      "name": "tur",
+                                                                      "type": ""
+                                                                    }
+                                                                  },
+                                                                  "inputs": {
+                                                                    "VALUE": {
+                                                                      "block": {
+                                                                        "type": "math_arithmetic",
+                                                                        "fields": {
+                                                                          "OP": "ADD"
+                                                                        },
+                                                                        "inputs": {
+                                                                          "A": {
+                                                                            "block": {
+                                                                              "type": "variables_get",
+                                                                              "fields": {
+                                                                                "VAR": {
+                                                                                  "id": "vid_tur",
+                                                                                  "name": "tur",
+                                                                                  "type": ""
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "B": {
+                                                                            "block": {
+                                                                              "type": "math_number",
+                                                                              "fields": {
+                                                                                "NUM": 1
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  },
+                                                                  "next": {
+                                                                    "block": {
+                                                                      "type": "rx_print",
+                                                                      "inputs": {
+                                                                        "TEXT": {
+                                                                          "block": {
+                                                                            "type": "text_join",
+                                                                            "extraState": {
+                                                                              "itemCount": 5
+                                                                            },
+                                                                            "inputs": {
+                                                                              "ADD0": {
+                                                                                "block": {
+                                                                                  "type": "text",
+                                                                                  "fields": {
+                                                                                    "TEXT": "Tur "
+                                                                                  }
+                                                                                }
+                                                                              },
+                                                                              "ADD1": {
+                                                                                "block": {
+                                                                                  "type": "variables_get",
+                                                                                  "fields": {
+                                                                                    "VAR": {
+                                                                                      "id": "vid_tur",
+                                                                                      "name": "tur",
+                                                                                      "type": ""
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              },
+                                                                              "ADD2": {
+                                                                                "block": {
+                                                                                  "type": "text",
+                                                                                  "fields": {
+                                                                                    "TEXT": " - nokta suresi: "
+                                                                                  }
+                                                                                }
+                                                                              },
+                                                                              "ADD3": {
+                                                                                "block": {
+                                                                                  "type": "variables_get",
+                                                                                  "fields": {
+                                                                                    "VAR": {
+                                                                                      "id": "vid_bekleme",
+                                                                                      "name": "bekleme",
+                                                                                      "type": ""
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              },
+                                                                              "ADD4": {
+                                                                                "block": {
+                                                                                  "type": "text",
+                                                                                  "fields": {
+                                                                                    "TEXT": " ms"
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "next": {
+                                                                        "block": {
+                                                                          "type": "rx_servo_angle",
+                                                                          "fields": {
+                                                                            "PIN": 4
+                                                                          },
+                                                                          "inputs": {
+                                                                            "ANGLE": {
+                                                                              "block": {
+                                                                                "type": "math_constrain",
+                                                                                "inputs": {
+                                                                                  "VALUE": {
+                                                                                    "block": {
+                                                                                      "type": "variables_get",
+                                                                                      "fields": {
+                                                                                        "VAR": {
+                                                                                          "id": "vid_t1",
+                                                                                          "name": "t1",
+                                                                                          "type": ""
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  },
+                                                                                  "LOW": {
+                                                                                    "block": {
+                                                                                      "type": "math_number",
+                                                                                      "fields": {
+                                                                                        "NUM": 30
+                                                                                      }
+                                                                                    }
+                                                                                  },
+                                                                                  "HIGH": {
+                                                                                    "block": {
+                                                                                      "type": "math_number",
+                                                                                      "fields": {
+                                                                                        "NUM": 150
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "next": {
+                                                                            "block": {
+                                                                              "type": "rx_servo_angle",
+                                                                              "fields": {
+                                                                                "PIN": 5
+                                                                              },
+                                                                              "inputs": {
+                                                                                "ANGLE": {
+                                                                                  "block": {
+                                                                                    "type": "math_constrain",
+                                                                                    "inputs": {
+                                                                                      "VALUE": {
+                                                                                        "block": {
+                                                                                          "type": "variables_get",
+                                                                                          "fields": {
+                                                                                            "VAR": {
+                                                                                              "id": "vid_o1",
+                                                                                              "name": "o1",
+                                                                                              "type": ""
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      },
+                                                                                      "LOW": {
+                                                                                        "block": {
+                                                                                          "type": "math_number",
+                                                                                          "fields": {
+                                                                                            "NUM": 30
+                                                                                          }
+                                                                                        }
+                                                                                      },
+                                                                                      "HIGH": {
+                                                                                        "block": {
+                                                                                          "type": "math_number",
+                                                                                          "fields": {
+                                                                                            "NUM": 150
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              },
+                                                                              "next": {
+                                                                                "block": {
+                                                                                  "type": "rx_servo_angle",
+                                                                                  "fields": {
+                                                                                    "PIN": 6
+                                                                                  },
+                                                                                  "inputs": {
+                                                                                    "ANGLE": {
+                                                                                      "block": {
+                                                                                        "type": "math_constrain",
+                                                                                        "inputs": {
+                                                                                          "VALUE": {
+                                                                                            "block": {
+                                                                                              "type": "variables_get",
+                                                                                              "fields": {
+                                                                                                "VAR": {
+                                                                                                  "id": "vid_d1",
+                                                                                                  "name": "d1",
+                                                                                                  "type": ""
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          },
+                                                                                          "LOW": {
+                                                                                            "block": {
+                                                                                              "type": "math_number",
+                                                                                              "fields": {
+                                                                                                "NUM": 30
+                                                                                              }
+                                                                                            }
+                                                                                          },
+                                                                                          "HIGH": {
+                                                                                            "block": {
+                                                                                              "type": "math_number",
+                                                                                              "fields": {
+                                                                                                "NUM": 150
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  },
+                                                                                  "next": {
+                                                                                    "block": {
+                                                                                      "type": "rx_delay_ms",
+                                                                                      "inputs": {
+                                                                                        "MS": {
+                                                                                          "block": {
+                                                                                            "type": "variables_get",
+                                                                                            "fields": {
+                                                                                              "VAR": {
+                                                                                                "id": "vid_bekleme",
+                                                                                                "name": "bekleme",
+                                                                                                "type": ""
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      },
+                                                                                      "next": {
+                                                                                        "block": {
+                                                                                          "type": "rx_servo_angle",
+                                                                                          "fields": {
+                                                                                            "PIN": 4
+                                                                                          },
+                                                                                          "inputs": {
+                                                                                            "ANGLE": {
+                                                                                              "block": {
+                                                                                                "type": "math_constrain",
+                                                                                                "inputs": {
+                                                                                                  "VALUE": {
+                                                                                                    "block": {
+                                                                                                      "type": "variables_get",
+                                                                                                      "fields": {
+                                                                                                        "VAR": {
+                                                                                                          "id": "vid_t2",
+                                                                                                          "name": "t2",
+                                                                                                          "type": ""
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  },
+                                                                                                  "LOW": {
+                                                                                                    "block": {
+                                                                                                      "type": "math_number",
+                                                                                                      "fields": {
+                                                                                                        "NUM": 30
+                                                                                                      }
+                                                                                                    }
+                                                                                                  },
+                                                                                                  "HIGH": {
+                                                                                                    "block": {
+                                                                                                      "type": "math_number",
+                                                                                                      "fields": {
+                                                                                                        "NUM": 150
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          },
+                                                                                          "next": {
+                                                                                            "block": {
+                                                                                              "type": "rx_servo_angle",
+                                                                                              "fields": {
+                                                                                                "PIN": 5
+                                                                                              },
+                                                                                              "inputs": {
+                                                                                                "ANGLE": {
+                                                                                                  "block": {
+                                                                                                    "type": "math_constrain",
+                                                                                                    "inputs": {
+                                                                                                      "VALUE": {
+                                                                                                        "block": {
+                                                                                                          "type": "variables_get",
+                                                                                                          "fields": {
+                                                                                                            "VAR": {
+                                                                                                              "id": "vid_o2",
+                                                                                                              "name": "o2",
+                                                                                                              "type": ""
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      },
+                                                                                                      "LOW": {
+                                                                                                        "block": {
+                                                                                                          "type": "math_number",
+                                                                                                          "fields": {
+                                                                                                            "NUM": 30
+                                                                                                          }
+                                                                                                        }
+                                                                                                      },
+                                                                                                      "HIGH": {
+                                                                                                        "block": {
+                                                                                                          "type": "math_number",
+                                                                                                          "fields": {
+                                                                                                            "NUM": 150
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              },
+                                                                                              "next": {
+                                                                                                "block": {
+                                                                                                  "type": "rx_servo_angle",
+                                                                                                  "fields": {
+                                                                                                    "PIN": 6
+                                                                                                  },
+                                                                                                  "inputs": {
+                                                                                                    "ANGLE": {
+                                                                                                      "block": {
+                                                                                                        "type": "math_constrain",
+                                                                                                        "inputs": {
+                                                                                                          "VALUE": {
+                                                                                                            "block": {
+                                                                                                              "type": "variables_get",
+                                                                                                              "fields": {
+                                                                                                                "VAR": {
+                                                                                                                  "id": "vid_d2",
+                                                                                                                  "name": "d2",
+                                                                                                                  "type": ""
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          },
+                                                                                                          "LOW": {
+                                                                                                            "block": {
+                                                                                                              "type": "math_number",
+                                                                                                              "fields": {
+                                                                                                                "NUM": 30
+                                                                                                              }
+                                                                                                            }
+                                                                                                          },
+                                                                                                          "HIGH": {
+                                                                                                            "block": {
+                                                                                                              "type": "math_number",
+                                                                                                              "fields": {
+                                                                                                                "NUM": 150
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  },
+                                                                                                  "next": {
+                                                                                                    "block": {
+                                                                                                      "type": "rx_delay_ms",
+                                                                                                      "inputs": {
+                                                                                                        "MS": {
+                                                                                                          "block": {
+                                                                                                            "type": "variables_get",
+                                                                                                            "fields": {
+                                                                                                              "VAR": {
+                                                                                                                "id": "vid_bekleme",
+                                                                                                                "name": "bekleme",
+                                                                                                                "type": ""
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      },
+                                                                                                      "next": {
+                                                                                                        "block": {
+                                                                                                          "type": "rx_servo_angle",
+                                                                                                          "fields": {
+                                                                                                            "PIN": 4
+                                                                                                          },
+                                                                                                          "inputs": {
+                                                                                                            "ANGLE": {
+                                                                                                              "block": {
+                                                                                                                "type": "math_constrain",
+                                                                                                                "inputs": {
+                                                                                                                  "VALUE": {
+                                                                                                                    "block": {
+                                                                                                                      "type": "variables_get",
+                                                                                                                      "fields": {
+                                                                                                                        "VAR": {
+                                                                                                                          "id": "vid_t3",
+                                                                                                                          "name": "t3",
+                                                                                                                          "type": ""
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  },
+                                                                                                                  "LOW": {
+                                                                                                                    "block": {
+                                                                                                                      "type": "math_number",
+                                                                                                                      "fields": {
+                                                                                                                        "NUM": 30
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  },
+                                                                                                                  "HIGH": {
+                                                                                                                    "block": {
+                                                                                                                      "type": "math_number",
+                                                                                                                      "fields": {
+                                                                                                                        "NUM": 150
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          },
+                                                                                                          "next": {
+                                                                                                            "block": {
+                                                                                                              "type": "rx_servo_angle",
+                                                                                                              "fields": {
+                                                                                                                "PIN": 5
+                                                                                                              },
+                                                                                                              "inputs": {
+                                                                                                                "ANGLE": {
+                                                                                                                  "block": {
+                                                                                                                    "type": "math_constrain",
+                                                                                                                    "inputs": {
+                                                                                                                      "VALUE": {
+                                                                                                                        "block": {
+                                                                                                                          "type": "variables_get",
+                                                                                                                          "fields": {
+                                                                                                                            "VAR": {
+                                                                                                                              "id": "vid_o3",
+                                                                                                                              "name": "o3",
+                                                                                                                              "type": ""
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      },
+                                                                                                                      "LOW": {
+                                                                                                                        "block": {
+                                                                                                                          "type": "math_number",
+                                                                                                                          "fields": {
+                                                                                                                            "NUM": 30
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      },
+                                                                                                                      "HIGH": {
+                                                                                                                        "block": {
+                                                                                                                          "type": "math_number",
+                                                                                                                          "fields": {
+                                                                                                                            "NUM": 150
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              },
+                                                                                                              "next": {
+                                                                                                                "block": {
+                                                                                                                  "type": "rx_servo_angle",
+                                                                                                                  "fields": {
+                                                                                                                    "PIN": 6
+                                                                                                                  },
+                                                                                                                  "inputs": {
+                                                                                                                    "ANGLE": {
+                                                                                                                      "block": {
+                                                                                                                        "type": "math_constrain",
+                                                                                                                        "inputs": {
+                                                                                                                          "VALUE": {
+                                                                                                                            "block": {
+                                                                                                                              "type": "variables_get",
+                                                                                                                              "fields": {
+                                                                                                                                "VAR": {
+                                                                                                                                  "id": "vid_d3",
+                                                                                                                                  "name": "d3",
+                                                                                                                                  "type": ""
+                                                                                                                                }
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          },
+                                                                                                                          "LOW": {
+                                                                                                                            "block": {
+                                                                                                                              "type": "math_number",
+                                                                                                                              "fields": {
+                                                                                                                                "NUM": 30
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          },
+                                                                                                                          "HIGH": {
+                                                                                                                            "block": {
+                                                                                                                              "type": "math_number",
+                                                                                                                              "fields": {
+                                                                                                                                "NUM": 150
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  },
+                                                                                                                  "next": {
+                                                                                                                    "block": {
+                                                                                                                      "type": "rx_delay_ms",
+                                                                                                                      "inputs": {
+                                                                                                                        "MS": {
+                                                                                                                          "block": {
+                                                                                                                            "type": "variables_get",
+                                                                                                                            "fields": {
+                                                                                                                              "VAR": {
+                                                                                                                                "id": "vid_bekleme",
+                                                                                                                                "name": "bekleme",
+                                                                                                                                "type": ""
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "t1",
+        "id": "vid_t1"
+      },
+      {
+        "name": "o1",
+        "id": "vid_o1"
+      },
+      {
+        "name": "d1",
+        "id": "vid_d1"
+      },
+      {
+        "name": "t2",
+        "id": "vid_t2"
+      },
+      {
+        "name": "o2",
+        "id": "vid_o2"
+      },
+      {
+        "name": "d2",
+        "id": "vid_d2"
+      },
+      {
+        "name": "t3",
+        "id": "vid_t3"
+      },
+      {
+        "name": "o3",
+        "id": "vid_o3"
+      },
+      {
+        "name": "d3",
+        "id": "vid_d3"
+      },
+      {
+        "name": "tur",
+        "id": "vid_tur"
+      },
+      {
+        "name": "bekleme",
+        "id": "vid_bekleme"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917257,
+  "updatedAt": 1783960917257
+}

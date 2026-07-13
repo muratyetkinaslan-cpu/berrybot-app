@@ -1,0 +1,403 @@
+{
+  "id": "11a7d0b5-377e-43db-8983-1c64e8200e73",
+  "name": "Görev 29 — Yaklaşınca Kaç!",
+  "filename": "gorev_29_Yaklasinca_Kac",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "variables_set",
+                "fields": {
+                  "VAR": {
+                    "id": "vid_kacti",
+                    "name": "kacti",
+                    "type": ""
+                  }
+                },
+                "inputs": {
+                  "VALUE": {
+                    "block": {
+                      "type": "logic_boolean",
+                      "fields": {
+                        "BOOL": "FALSE"
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_servo_angle",
+                    "fields": {
+                      "PIN": 4
+                    },
+                    "inputs": {
+                      "ANGLE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 90
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_servo_angle",
+                        "fields": {
+                          "PIN": 5
+                        },
+                        "inputs": {
+                          "ANGLE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 90
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_angle",
+                            "fields": {
+                              "PIN": 6
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_angle",
+                                "fields": {
+                                  "PIN": 7
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 90
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_forever",
+                                    "inputs": {
+                                      "DO": {
+                                        "block": {
+                                          "type": "variables_set",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "vid_mesafe",
+                                              "name": "mesafe",
+                                              "type": ""
+                                            }
+                                          },
+                                          "inputs": {
+                                            "VALUE": {
+                                              "block": {
+                                                "type": "rx_ultrasonic_distance",
+                                                "fields": {
+                                                  "TRIG": 12,
+                                                  "ECHO": 13
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "controls_if",
+                                              "inputs": {
+                                                "IF0": {
+                                                  "block": {
+                                                    "type": "logic_operation",
+                                                    "fields": {
+                                                      "OP": "AND"
+                                                    },
+                                                    "inputs": {
+                                                      "A": {
+                                                        "block": {
+                                                          "type": "logic_compare",
+                                                          "fields": {
+                                                            "OP": "LT"
+                                                          },
+                                                          "inputs": {
+                                                            "A": {
+                                                              "block": {
+                                                                "type": "variables_get",
+                                                                "fields": {
+                                                                  "VAR": {
+                                                                    "id": "vid_mesafe",
+                                                                    "name": "mesafe",
+                                                                    "type": ""
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            "B": {
+                                                              "block": {
+                                                                "type": "math_number",
+                                                                "fields": {
+                                                                  "NUM": 10
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "B": {
+                                                        "block": {
+                                                          "type": "logic_negate",
+                                                          "inputs": {
+                                                            "BOOL": {
+                                                              "block": {
+                                                                "type": "variables_get",
+                                                                "fields": {
+                                                                  "VAR": {
+                                                                    "id": "vid_kacti",
+                                                                    "name": "kacti",
+                                                                    "type": ""
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "DO0": {
+                                                  "block": {
+                                                    "type": "rx_servo_angle",
+                                                    "fields": {
+                                                      "PIN": 5
+                                                    },
+                                                    "inputs": {
+                                                      "ANGLE": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 130
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "variables_set",
+                                                        "fields": {
+                                                          "VAR": {
+                                                            "id": "vid_kacti",
+                                                            "name": "kacti",
+                                                            "type": ""
+                                                          }
+                                                        },
+                                                        "inputs": {
+                                                          "VALUE": {
+                                                            "block": {
+                                                              "type": "logic_boolean",
+                                                              "fields": {
+                                                                "BOOL": "TRUE"
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_buzzer_tone",
+                                                            "fields": {
+                                                              "PIN": 8
+                                                            },
+                                                            "inputs": {
+                                                              "FREQ": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 900
+                                                                  }
+                                                                }
+                                                              },
+                                                              "DUR": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 120
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "next": {
+                                                "block": {
+                                                  "type": "controls_if",
+                                                  "inputs": {
+                                                    "IF0": {
+                                                      "block": {
+                                                        "type": "logic_operation",
+                                                        "fields": {
+                                                          "OP": "AND"
+                                                        },
+                                                        "inputs": {
+                                                          "A": {
+                                                            "block": {
+                                                              "type": "logic_compare",
+                                                              "fields": {
+                                                                "OP": "GT"
+                                                              },
+                                                              "inputs": {
+                                                                "A": {
+                                                                  "block": {
+                                                                    "type": "variables_get",
+                                                                    "fields": {
+                                                                      "VAR": {
+                                                                        "id": "vid_mesafe",
+                                                                        "name": "mesafe",
+                                                                        "type": ""
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "B": {
+                                                                  "block": {
+                                                                    "type": "math_number",
+                                                                    "fields": {
+                                                                      "NUM": 15
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "B": {
+                                                            "block": {
+                                                              "type": "variables_get",
+                                                              "fields": {
+                                                                "VAR": {
+                                                                  "id": "vid_kacti",
+                                                                  "name": "kacti",
+                                                                  "type": ""
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "DO0": {
+                                                      "block": {
+                                                        "type": "rx_servo_angle",
+                                                        "fields": {
+                                                          "PIN": 5
+                                                        },
+                                                        "inputs": {
+                                                          "ANGLE": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 90
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "variables_set",
+                                                            "fields": {
+                                                              "VAR": {
+                                                                "id": "vid_kacti",
+                                                                "name": "kacti",
+                                                                "type": ""
+                                                              }
+                                                            },
+                                                            "inputs": {
+                                                              "VALUE": {
+                                                                "block": {
+                                                                  "type": "logic_boolean",
+                                                                  "fields": {
+                                                                    "BOOL": "FALSE"
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "next": {
+                                                    "block": {
+                                                      "type": "rx_delay_ms",
+                                                      "inputs": {
+                                                        "MS": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 60
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "kacti",
+        "id": "vid_kacti"
+      },
+      {
+        "name": "mesafe",
+        "id": "vid_mesafe"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917192,
+  "updatedAt": 1783960917192
+}

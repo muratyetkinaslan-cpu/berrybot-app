@@ -1,0 +1,595 @@
+{
+  "id": "58f8595b-3f1f-46c1-b079-f2778e5061e8",
+  "name": "Görev 14 — Kavrama Işığı",
+  "filename": "gorev_14_Kavrama_Isigi",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "renk_sari"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_digital_write",
+                "fields": {
+                  "PIN": 9,
+                  "STATE": "HIGH"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_digital_write",
+                    "fields": {
+                      "PIN": 10,
+                      "STATE": "HIGH"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_digital_write",
+                        "fields": {
+                          "PIN": 11,
+                          "STATE": "LOW"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 40
+        },
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "renk_mor"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_digital_write",
+                "fields": {
+                  "PIN": 9,
+                  "STATE": "HIGH"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_digital_write",
+                    "fields": {
+                      "PIN": 10,
+                      "STATE": "LOW"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_digital_write",
+                        "fields": {
+                          "PIN": 11,
+                          "STATE": "HIGH"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 360
+        },
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "renk_beyaz"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_digital_write",
+                "fields": {
+                  "PIN": 9,
+                  "STATE": "HIGH"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_digital_write",
+                    "fields": {
+                      "PIN": 10,
+                      "STATE": "HIGH"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_digital_write",
+                        "fields": {
+                          "PIN": 11,
+                          "STATE": "HIGH"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 680
+        },
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "variables_set",
+                "fields": {
+                  "VAR": {
+                    "id": "vid_gripper",
+                    "name": "gripper",
+                    "type": ""
+                  }
+                },
+                "inputs": {
+                  "VALUE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 90
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_servo_angle",
+                    "fields": {
+                      "PIN": 7
+                    },
+                    "inputs": {
+                      "ANGLE": {
+                        "block": {
+                          "type": "math_constrain",
+                          "inputs": {
+                            "VALUE": {
+                              "block": {
+                                "type": "variables_get",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "vid_gripper",
+                                    "name": "gripper",
+                                    "type": ""
+                                  }
+                                }
+                              }
+                            },
+                            "LOW": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 40
+                                }
+                              }
+                            },
+                            "HIGH": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 140
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_forever",
+                        "inputs": {
+                          "DO": {
+                            "block": {
+                              "type": "variables_set",
+                              "fields": {
+                                "VAR": {
+                                  "id": "vid_mesafe",
+                                  "name": "mesafe",
+                                  "type": ""
+                                }
+                              },
+                              "inputs": {
+                                "VALUE": {
+                                  "block": {
+                                    "type": "rx_ultrasonic_distance",
+                                    "fields": {
+                                      "TRIG": 12,
+                                      "ECHO": 13
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "controls_if",
+                                  "inputs": {
+                                    "IF0": {
+                                      "block": {
+                                        "type": "logic_operation",
+                                        "fields": {
+                                          "OP": "AND"
+                                        },
+                                        "inputs": {
+                                          "A": {
+                                            "block": {
+                                              "type": "logic_compare",
+                                              "fields": {
+                                                "OP": "LT"
+                                              },
+                                              "inputs": {
+                                                "A": {
+                                                  "block": {
+                                                    "type": "variables_get",
+                                                    "fields": {
+                                                      "VAR": {
+                                                        "id": "vid_mesafe",
+                                                        "name": "mesafe",
+                                                        "type": ""
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "B": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 10
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "B": {
+                                            "block": {
+                                              "type": "logic_compare",
+                                              "fields": {
+                                                "OP": "GT"
+                                              },
+                                              "inputs": {
+                                                "A": {
+                                                  "block": {
+                                                    "type": "variables_get",
+                                                    "fields": {
+                                                      "VAR": {
+                                                        "id": "vid_gripper",
+                                                        "name": "gripper",
+                                                        "type": ""
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "B": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 85
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "DO0": {
+                                      "block": {
+                                        "type": "procedures_callnoreturn",
+                                        "extraState": {
+                                          "name": "renk_sari"
+                                        },
+                                        "inputs": {}
+                                      }
+                                    },
+                                    "IF1": {
+                                      "block": {
+                                        "type": "logic_compare",
+                                        "fields": {
+                                          "OP": "LTE"
+                                        },
+                                        "inputs": {
+                                          "A": {
+                                            "block": {
+                                              "type": "variables_get",
+                                              "fields": {
+                                                "VAR": {
+                                                  "id": "vid_gripper",
+                                                  "name": "gripper",
+                                                  "type": ""
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "B": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 85
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "DO1": {
+                                      "block": {
+                                        "type": "procedures_callnoreturn",
+                                        "extraState": {
+                                          "name": "renk_mor"
+                                        },
+                                        "inputs": {}
+                                      }
+                                    },
+                                    "ELSE": {
+                                      "block": {
+                                        "type": "procedures_callnoreturn",
+                                        "extraState": {
+                                          "name": "renk_beyaz"
+                                        },
+                                        "inputs": {}
+                                      }
+                                    }
+                                  },
+                                  "extraState": {
+                                    "elseIfCount": 1,
+                                    "elseCount": 1
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "controls_if",
+                                      "inputs": {
+                                        "IF0": {
+                                          "block": {
+                                            "type": "logic_compare",
+                                            "fields": {
+                                              "OP": "LT"
+                                            },
+                                            "inputs": {
+                                              "A": {
+                                                "block": {
+                                                  "type": "variables_get",
+                                                  "fields": {
+                                                    "VAR": {
+                                                      "id": "vid_mesafe",
+                                                      "name": "mesafe",
+                                                      "type": ""
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "B": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 7
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "DO0": {
+                                          "block": {
+                                            "type": "variables_set",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "vid_gripper",
+                                                "name": "gripper",
+                                                "type": ""
+                                              }
+                                            },
+                                            "inputs": {
+                                              "VALUE": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 40
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_servo_angle",
+                                                "fields": {
+                                                  "PIN": 7
+                                                },
+                                                "inputs": {
+                                                  "ANGLE": {
+                                                    "block": {
+                                                      "type": "math_constrain",
+                                                      "inputs": {
+                                                        "VALUE": {
+                                                          "block": {
+                                                            "type": "variables_get",
+                                                            "fields": {
+                                                              "VAR": {
+                                                                "id": "vid_gripper",
+                                                                "name": "gripper",
+                                                                "type": ""
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "LOW": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 40
+                                                            }
+                                                          }
+                                                        },
+                                                        "HIGH": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 140
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "rx_delay_s",
+                                                    "inputs": {
+                                                      "S": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 2
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "variables_set",
+                                                        "fields": {
+                                                          "VAR": {
+                                                            "id": "vid_gripper",
+                                                            "name": "gripper",
+                                                            "type": ""
+                                                          }
+                                                        },
+                                                        "inputs": {
+                                                          "VALUE": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 140
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_servo_angle",
+                                                            "fields": {
+                                                              "PIN": 7
+                                                            },
+                                                            "inputs": {
+                                                              "ANGLE": {
+                                                                "block": {
+                                                                  "type": "math_constrain",
+                                                                  "inputs": {
+                                                                    "VALUE": {
+                                                                      "block": {
+                                                                        "type": "variables_get",
+                                                                        "fields": {
+                                                                          "VAR": {
+                                                                            "id": "vid_gripper",
+                                                                            "name": "gripper",
+                                                                            "type": ""
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    },
+                                                                    "LOW": {
+                                                                      "block": {
+                                                                        "type": "math_number",
+                                                                        "fields": {
+                                                                          "NUM": 40
+                                                                        }
+                                                                      }
+                                                                    },
+                                                                    "HIGH": {
+                                                                      "block": {
+                                                                        "type": "math_number",
+                                                                        "fields": {
+                                                                          "NUM": 140
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            "next": {
+                                                              "block": {
+                                                                "type": "rx_delay_s",
+                                                                "inputs": {
+                                                                  "S": {
+                                                                    "block": {
+                                                                      "type": "math_number",
+                                                                      "fields": {
+                                                                        "NUM": 1
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_delay_ms",
+                                          "inputs": {
+                                            "MS": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 100
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "gripper",
+        "id": "vid_gripper"
+      },
+      {
+        "name": "mesafe",
+        "id": "vid_mesafe"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917181,
+  "updatedAt": 1783960917181
+}

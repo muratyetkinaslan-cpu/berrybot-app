@@ -1,0 +1,796 @@
+{
+  "id": "7060961c-cdc1-4fa3-9f85-d4557cdc7e63",
+  "name": "Görev 54 — X-O-X: İlk Hamle",
+  "filename": "gorev_54_X_O_X_Ilk_Hamle",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "git_hucre"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "variables_set",
+                "fields": {
+                  "VAR": {
+                    "id": "vid_sutun",
+                    "name": "sutun",
+                    "type": ""
+                  }
+                },
+                "inputs": {
+                  "VALUE": {
+                    "block": {
+                      "type": "math_modulo",
+                      "inputs": {
+                        "DIVIDEND": {
+                          "block": {
+                            "type": "variables_get",
+                            "fields": {
+                              "VAR": {
+                                "id": "vid_h",
+                                "name": "h",
+                                "type": ""
+                              }
+                            }
+                          }
+                        },
+                        "DIVISOR": {
+                          "block": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 3
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "vid_satir",
+                        "name": "satir",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "math_round",
+                          "fields": {
+                            "OP": "ROUNDDOWN"
+                          },
+                          "inputs": {
+                            "NUM": {
+                              "block": {
+                                "type": "math_arithmetic",
+                                "fields": {
+                                  "OP": "DIVIDE"
+                                },
+                                "inputs": {
+                                  "A": {
+                                    "block": {
+                                      "type": "variables_get",
+                                      "fields": {
+                                        "VAR": {
+                                          "id": "vid_h",
+                                          "name": "h",
+                                          "type": ""
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "B": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 3
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "variables_set",
+                        "fields": {
+                          "VAR": {
+                            "id": "vid_t",
+                            "name": "t",
+                            "type": ""
+                          }
+                        },
+                        "inputs": {
+                          "VALUE": {
+                            "block": {
+                              "type": "math_arithmetic",
+                              "fields": {
+                                "OP": "ADD"
+                              },
+                              "inputs": {
+                                "A": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 50
+                                    }
+                                  }
+                                },
+                                "B": {
+                                  "block": {
+                                    "type": "math_arithmetic",
+                                    "fields": {
+                                      "OP": "MULTIPLY"
+                                    },
+                                    "inputs": {
+                                      "A": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "vid_sutun",
+                                              "name": "sutun",
+                                              "type": ""
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "B": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 40
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "variables_set",
+                            "fields": {
+                              "VAR": {
+                                "id": "vid_o",
+                                "name": "o",
+                                "type": ""
+                              }
+                            },
+                            "inputs": {
+                              "VALUE": {
+                                "block": {
+                                  "type": "math_arithmetic",
+                                  "fields": {
+                                    "OP": "ADD"
+                                  },
+                                  "inputs": {
+                                    "A": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 60
+                                        }
+                                      }
+                                    },
+                                    "B": {
+                                      "block": {
+                                        "type": "math_arithmetic",
+                                        "fields": {
+                                          "OP": "MULTIPLY"
+                                        },
+                                        "inputs": {
+                                          "A": {
+                                            "block": {
+                                              "type": "variables_get",
+                                              "fields": {
+                                                "VAR": {
+                                                  "id": "vid_satir",
+                                                  "name": "satir",
+                                                  "type": ""
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "B": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 15
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_angle",
+                                "fields": {
+                                  "PIN": 4
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_constrain",
+                                      "inputs": {
+                                        "VALUE": {
+                                          "block": {
+                                            "type": "variables_get",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "vid_t",
+                                                "name": "t",
+                                                "type": ""
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "LOW": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 30
+                                            }
+                                          }
+                                        },
+                                        "HIGH": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 150
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_angle",
+                                    "fields": {
+                                      "PIN": 5
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "math_constrain",
+                                          "inputs": {
+                                            "VALUE": {
+                                              "block": {
+                                                "type": "variables_get",
+                                                "fields": {
+                                                  "VAR": {
+                                                    "id": "vid_o",
+                                                    "name": "o",
+                                                    "type": ""
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "LOW": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 50
+                                                }
+                                              }
+                                            },
+                                            "HIGH": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 130
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_servo_angle",
+                                        "fields": {
+                                          "PIN": 6
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 115
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_delay_ms",
+                                            "inputs": {
+                                              "MS": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 700
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "extraState": {
+            "params": [
+              {
+                "name": "h",
+                "id": "vid_h"
+              }
+            ]
+          },
+          "x": 820,
+          "y": 40
+        },
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "kup_al"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_servo_angle",
+                "fields": {
+                  "PIN": 7
+                },
+                "inputs": {
+                  "ANGLE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 140
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_delay_ms",
+                    "inputs": {
+                      "MS": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 300
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_servo_angle",
+                        "fields": {
+                          "PIN": 4
+                        },
+                        "inputs": {
+                          "ANGLE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 90
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_angle",
+                            "fields": {
+                              "PIN": 5
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 55
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_angle",
+                                "fields": {
+                                  "PIN": 6
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 125
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_delay_s",
+                                    "inputs": {
+                                      "S": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 1
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_servo_angle",
+                                        "fields": {
+                                          "PIN": 7
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 40
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_delay_ms",
+                                            "inputs": {
+                                              "MS": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 500
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_servo_angle",
+                                                "fields": {
+                                                  "PIN": 5
+                                                },
+                                                "inputs": {
+                                                  "ANGLE": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 115
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "rx_delay_ms",
+                                                    "inputs": {
+                                                      "MS": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 500
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 360
+        },
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "hucreye_birak"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_servo_angle",
+                "fields": {
+                  "PIN": 7
+                },
+                "inputs": {
+                  "ANGLE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 140
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_delay_ms",
+                    "inputs": {
+                      "MS": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 400
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_servo_angle",
+                        "fields": {
+                          "PIN": 5
+                        },
+                        "inputs": {
+                          "ANGLE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 115
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_delay_ms",
+                            "inputs": {
+                              "MS": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 400
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 680
+        },
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "procedures_callnoreturn",
+                "extraState": {
+                  "name": "kup_al"
+                },
+                "inputs": {},
+                "next": {
+                  "block": {
+                    "type": "procedures_callnoreturn",
+                    "extraState": {
+                      "name": "git_hucre",
+                      "params": [
+                        "h"
+                      ]
+                    },
+                    "inputs": {
+                      "ARG0": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 4
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "procedures_callnoreturn",
+                        "extraState": {
+                          "name": "hucreye_birak"
+                        },
+                        "inputs": {},
+                        "next": {
+                          "block": {
+                            "type": "rx_buzzer_tone",
+                            "fields": {
+                              "PIN": 8
+                            },
+                            "inputs": {
+                              "FREQ": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 1200
+                                  }
+                                }
+                              },
+                              "DUR": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 150
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_angle",
+                                "fields": {
+                                  "PIN": 4
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 90
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_angle",
+                                    "fields": {
+                                      "PIN": 5
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 90
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_servo_angle",
+                                        "fields": {
+                                          "PIN": 6
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 90
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_servo_angle",
+                                            "fields": {
+                                              "PIN": 7
+                                            },
+                                            "inputs": {
+                                              "ANGLE": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 90
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "h",
+        "id": "vid_h"
+      },
+      {
+        "name": "sutun",
+        "id": "vid_sutun"
+      },
+      {
+        "name": "satir",
+        "id": "vid_satir"
+      },
+      {
+        "name": "t",
+        "id": "vid_t"
+      },
+      {
+        "name": "o",
+        "id": "vid_o"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917230,
+  "updatedAt": 1783960917230
+}

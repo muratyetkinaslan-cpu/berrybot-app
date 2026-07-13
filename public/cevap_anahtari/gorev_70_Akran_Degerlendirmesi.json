@@ -1,0 +1,605 @@
+{
+  "id": "6f2af522-6723-402c-9558-9dfe5577781d",
+  "name": "Görev 70 — Akran Değerlendirmesi",
+  "filename": "gorev_70_Akran_Degerlendirmesi",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "variables_set",
+                "fields": {
+                  "VAR": {
+                    "id": "vid_puan",
+                    "name": "puan",
+                    "type": ""
+                  }
+                },
+                "inputs": {
+                  "VALUE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 0
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "vid_kriter",
+                        "name": "kriter",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 1
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_print",
+                        "inputs": {
+                          "TEXT": {
+                            "block": {
+                              "type": "text",
+                              "fields": {
+                                "TEXT": "Degerlendirme: 3 kriter, butonla 1-5 puan ver"
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_print",
+                            "inputs": {
+                              "TEXT": {
+                                "block": {
+                                  "type": "text",
+                                  "fields": {
+                                    "TEXT": "Kriter 1: Yaraticilik"
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_forever",
+                                "inputs": {
+                                  "DO": {
+                                    "block": {
+                                      "type": "controls_if",
+                                      "inputs": {
+                                        "IF0": {
+                                          "block": {
+                                            "type": "rx_button_pressed",
+                                            "fields": {
+                                              "PIN": 2
+                                            }
+                                          }
+                                        },
+                                        "DO0": {
+                                          "block": {
+                                            "type": "controls_whileUntil",
+                                            "fields": {
+                                              "MODE": "WHILE"
+                                            },
+                                            "inputs": {
+                                              "BOOL": {
+                                                "block": {
+                                                  "type": "rx_button_pressed",
+                                                  "fields": {
+                                                    "PIN": 2
+                                                  }
+                                                }
+                                              },
+                                              "DO": {
+                                                "block": {
+                                                  "type": "rx_delay_ms",
+                                                  "inputs": {
+                                                    "MS": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 10
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "variables_set",
+                                                "fields": {
+                                                  "VAR": {
+                                                    "id": "vid_puan",
+                                                    "name": "puan",
+                                                    "type": ""
+                                                  }
+                                                },
+                                                "inputs": {
+                                                  "VALUE": {
+                                                    "block": {
+                                                      "type": "math_arithmetic",
+                                                      "fields": {
+                                                        "OP": "ADD"
+                                                      },
+                                                      "inputs": {
+                                                        "A": {
+                                                          "block": {
+                                                            "type": "variables_get",
+                                                            "fields": {
+                                                              "VAR": {
+                                                                "id": "vid_puan",
+                                                                "name": "puan",
+                                                                "type": ""
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "B": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 1
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "rx_buzzer_tone",
+                                                    "fields": {
+                                                      "PIN": 8
+                                                    },
+                                                    "inputs": {
+                                                      "FREQ": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 1200
+                                                          }
+                                                        }
+                                                      },
+                                                      "DUR": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 60
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "rx_print",
+                                                        "inputs": {
+                                                          "TEXT": {
+                                                            "block": {
+                                                              "type": "text_join",
+                                                              "extraState": {
+                                                                "itemCount": 4
+                                                              },
+                                                              "inputs": {
+                                                                "ADD0": {
+                                                                  "block": {
+                                                                    "type": "text",
+                                                                    "fields": {
+                                                                      "TEXT": "Kriter "
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "ADD1": {
+                                                                  "block": {
+                                                                    "type": "variables_get",
+                                                                    "fields": {
+                                                                      "VAR": {
+                                                                        "id": "vid_kriter",
+                                                                        "name": "kriter",
+                                                                        "type": ""
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "ADD2": {
+                                                                  "block": {
+                                                                    "type": "text",
+                                                                    "fields": {
+                                                                      "TEXT": " puan: "
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "ADD3": {
+                                                                  "block": {
+                                                                    "type": "variables_get",
+                                                                    "fields": {
+                                                                      "VAR": {
+                                                                        "id": "vid_puan",
+                                                                        "name": "puan",
+                                                                        "type": ""
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "controls_if",
+                                                            "inputs": {
+                                                              "IF0": {
+                                                                "block": {
+                                                                  "type": "logic_compare",
+                                                                  "fields": {
+                                                                    "OP": "GTE"
+                                                                  },
+                                                                  "inputs": {
+                                                                    "A": {
+                                                                      "block": {
+                                                                        "type": "variables_get",
+                                                                        "fields": {
+                                                                          "VAR": {
+                                                                            "id": "vid_puan",
+                                                                            "name": "puan",
+                                                                            "type": ""
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    },
+                                                                    "B": {
+                                                                      "block": {
+                                                                        "type": "math_number",
+                                                                        "fields": {
+                                                                          "NUM": 5
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              },
+                                                              "DO0": {
+                                                                "block": {
+                                                                  "type": "rx_print",
+                                                                  "inputs": {
+                                                                    "TEXT": {
+                                                                      "block": {
+                                                                        "type": "text_join",
+                                                                        "extraState": {
+                                                                          "itemCount": 5
+                                                                        },
+                                                                        "inputs": {
+                                                                          "ADD0": {
+                                                                            "block": {
+                                                                              "type": "text",
+                                                                              "fields": {
+                                                                                "TEXT": "Kriter "
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "ADD1": {
+                                                                            "block": {
+                                                                              "type": "variables_get",
+                                                                              "fields": {
+                                                                                "VAR": {
+                                                                                  "id": "vid_kriter",
+                                                                                  "name": "kriter",
+                                                                                  "type": ""
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "ADD2": {
+                                                                            "block": {
+                                                                              "type": "text",
+                                                                              "fields": {
+                                                                                "TEXT": " tamamlandi: "
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "ADD3": {
+                                                                            "block": {
+                                                                              "type": "variables_get",
+                                                                              "fields": {
+                                                                                "VAR": {
+                                                                                  "id": "vid_puan",
+                                                                                  "name": "puan",
+                                                                                  "type": ""
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "ADD4": {
+                                                                            "block": {
+                                                                              "type": "text",
+                                                                              "fields": {
+                                                                                "TEXT": " / 5"
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  },
+                                                                  "next": {
+                                                                    "block": {
+                                                                      "type": "variables_set",
+                                                                      "fields": {
+                                                                        "VAR": {
+                                                                          "id": "vid_puan",
+                                                                          "name": "puan",
+                                                                          "type": ""
+                                                                        }
+                                                                      },
+                                                                      "inputs": {
+                                                                        "VALUE": {
+                                                                          "block": {
+                                                                            "type": "math_number",
+                                                                            "fields": {
+                                                                              "NUM": 0
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "next": {
+                                                                        "block": {
+                                                                          "type": "variables_set",
+                                                                          "fields": {
+                                                                            "VAR": {
+                                                                              "id": "vid_kriter",
+                                                                              "name": "kriter",
+                                                                              "type": ""
+                                                                            }
+                                                                          },
+                                                                          "inputs": {
+                                                                            "VALUE": {
+                                                                              "block": {
+                                                                                "type": "math_arithmetic",
+                                                                                "fields": {
+                                                                                  "OP": "ADD"
+                                                                                },
+                                                                                "inputs": {
+                                                                                  "A": {
+                                                                                    "block": {
+                                                                                      "type": "variables_get",
+                                                                                      "fields": {
+                                                                                        "VAR": {
+                                                                                          "id": "vid_kriter",
+                                                                                          "name": "kriter",
+                                                                                          "type": ""
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  },
+                                                                                  "B": {
+                                                                                    "block": {
+                                                                                      "type": "math_number",
+                                                                                      "fields": {
+                                                                                        "NUM": 1
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "next": {
+                                                                            "block": {
+                                                                              "type": "controls_if",
+                                                                              "inputs": {
+                                                                                "IF0": {
+                                                                                  "block": {
+                                                                                    "type": "logic_compare",
+                                                                                    "fields": {
+                                                                                      "OP": "GT"
+                                                                                    },
+                                                                                    "inputs": {
+                                                                                      "A": {
+                                                                                        "block": {
+                                                                                          "type": "variables_get",
+                                                                                          "fields": {
+                                                                                            "VAR": {
+                                                                                              "id": "vid_kriter",
+                                                                                              "name": "kriter",
+                                                                                              "type": ""
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      },
+                                                                                      "B": {
+                                                                                        "block": {
+                                                                                          "type": "math_number",
+                                                                                          "fields": {
+                                                                                            "NUM": 3
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                },
+                                                                                "DO0": {
+                                                                                  "block": {
+                                                                                    "type": "variables_set",
+                                                                                    "fields": {
+                                                                                      "VAR": {
+                                                                                        "id": "vid_kriter",
+                                                                                        "name": "kriter",
+                                                                                        "type": ""
+                                                                                      }
+                                                                                    },
+                                                                                    "inputs": {
+                                                                                      "VALUE": {
+                                                                                        "block": {
+                                                                                          "type": "math_number",
+                                                                                          "fields": {
+                                                                                            "NUM": 1
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    },
+                                                                                    "next": {
+                                                                                      "block": {
+                                                                                        "type": "rx_buzzer_note",
+                                                                                        "fields": {
+                                                                                          "PIN": 8,
+                                                                                          "NOTE": "880"
+                                                                                        },
+                                                                                        "inputs": {
+                                                                                          "DUR": {
+                                                                                            "block": {
+                                                                                              "type": "math_number",
+                                                                                              "fields": {
+                                                                                                "NUM": 300
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        },
+                                                                                        "next": {
+                                                                                          "block": {
+                                                                                            "type": "rx_print",
+                                                                                            "inputs": {
+                                                                                              "TEXT": {
+                                                                                                "block": {
+                                                                                                  "type": "text",
+                                                                                                  "fields": {
+                                                                                                    "TEXT": "Form bitti! 2 guclu yon + 1 oneri yaz."
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                },
+                                                                                "ELSE": {
+                                                                                  "block": {
+                                                                                    "type": "rx_print",
+                                                                                    "inputs": {
+                                                                                      "TEXT": {
+                                                                                        "block": {
+                                                                                          "type": "text_join",
+                                                                                          "extraState": {
+                                                                                            "itemCount": 2
+                                                                                          },
+                                                                                          "inputs": {
+                                                                                            "ADD0": {
+                                                                                              "block": {
+                                                                                                "type": "text",
+                                                                                                "fields": {
+                                                                                                  "TEXT": "Simdi Kriter "
+                                                                                                }
+                                                                                              }
+                                                                                            },
+                                                                                            "ADD1": {
+                                                                                              "block": {
+                                                                                                "type": "variables_get",
+                                                                                                "fields": {
+                                                                                                  "VAR": {
+                                                                                                    "id": "vid_kriter",
+                                                                                                    "name": "kriter",
+                                                                                                    "type": ""
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              },
+                                                                              "extraState": {
+                                                                                "elseCount": 1
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_delay_ms",
+                                          "inputs": {
+                                            "MS": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 50
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "puan",
+        "id": "vid_puan"
+      },
+      {
+        "name": "kriter",
+        "id": "vid_kriter"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917281,
+  "updatedAt": 1783960917281
+}

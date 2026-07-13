@@ -1,0 +1,352 @@
+{
+  "id": "3831851c-c093-41d0-b296-d349121c684d",
+  "name": "Görev 17 — İç İçe Döngü: Tarama Deseni",
+  "filename": "gorev_17_Ic_Ice_Dongu_Tarama_Deseni",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_servo_angle",
+                "fields": {
+                  "PIN": 4
+                },
+                "inputs": {
+                  "ANGLE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 40
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_forever",
+                    "inputs": {
+                      "DO": {
+                        "block": {
+                          "type": "controls_for",
+                          "fields": {
+                            "VAR": {
+                              "id": "vid_omuz",
+                              "name": "omuz",
+                              "type": ""
+                            }
+                          },
+                          "inputs": {
+                            "FROM": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 60
+                                }
+                              }
+                            },
+                            "TO": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 120
+                                }
+                              }
+                            },
+                            "BY": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 30
+                                }
+                              }
+                            },
+                            "DO": {
+                              "block": {
+                                "type": "rx_servo_angle",
+                                "fields": {
+                                  "PIN": 5
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_constrain",
+                                      "inputs": {
+                                        "VALUE": {
+                                          "block": {
+                                            "type": "variables_get",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "vid_omuz",
+                                                "name": "omuz",
+                                                "type": ""
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "LOW": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 30
+                                            }
+                                          }
+                                        },
+                                        "HIGH": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 150
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_delay_ms",
+                                    "inputs": {
+                                      "MS": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 300
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "controls_for",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "vid_t",
+                                            "name": "t",
+                                            "type": ""
+                                          }
+                                        },
+                                        "inputs": {
+                                          "FROM": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 40
+                                              }
+                                            }
+                                          },
+                                          "TO": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 140
+                                              }
+                                            }
+                                          },
+                                          "BY": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 2
+                                              }
+                                            }
+                                          },
+                                          "DO": {
+                                            "block": {
+                                              "type": "rx_servo_angle",
+                                              "fields": {
+                                                "PIN": 4
+                                              },
+                                              "inputs": {
+                                                "ANGLE": {
+                                                  "block": {
+                                                    "type": "math_constrain",
+                                                    "inputs": {
+                                                      "VALUE": {
+                                                        "block": {
+                                                          "type": "variables_get",
+                                                          "fields": {
+                                                            "VAR": {
+                                                              "id": "vid_t",
+                                                              "name": "t",
+                                                              "type": ""
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "LOW": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 30
+                                                          }
+                                                        }
+                                                      },
+                                                      "HIGH": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 150
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "next": {
+                                                "block": {
+                                                  "type": "rx_delay_ms",
+                                                  "inputs": {
+                                                    "MS": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 20
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "controls_for",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "vid_t",
+                                                "name": "t",
+                                                "type": ""
+                                              }
+                                            },
+                                            "inputs": {
+                                              "FROM": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 140
+                                                  }
+                                                }
+                                              },
+                                              "TO": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 40
+                                                  }
+                                                }
+                                              },
+                                              "BY": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": -2
+                                                  }
+                                                }
+                                              },
+                                              "DO": {
+                                                "block": {
+                                                  "type": "rx_servo_angle",
+                                                  "fields": {
+                                                    "PIN": 4
+                                                  },
+                                                  "inputs": {
+                                                    "ANGLE": {
+                                                      "block": {
+                                                        "type": "math_constrain",
+                                                        "inputs": {
+                                                          "VALUE": {
+                                                            "block": {
+                                                              "type": "variables_get",
+                                                              "fields": {
+                                                                "VAR": {
+                                                                  "id": "vid_t",
+                                                                  "name": "t",
+                                                                  "type": ""
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "LOW": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 30
+                                                              }
+                                                            }
+                                                          },
+                                                          "HIGH": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 150
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "next": {
+                                                    "block": {
+                                                      "type": "rx_delay_ms",
+                                                      "inputs": {
+                                                        "MS": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 20
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "omuz",
+        "id": "vid_omuz"
+      },
+      {
+        "name": "t",
+        "id": "vid_t"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917183,
+  "updatedAt": 1783960917183
+}

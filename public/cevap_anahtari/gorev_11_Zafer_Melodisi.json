@@ -1,0 +1,159 @@
+{
+  "id": "8591c0d9-9b1d-4288-b56f-e5848be47d52",
+  "name": "Görev 11 — Zafer Melodisi",
+  "filename": "gorev_11_Zafer_Melodisi",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "zafer_melodisi"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_buzzer_note",
+                "fields": {
+                  "PIN": 8,
+                  "NOTE": "523"
+                },
+                "inputs": {
+                  "DUR": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 150
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_buzzer_note",
+                    "fields": {
+                      "PIN": 8,
+                      "NOTE": "659"
+                    },
+                    "inputs": {
+                      "DUR": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 150
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_buzzer_note",
+                        "fields": {
+                          "PIN": 8,
+                          "NOTE": "784"
+                        },
+                        "inputs": {
+                          "DUR": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 150
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_buzzer_note",
+                            "fields": {
+                              "PIN": 8,
+                              "NOTE": "1047"
+                            },
+                            "inputs": {
+                              "DUR": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 300
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_buzzer_off",
+                                "fields": {
+                                  "PIN": 8
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 40
+        },
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_servo_angle",
+                "fields": {
+                  "PIN": 7
+                },
+                "inputs": {
+                  "ANGLE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 140
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_delay_ms",
+                    "inputs": {
+                      "MS": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 500
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "procedures_callnoreturn",
+                        "extraState": {
+                          "name": "zafer_melodisi"
+                        },
+                        "inputs": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": null,
+  "createdAt": 1783960917180,
+  "updatedAt": 1783960917180
+}

@@ -1,0 +1,594 @@
+{
+  "id": "fee0d786-06ce-413c-a8af-9dd8b1557d06",
+  "name": "Görev 23 — Basılı Tutma vs Tek Basış",
+  "filename": "gorev_23_Basili_Tutma_vs_Tek_Basis",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "variables_set",
+                "fields": {
+                  "VAR": {
+                    "id": "vid_gripper",
+                    "name": "gripper",
+                    "type": ""
+                  }
+                },
+                "inputs": {
+                  "VALUE": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 140
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_servo_angle",
+                    "fields": {
+                      "PIN": 7
+                    },
+                    "inputs": {
+                      "ANGLE": {
+                        "block": {
+                          "type": "math_constrain",
+                          "inputs": {
+                            "VALUE": {
+                              "block": {
+                                "type": "variables_get",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "vid_gripper",
+                                    "name": "gripper",
+                                    "type": ""
+                                  }
+                                }
+                              }
+                            },
+                            "LOW": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 40
+                                }
+                              }
+                            },
+                            "HIGH": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 140
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_forever",
+                        "inputs": {
+                          "DO": {
+                            "block": {
+                              "type": "controls_if",
+                              "inputs": {
+                                "IF0": {
+                                  "block": {
+                                    "type": "rx_button_pressed",
+                                    "fields": {
+                                      "PIN": 2
+                                    }
+                                  }
+                                },
+                                "DO0": {
+                                  "block": {
+                                    "type": "variables_set",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "vid_baslangic",
+                                        "name": "baslangic",
+                                        "type": ""
+                                      }
+                                    },
+                                    "inputs": {
+                                      "VALUE": {
+                                        "block": {
+                                          "type": "rx_millis"
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "controls_whileUntil",
+                                        "fields": {
+                                          "MODE": "WHILE"
+                                        },
+                                        "inputs": {
+                                          "BOOL": {
+                                            "block": {
+                                              "type": "rx_button_pressed",
+                                              "fields": {
+                                                "PIN": 2
+                                              }
+                                            }
+                                          },
+                                          "DO": {
+                                            "block": {
+                                              "type": "rx_delay_ms",
+                                              "inputs": {
+                                                "MS": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 10
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "variables_set",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "vid_sure",
+                                                "name": "sure",
+                                                "type": ""
+                                              }
+                                            },
+                                            "inputs": {
+                                              "VALUE": {
+                                                "block": {
+                                                  "type": "math_arithmetic",
+                                                  "fields": {
+                                                    "OP": "MINUS"
+                                                  },
+                                                  "inputs": {
+                                                    "A": {
+                                                      "block": {
+                                                        "type": "rx_millis"
+                                                      }
+                                                    },
+                                                    "B": {
+                                                      "block": {
+                                                        "type": "variables_get",
+                                                        "fields": {
+                                                          "VAR": {
+                                                            "id": "vid_baslangic",
+                                                            "name": "baslangic",
+                                                            "type": ""
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "controls_if",
+                                                "inputs": {
+                                                  "IF0": {
+                                                    "block": {
+                                                      "type": "logic_compare",
+                                                      "fields": {
+                                                        "OP": "GT"
+                                                      },
+                                                      "inputs": {
+                                                        "A": {
+                                                          "block": {
+                                                            "type": "variables_get",
+                                                            "fields": {
+                                                              "VAR": {
+                                                                "id": "vid_sure",
+                                                                "name": "sure",
+                                                                "type": ""
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "B": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 2000
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "DO0": {
+                                                    "block": {
+                                                      "type": "rx_servo_angle",
+                                                      "fields": {
+                                                        "PIN": 4
+                                                      },
+                                                      "inputs": {
+                                                        "ANGLE": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 90
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "next": {
+                                                        "block": {
+                                                          "type": "rx_servo_angle",
+                                                          "fields": {
+                                                            "PIN": 5
+                                                          },
+                                                          "inputs": {
+                                                            "ANGLE": {
+                                                              "block": {
+                                                                "type": "math_number",
+                                                                "fields": {
+                                                                  "NUM": 90
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "next": {
+                                                            "block": {
+                                                              "type": "rx_servo_angle",
+                                                              "fields": {
+                                                                "PIN": 6
+                                                              },
+                                                              "inputs": {
+                                                                "ANGLE": {
+                                                                  "block": {
+                                                                    "type": "math_number",
+                                                                    "fields": {
+                                                                      "NUM": 90
+                                                                    }
+                                                                  }
+                                                                }
+                                                              },
+                                                              "next": {
+                                                                "block": {
+                                                                  "type": "rx_servo_angle",
+                                                                  "fields": {
+                                                                    "PIN": 7
+                                                                  },
+                                                                  "inputs": {
+                                                                    "ANGLE": {
+                                                                      "block": {
+                                                                        "type": "math_number",
+                                                                        "fields": {
+                                                                          "NUM": 90
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  },
+                                                                  "next": {
+                                                                    "block": {
+                                                                      "type": "variables_set",
+                                                                      "fields": {
+                                                                        "VAR": {
+                                                                          "id": "vid_gripper",
+                                                                          "name": "gripper",
+                                                                          "type": ""
+                                                                        }
+                                                                      },
+                                                                      "inputs": {
+                                                                        "VALUE": {
+                                                                          "block": {
+                                                                            "type": "math_number",
+                                                                            "fields": {
+                                                                              "NUM": 90
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "next": {
+                                                                        "block": {
+                                                                          "type": "rx_servo_angle",
+                                                                          "fields": {
+                                                                            "PIN": 7
+                                                                          },
+                                                                          "inputs": {
+                                                                            "ANGLE": {
+                                                                              "block": {
+                                                                                "type": "math_constrain",
+                                                                                "inputs": {
+                                                                                  "VALUE": {
+                                                                                    "block": {
+                                                                                      "type": "variables_get",
+                                                                                      "fields": {
+                                                                                        "VAR": {
+                                                                                          "id": "vid_gripper",
+                                                                                          "name": "gripper",
+                                                                                          "type": ""
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  },
+                                                                                  "LOW": {
+                                                                                    "block": {
+                                                                                      "type": "math_number",
+                                                                                      "fields": {
+                                                                                        "NUM": 40
+                                                                                      }
+                                                                                    }
+                                                                                  },
+                                                                                  "HIGH": {
+                                                                                    "block": {
+                                                                                      "type": "math_number",
+                                                                                      "fields": {
+                                                                                        "NUM": 140
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "next": {
+                                                                            "block": {
+                                                                              "type": "rx_buzzer_tone",
+                                                                              "fields": {
+                                                                                "PIN": 8
+                                                                              },
+                                                                              "inputs": {
+                                                                                "FREQ": {
+                                                                                  "block": {
+                                                                                    "type": "math_number",
+                                                                                    "fields": {
+                                                                                      "NUM": 400
+                                                                                    }
+                                                                                  }
+                                                                                },
+                                                                                "DUR": {
+                                                                                  "block": {
+                                                                                    "type": "math_number",
+                                                                                    "fields": {
+                                                                                      "NUM": 300
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "ELSE": {
+                                                    "block": {
+                                                      "type": "controls_if",
+                                                      "inputs": {
+                                                        "IF0": {
+                                                          "block": {
+                                                            "type": "logic_compare",
+                                                            "fields": {
+                                                              "OP": "GT"
+                                                            },
+                                                            "inputs": {
+                                                              "A": {
+                                                                "block": {
+                                                                  "type": "variables_get",
+                                                                  "fields": {
+                                                                    "VAR": {
+                                                                      "id": "vid_gripper",
+                                                                      "name": "gripper",
+                                                                      "type": ""
+                                                                    }
+                                                                  }
+                                                                }
+                                                              },
+                                                              "B": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 90
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "DO0": {
+                                                          "block": {
+                                                            "type": "variables_set",
+                                                            "fields": {
+                                                              "VAR": {
+                                                                "id": "vid_gripper",
+                                                                "name": "gripper",
+                                                                "type": ""
+                                                              }
+                                                            },
+                                                            "inputs": {
+                                                              "VALUE": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 40
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "ELSE": {
+                                                          "block": {
+                                                            "type": "variables_set",
+                                                            "fields": {
+                                                              "VAR": {
+                                                                "id": "vid_gripper",
+                                                                "name": "gripper",
+                                                                "type": ""
+                                                              }
+                                                            },
+                                                            "inputs": {
+                                                              "VALUE": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 140
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "extraState": {
+                                                        "elseCount": 1
+                                                      },
+                                                      "next": {
+                                                        "block": {
+                                                          "type": "rx_servo_angle",
+                                                          "fields": {
+                                                            "PIN": 7
+                                                          },
+                                                          "inputs": {
+                                                            "ANGLE": {
+                                                              "block": {
+                                                                "type": "math_constrain",
+                                                                "inputs": {
+                                                                  "VALUE": {
+                                                                    "block": {
+                                                                      "type": "variables_get",
+                                                                      "fields": {
+                                                                        "VAR": {
+                                                                          "id": "vid_gripper",
+                                                                          "name": "gripper",
+                                                                          "type": ""
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  },
+                                                                  "LOW": {
+                                                                    "block": {
+                                                                      "type": "math_number",
+                                                                      "fields": {
+                                                                        "NUM": 40
+                                                                      }
+                                                                    }
+                                                                  },
+                                                                  "HIGH": {
+                                                                    "block": {
+                                                                      "type": "math_number",
+                                                                      "fields": {
+                                                                        "NUM": 140
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "next": {
+                                                            "block": {
+                                                              "type": "rx_buzzer_tone",
+                                                              "fields": {
+                                                                "PIN": 8
+                                                              },
+                                                              "inputs": {
+                                                                "FREQ": {
+                                                                  "block": {
+                                                                    "type": "math_number",
+                                                                    "fields": {
+                                                                      "NUM": 1200
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "DUR": {
+                                                                  "block": {
+                                                                    "type": "math_number",
+                                                                    "fields": {
+                                                                      "NUM": 80
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "extraState": {
+                                                  "elseCount": 1
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_delay_ms",
+                                  "inputs": {
+                                    "MS": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 20
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "gripper",
+        "id": "vid_gripper"
+      },
+      {
+        "name": "baslangic",
+        "id": "vid_baslangic"
+      },
+      {
+        "name": "sure",
+        "id": "vid_sure"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917188,
+  "updatedAt": 1783960917188
+}

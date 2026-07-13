@@ -1,0 +1,128 @@
+{
+  "id": "82a43857-4b77-4283-a36b-648c571ecba3",
+  "name": "Görev 64 — Final Hazırlık: Sistem Şeması",
+  "filename": "gorev_64_Final_Hazirlik_Sistem_Semasi",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_print",
+                "inputs": {
+                  "TEXT": {
+                    "block": {
+                      "type": "text",
+                      "fields": {
+                        "TEXT": "=== ROBOARM PIN HARITASI (Uno + Sensor Shield) ==="
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_print",
+                    "inputs": {
+                      "TEXT": {
+                        "block": {
+                          "type": "text",
+                          "fields": {
+                            "TEXT": "Servolar: D4 taban, D5 omuz, D6 dirsek, D7 tutucu"
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_print",
+                        "inputs": {
+                          "TEXT": {
+                            "block": {
+                              "type": "text",
+                              "fields": {
+                                "TEXT": "D2 buton, D3 role, D8 buzzer"
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_print",
+                            "inputs": {
+                              "TEXT": {
+                                "block": {
+                                  "type": "text",
+                                  "fields": {
+                                    "TEXT": "D9/D10/D11 RGB (R/G/B), D12 trig, D13 echo"
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_print",
+                                "inputs": {
+                                  "TEXT": {
+                                    "block": {
+                                      "type": "text",
+                                      "fields": {
+                                        "TEXT": "A0 pot, A1 LDR, A2 pot2/LDR2/LM35"
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_print",
+                                    "inputs": {
+                                      "TEXT": {
+                                        "block": {
+                                          "type": "text",
+                                          "fields": {
+                                            "TEXT": "Guvenli aci: 30-150 (tutucu 40-140)"
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_print",
+                                        "inputs": {
+                                          "TEXT": {
+                                            "block": {
+                                              "type": "text",
+                                              "fields": {
+                                                "TEXT": "Semayi A4'e ciz: girdi -> islem -> cikti + akis diyagrami"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": null,
+  "createdAt": 1783960917263,
+  "updatedAt": 1783960917263
+}

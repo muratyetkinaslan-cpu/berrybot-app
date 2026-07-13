@@ -1,0 +1,745 @@
+{
+  "id": "859d81ac-7b33-4b0d-b6f9-96f93930bf28",
+  "name": "Görev 49 — Sıcaklık Alarmı + Güvenlik Kolu",
+  "filename": "gorev_49_Sicaklik_Alarmi_Guvenlik_Kolu",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "renk_kirmizi"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_digital_write",
+                "fields": {
+                  "PIN": 9,
+                  "STATE": "HIGH"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_digital_write",
+                    "fields": {
+                      "PIN": 10,
+                      "STATE": "LOW"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_digital_write",
+                        "fields": {
+                          "PIN": 11,
+                          "STATE": "LOW"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 40
+        },
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "renk_yesil"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_digital_write",
+                "fields": {
+                  "PIN": 9,
+                  "STATE": "LOW"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_digital_write",
+                    "fields": {
+                      "PIN": 10,
+                      "STATE": "HIGH"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_digital_write",
+                        "fields": {
+                          "PIN": 11,
+                          "STATE": "LOW"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 360
+        },
+        {
+          "type": "procedures_defnoreturn",
+          "fields": {
+            "NAME": "renk_kapat"
+          },
+          "inputs": {
+            "STACK": {
+              "block": {
+                "type": "rx_digital_write",
+                "fields": {
+                  "PIN": 9,
+                  "STATE": "LOW"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_digital_write",
+                    "fields": {
+                      "PIN": 10,
+                      "STATE": "LOW"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_digital_write",
+                        "fields": {
+                          "PIN": 11,
+                          "STATE": "LOW"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "x": 820,
+          "y": 680
+        },
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_relay",
+                "fields": {
+                  "PIN": 3,
+                  "STATE": "ON"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_print",
+                    "inputs": {
+                      "TEXT": {
+                        "block": {
+                          "type": "text",
+                          "fields": {
+                            "TEXT": "Sistem calisiyor, role ACIK"
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_servo_angle",
+                        "fields": {
+                          "PIN": 4
+                        },
+                        "inputs": {
+                          "ANGLE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 90
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_angle",
+                            "fields": {
+                              "PIN": 5
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_angle",
+                                "fields": {
+                                  "PIN": 6
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 90
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_angle",
+                                    "fields": {
+                                      "PIN": 7
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 90
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_forever",
+                                        "inputs": {
+                                          "DO": {
+                                            "block": {
+                                              "type": "variables_set",
+                                              "fields": {
+                                                "VAR": {
+                                                  "id": "vid_t",
+                                                  "name": "t",
+                                                  "type": ""
+                                                }
+                                              },
+                                              "inputs": {
+                                                "VALUE": {
+                                                  "block": {
+                                                    "type": "math_arithmetic",
+                                                    "fields": {
+                                                      "OP": "DIVIDE"
+                                                    },
+                                                    "inputs": {
+                                                      "A": {
+                                                        "block": {
+                                                          "type": "math_arithmetic",
+                                                          "fields": {
+                                                            "OP": "MULTIPLY"
+                                                          },
+                                                          "inputs": {
+                                                            "A": {
+                                                              "block": {
+                                                                "type": "rx_analog_read",
+                                                                "fields": {
+                                                                  "PIN": "28"
+                                                                }
+                                                              }
+                                                            },
+                                                            "B": {
+                                                              "block": {
+                                                                "type": "math_number",
+                                                                "fields": {
+                                                                  "NUM": 500
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "B": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 1024
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "next": {
+                                                "block": {
+                                                  "type": "controls_if",
+                                                  "inputs": {
+                                                    "IF0": {
+                                                      "block": {
+                                                        "type": "logic_compare",
+                                                        "fields": {
+                                                          "OP": "GT"
+                                                        },
+                                                        "inputs": {
+                                                          "A": {
+                                                            "block": {
+                                                              "type": "variables_get",
+                                                              "fields": {
+                                                                "VAR": {
+                                                                  "id": "vid_t",
+                                                                  "name": "t",
+                                                                  "type": ""
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "B": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 30
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "DO0": {
+                                                      "block": {
+                                                        "type": "rx_print",
+                                                        "inputs": {
+                                                          "TEXT": {
+                                                            "block": {
+                                                              "type": "text",
+                                                              "fields": {
+                                                                "TEXT": "!!! ALARM: ASIRI SICAK !!!"
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "controls_repeat_ext",
+                                                            "inputs": {
+                                                              "TIMES": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 3
+                                                                  }
+                                                                }
+                                                              },
+                                                              "DO": {
+                                                                "block": {
+                                                                  "type": "procedures_callnoreturn",
+                                                                  "extraState": {
+                                                                    "name": "renk_kirmizi"
+                                                                  },
+                                                                  "inputs": {},
+                                                                  "next": {
+                                                                    "block": {
+                                                                      "type": "rx_buzzer_tone",
+                                                                      "fields": {
+                                                                        "PIN": 8
+                                                                      },
+                                                                      "inputs": {
+                                                                        "FREQ": {
+                                                                          "block": {
+                                                                            "type": "math_number",
+                                                                            "fields": {
+                                                                              "NUM": 2000
+                                                                            }
+                                                                          }
+                                                                        },
+                                                                        "DUR": {
+                                                                          "block": {
+                                                                            "type": "math_number",
+                                                                            "fields": {
+                                                                              "NUM": 200
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "next": {
+                                                                        "block": {
+                                                                          "type": "rx_delay_ms",
+                                                                          "inputs": {
+                                                                            "MS": {
+                                                                              "block": {
+                                                                                "type": "math_number",
+                                                                                "fields": {
+                                                                                  "NUM": 100
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "next": {
+                                                                            "block": {
+                                                                              "type": "procedures_callnoreturn",
+                                                                              "extraState": {
+                                                                                "name": "renk_kapat"
+                                                                              },
+                                                                              "inputs": {},
+                                                                              "next": {
+                                                                                "block": {
+                                                                                  "type": "rx_delay_ms",
+                                                                                  "inputs": {
+                                                                                    "MS": {
+                                                                                      "block": {
+                                                                                        "type": "math_number",
+                                                                                        "fields": {
+                                                                                          "NUM": 150
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            "next": {
+                                                              "block": {
+                                                                "type": "rx_servo_angle",
+                                                                "fields": {
+                                                                  "PIN": 4
+                                                                },
+                                                                "inputs": {
+                                                                  "ANGLE": {
+                                                                    "block": {
+                                                                      "type": "math_number",
+                                                                      "fields": {
+                                                                        "NUM": 120
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "next": {
+                                                                  "block": {
+                                                                    "type": "rx_servo_angle",
+                                                                    "fields": {
+                                                                      "PIN": 5
+                                                                    },
+                                                                    "inputs": {
+                                                                      "ANGLE": {
+                                                                        "block": {
+                                                                          "type": "math_number",
+                                                                          "fields": {
+                                                                            "NUM": 65
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    },
+                                                                    "next": {
+                                                                      "block": {
+                                                                        "type": "rx_servo_angle",
+                                                                        "fields": {
+                                                                          "PIN": 6
+                                                                        },
+                                                                        "inputs": {
+                                                                          "ANGLE": {
+                                                                            "block": {
+                                                                              "type": "math_number",
+                                                                              "fields": {
+                                                                                "NUM": 115
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        },
+                                                                        "next": {
+                                                                          "block": {
+                                                                            "type": "rx_delay_s",
+                                                                            "inputs": {
+                                                                              "S": {
+                                                                                "block": {
+                                                                                  "type": "math_number",
+                                                                                  "fields": {
+                                                                                    "NUM": 1
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            },
+                                                                            "next": {
+                                                                              "block": {
+                                                                                "type": "rx_servo_angle",
+                                                                                "fields": {
+                                                                                  "PIN": 7
+                                                                                },
+                                                                                "inputs": {
+                                                                                  "ANGLE": {
+                                                                                    "block": {
+                                                                                      "type": "math_number",
+                                                                                      "fields": {
+                                                                                        "NUM": 40
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                },
+                                                                                "next": {
+                                                                                  "block": {
+                                                                                    "type": "rx_delay_ms",
+                                                                                    "inputs": {
+                                                                                      "MS": {
+                                                                                        "block": {
+                                                                                          "type": "math_number",
+                                                                                          "fields": {
+                                                                                            "NUM": 500
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    },
+                                                                                    "next": {
+                                                                                      "block": {
+                                                                                        "type": "rx_relay",
+                                                                                        "fields": {
+                                                                                          "PIN": 3,
+                                                                                          "STATE": "OFF"
+                                                                                        },
+                                                                                        "next": {
+                                                                                          "block": {
+                                                                                            "type": "rx_print",
+                                                                                            "inputs": {
+                                                                                              "TEXT": {
+                                                                                                "block": {
+                                                                                                  "type": "text",
+                                                                                                  "fields": {
+                                                                                                    "TEXT": "Role KAPATILDI - sistem guvende"
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            },
+                                                                                            "next": {
+                                                                                              "block": {
+                                                                                                "type": "rx_servo_angle",
+                                                                                                "fields": {
+                                                                                                  "PIN": 7
+                                                                                                },
+                                                                                                "inputs": {
+                                                                                                  "ANGLE": {
+                                                                                                    "block": {
+                                                                                                      "type": "math_number",
+                                                                                                      "fields": {
+                                                                                                        "NUM": 140
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                },
+                                                                                                "next": {
+                                                                                                  "block": {
+                                                                                                    "type": "rx_servo_angle",
+                                                                                                    "fields": {
+                                                                                                      "PIN": 4
+                                                                                                    },
+                                                                                                    "inputs": {
+                                                                                                      "ANGLE": {
+                                                                                                        "block": {
+                                                                                                          "type": "math_number",
+                                                                                                          "fields": {
+                                                                                                            "NUM": 90
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    },
+                                                                                                    "next": {
+                                                                                                      "block": {
+                                                                                                        "type": "rx_servo_angle",
+                                                                                                        "fields": {
+                                                                                                          "PIN": 5
+                                                                                                        },
+                                                                                                        "inputs": {
+                                                                                                          "ANGLE": {
+                                                                                                            "block": {
+                                                                                                              "type": "math_number",
+                                                                                                              "fields": {
+                                                                                                                "NUM": 90
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        },
+                                                                                                        "next": {
+                                                                                                          "block": {
+                                                                                                            "type": "rx_servo_angle",
+                                                                                                            "fields": {
+                                                                                                              "PIN": 6
+                                                                                                            },
+                                                                                                            "inputs": {
+                                                                                                              "ANGLE": {
+                                                                                                                "block": {
+                                                                                                                  "type": "math_number",
+                                                                                                                  "fields": {
+                                                                                                                    "NUM": 90
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            },
+                                                                                                            "next": {
+                                                                                                              "block": {
+                                                                                                                "type": "rx_servo_angle",
+                                                                                                                "fields": {
+                                                                                                                  "PIN": 7
+                                                                                                                },
+                                                                                                                "inputs": {
+                                                                                                                  "ANGLE": {
+                                                                                                                    "block": {
+                                                                                                                      "type": "math_number",
+                                                                                                                      "fields": {
+                                                                                                                        "NUM": 90
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                },
+                                                                                                                "next": {
+                                                                                                                  "block": {
+                                                                                                                    "type": "rx_delay_s",
+                                                                                                                    "inputs": {
+                                                                                                                      "S": {
+                                                                                                                        "block": {
+                                                                                                                          "type": "math_number",
+                                                                                                                          "fields": {
+                                                                                                                            "NUM": 3
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "ELSE": {
+                                                      "block": {
+                                                        "type": "procedures_callnoreturn",
+                                                        "extraState": {
+                                                          "name": "renk_yesil"
+                                                        },
+                                                        "inputs": {},
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_print",
+                                                            "inputs": {
+                                                              "TEXT": {
+                                                                "block": {
+                                                                  "type": "text_join",
+                                                                  "extraState": {
+                                                                    "itemCount": 3
+                                                                  },
+                                                                  "inputs": {
+                                                                    "ADD0": {
+                                                                      "block": {
+                                                                        "type": "text",
+                                                                        "fields": {
+                                                                          "TEXT": "Normal: "
+                                                                        }
+                                                                      }
+                                                                    },
+                                                                    "ADD1": {
+                                                                      "block": {
+                                                                        "type": "variables_get",
+                                                                        "fields": {
+                                                                          "VAR": {
+                                                                            "id": "vid_t",
+                                                                            "name": "t",
+                                                                            "type": ""
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    },
+                                                                    "ADD2": {
+                                                                      "block": {
+                                                                        "type": "text",
+                                                                        "fields": {
+                                                                          "TEXT": " C"
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "extraState": {
+                                                    "elseCount": 1
+                                                  },
+                                                  "next": {
+                                                    "block": {
+                                                      "type": "rx_delay_ms",
+                                                      "inputs": {
+                                                        "MS": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 300
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "t",
+        "id": "vid_t"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917223,
+  "updatedAt": 1783960917223
+}

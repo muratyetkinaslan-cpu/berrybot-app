@@ -1,0 +1,383 @@
+{
+  "surum": "v3",
+  "donanim": {
+    "kart": "Arduino Uno + Sensor Shield",
+    "pinler": {
+      "D2": "buton",
+      "D3": "röle",
+      "D4": "taban servo",
+      "D5": "omuz servo",
+      "D6": "dirsek servo",
+      "D7": "tutucu servo",
+      "D8": "buzzer",
+      "D9/D10/D11": "RGB (R/G/B, dijital)",
+      "D12": "HC-SR04 trig",
+      "D13": "HC-SR04 echo",
+      "A0('26')": "potansiyometre",
+      "A1('27')": "LDR",
+      "A2('28')": "pot2 / LDR2 / LM35"
+    },
+    "guvenli_aci": {
+      "taban_omuz_dirsek": "30-150",
+      "tutucu": "40-140"
+    },
+    "not": "roboexx-yama/arduino-generator.ts uygulanmadan pot/LDR/analog görevleri derlenmez."
+  },
+  "gorevler": [
+    {
+      "task_id": 1,
+      "title": "İlk Hareket: Tabanı Döndür",
+      "file": "gorev_01_Ilk_Hareket_Tabani_Dondur.json"
+    },
+    {
+      "task_id": 2,
+      "title": "Tekrarla: 5 Kez Git-Gel",
+      "file": "gorev_02_Tekrarla_5_Kez_Git_Gel.json"
+    },
+    {
+      "task_id": 3,
+      "title": "Yumuşak Hareket: Hız Değişkeni",
+      "file": "gorev_03_Yumusak_Hareket_Hiz_Degiskeni.json"
+    },
+    {
+      "task_id": 4,
+      "title": "Dört Eksen Tanışma",
+      "file": "gorev_04_Dort_Eksen_Tanisma.json"
+    },
+    {
+      "task_id": 5,
+      "title": "Selam Veren Kol",
+      "file": "gorev_05_Selam_Veren_Kol.json"
+    },
+    {
+      "task_id": 6,
+      "title": "Gripper: Aç-Kapa",
+      "file": "gorev_06_Gripper_Ac_Kapa.json"
+    },
+    {
+      "task_id": 7,
+      "title": "İlk Kavrama: Küpü Tut",
+      "file": "gorev_07_Ilk_Kavrama_Kupu_Tut.json"
+    },
+    {
+      "task_id": 8,
+      "title": "Hareket Sesi",
+      "file": "gorev_08_Hareket_Sesi.json"
+    },
+    {
+      "task_id": 9,
+      "title": "Geri Vites Sesi",
+      "file": "gorev_09_Geri_Vites_Sesi.json"
+    },
+    {
+      "task_id": 10,
+      "title": "Mesafe Park Sensörü",
+      "file": "gorev_10_Mesafe_Park_Sensoru.json"
+    },
+    {
+      "task_id": 11,
+      "title": "Zafer Melodisi",
+      "file": "gorev_11_Zafer_Melodisi.json"
+    },
+    {
+      "task_id": 12,
+      "title": "Durum Işığı",
+      "file": "gorev_12_Durum_Isigi.json"
+    },
+    {
+      "task_id": 13,
+      "title": "Bölgeye Göre Renk",
+      "file": "gorev_13_Bolgeye_Gore_Renk.json"
+    },
+    {
+      "task_id": 14,
+      "title": "Kavrama Işığı",
+      "file": "gorev_14_Kavrama_Isigi.json"
+    },
+    {
+      "task_id": 15,
+      "title": "İleri-Geri Süpürme",
+      "file": "gorev_15_Ileri_Geri_Supurme.json"
+    },
+    {
+      "task_id": 16,
+      "title": "Hızlanan Süpürme",
+      "file": "gorev_16_Hizlanan_Supurme.json"
+    },
+    {
+      "task_id": 17,
+      "title": "İç İçe Döngü: Tarama Deseni",
+      "file": "gorev_17_Ic_Ice_Dongu_Tarama_Deseni.json"
+    },
+    {
+      "task_id": 18,
+      "title": "Fonksiyon Yaz: git_pozisyona()",
+      "file": "gorev_18_Fonksiyon_Yaz_git_pozisyona.json"
+    },
+    {
+      "task_id": 19,
+      "title": "Rastgele Dans",
+      "file": "gorev_19_Rastgele_Dans.json"
+    },
+    {
+      "task_id": 20,
+      "title": "Pozisyon Hafızası: Rota Tekrarı",
+      "file": "gorev_20_Pozisyon_Hafizasi_Rota_Tekrari.json"
+    },
+    {
+      "task_id": 21,
+      "title": "Buton ile Başlat",
+      "file": "gorev_21_Buton_ile_Baslat.json"
+    },
+    {
+      "task_id": 22,
+      "title": "Sayaçlı Buton",
+      "file": "gorev_22_Sayacli_Buton.json"
+    },
+    {
+      "task_id": 23,
+      "title": "Basılı Tutma vs Tek Basış",
+      "file": "gorev_23_Basili_Tutma_vs_Tek_Basis.json"
+    },
+    {
+      "task_id": 24,
+      "title": "Potla Taban Kontrolü",
+      "file": "gorev_24_Potla_Taban_Kontrolu.json"
+    },
+    {
+      "task_id": 25,
+      "title": "Çift Pot: Kukla Modu",
+      "file": "gorev_25_Cift_Pot_Kukla_Modu.json"
+    },
+    {
+      "task_id": 26,
+      "title": "Pot ile Hız Ayarı",
+      "file": "gorev_26_Pot_ile_Hiz_Ayari.json"
+    },
+    {
+      "task_id": 27,
+      "title": "Ölü Bölge (Deadzone)",
+      "file": "gorev_27_Olu_Bolge_Deadzone.json"
+    },
+    {
+      "task_id": 28,
+      "title": "Mesafe Oku ve Yazdır",
+      "file": "gorev_28_Mesafe_Oku_ve_Yazdir.json"
+    },
+    {
+      "task_id": 29,
+      "title": "Yaklaşınca Kaç!",
+      "file": "gorev_29_Yaklasinca_Kac.json"
+    },
+    {
+      "task_id": 30,
+      "title": "Mesafeyle Eksen Sürme (Jedi Modu)",
+      "file": "gorev_30_Mesafeyle_Eksen_Surme_Jedi_Modu.json"
+    },
+    {
+      "task_id": 31,
+      "title": "Nesne Var mı? Kavra!",
+      "file": "gorev_31_Nesne_Var_mi_Kavra.json"
+    },
+    {
+      "task_id": 32,
+      "title": "Radar Tarayıcı",
+      "file": "gorev_32_Radar_Tarayici.json"
+    },
+    {
+      "task_id": 33,
+      "title": "Gamepad: Tek Eksen Sürüşü",
+      "file": "gorev_33_Gamepad_Tek_Eksen_Surusu.json"
+    },
+    {
+      "task_id": 34,
+      "title": "Gamepad: 4 Eksen Tam Kontrol",
+      "file": "gorev_34_Gamepad_4_Eksen_Tam_Kontrol.json"
+    },
+    {
+      "task_id": 35,
+      "title": "Turbo Modu",
+      "file": "gorev_35_Turbo_Modu.json"
+    },
+    {
+      "task_id": 36,
+      "title": "Ev Pozisyonu Tuşu",
+      "file": "gorev_36_Ev_Pozisyonu_Tusu.json"
+    },
+    {
+      "task_id": 37,
+      "title": "Gamepad ile Küp Taşıma Yarışı",
+      "file": "gorev_37_Gamepad_ile_Kup_Tasima_Yarisi.json"
+    },
+    {
+      "task_id": 38,
+      "title": "Makro Kaydı: Tuşla Oynat",
+      "file": "gorev_38_Makro_Kaydi_Tusla_Oynat.json"
+    },
+    {
+      "task_id": 39,
+      "title": "Işık Değeri Oku",
+      "file": "gorev_39_Isik_Degeri_Oku.json"
+    },
+    {
+      "task_id": 40,
+      "title": "Işığa Dönen Kol (Ayçiçeği)",
+      "file": "gorev_40_Isiga_Donen_Kol_Aycicegi.json"
+    },
+    {
+      "task_id": 41,
+      "title": "Karanlık Modu",
+      "file": "gorev_41_Karanlik_Modu.json"
+    },
+    {
+      "task_id": 42,
+      "title": "Merhaba Seri Monitör",
+      "file": "gorev_42_Merhaba_Seri_Monitor.json"
+    },
+    {
+      "task_id": 43,
+      "title": "Canlı Açı Paneli",
+      "file": "gorev_43_Canli_Aci_Paneli.json"
+    },
+    {
+      "task_id": 44,
+      "title": "Mesafe Göstergesi + Bar",
+      "file": "gorev_44_Mesafe_Gostergesi_Bar.json"
+    },
+    {
+      "task_id": 45,
+      "title": "Görev Sayacı",
+      "file": "gorev_45_Gorev_Sayaci.json"
+    },
+    {
+      "task_id": 46,
+      "title": "Sıcaklık Oku (LM35)",
+      "file": "gorev_46_Sicaklik_Oku_LM35.json"
+    },
+    {
+      "task_id": 47,
+      "title": "Röle: Işığı Aç-Kapa",
+      "file": "gorev_47_Role_Isigi_Ac_Kapa.json"
+    },
+    {
+      "task_id": 48,
+      "title": "Akıllı Fan Sistemi",
+      "file": "gorev_48_Akilli_Fan_Sistemi.json"
+    },
+    {
+      "task_id": 49,
+      "title": "Sıcaklık Alarmı + Güvenlik Kolu",
+      "file": "gorev_49_Sicaklik_Alarmi_Guvenlik_Kolu.json"
+    },
+    {
+      "task_id": 50,
+      "title": "Pick & Place: A'dan B'ye",
+      "file": "gorev_50_Pick_Place_A_dan_B_ye.json"
+    },
+    {
+      "task_id": 51,
+      "title": "Silindir Parkuru: Halkayı Geçir",
+      "file": "gorev_51_Silindir_Parkuru_Halkayi_Gecir.json"
+    },
+    {
+      "task_id": 52,
+      "title": "Kule Yap: 3 Küp Üst Üste",
+      "file": "gorev_52_Kule_Yap_3_Kup_Ust_Uste.json"
+    },
+    {
+      "task_id": 53,
+      "title": "Renk Ayrıştırma Simülasyonu",
+      "file": "gorev_53_Renk_Ayristirma_Simulasyonu.json"
+    },
+    {
+      "task_id": 54,
+      "title": "X-O-X: İlk Hamle",
+      "file": "gorev_54_X_O_X_Ilk_Hamle.json"
+    },
+    {
+      "task_id": 55,
+      "title": "X-O-X: Sıralı Hamleler",
+      "file": "gorev_55_X_O_X_Sirali_Hamleler.json"
+    },
+    {
+      "task_id": 56,
+      "title": "X-O-X: İnsana Karşı!",
+      "file": "gorev_56_X_O_X_Insana_Karsi.json"
+    },
+    {
+      "task_id": 57,
+      "title": "Otomatik Üretim Bandı",
+      "file": "gorev_57_Otomatik_Uretim_Bandi.json"
+    },
+    {
+      "task_id": 58,
+      "title": "Işıkla Komut: Fener Kodu",
+      "file": "gorev_58_Isikla_Komut_Fener_Kodu.json"
+    },
+    {
+      "task_id": 59,
+      "title": "Gece Bekçisi Robot",
+      "file": "gorev_59_Gece_Bekcisi_Robot.json"
+    },
+    {
+      "task_id": 60,
+      "title": "Teach & Repeat: Öğret-Tekrarla",
+      "file": "gorev_60_Teach_Repeat_Ogret_Tekrarla.json"
+    },
+    {
+      "task_id": 61,
+      "title": "Pot ile Oynatma Hızı",
+      "file": "gorev_61_Pot_ile_Oynatma_Hizi.json"
+    },
+    {
+      "task_id": 62,
+      "title": "Hassasiyet Testi: Aynı Noktaya 10 Kez",
+      "file": "gorev_62_Hassasiyet_Testi_Ayni_Noktaya_10_Kez.json"
+    },
+    {
+      "task_id": 63,
+      "title": "Servo Yumuşatma: Easing",
+      "file": "gorev_63_Servo_Yumusatma_Easing.json"
+    },
+    {
+      "task_id": 64,
+      "title": "Final Hazırlık: Sistem Şeması",
+      "file": "gorev_64_Final_Hazirlik_Sistem_Semasi.json"
+    },
+    {
+      "task_id": 65,
+      "title": "Final A: Akıllı Depo Robotu",
+      "file": "gorev_65_Final_A_Akilli_Depo_Robotu.json"
+    },
+    {
+      "task_id": 66,
+      "title": "Final B: X-O-X Turnuva Robotu",
+      "file": "gorev_66_Final_B_X_O_X_Turnuva_Robotu.json"
+    },
+    {
+      "task_id": 67,
+      "title": "Final C: Serbest Proje",
+      "file": "gorev_67_Final_C_Serbest_Proje.json"
+    },
+    {
+      "task_id": 68,
+      "title": "Kod Temizliği & Yorumlama",
+      "file": "gorev_68_Kod_Temizligi_Yorumlama.json"
+    },
+    {
+      "task_id": 69,
+      "title": "Demo Günü Sunumu",
+      "file": "gorev_69_Demo_Gunu_Sunumu.json"
+    },
+    {
+      "task_id": 70,
+      "title": "Akran Değerlendirmesi",
+      "file": "gorev_70_Akran_Degerlendirmesi.json"
+    },
+    {
+      "task_id": 71,
+      "title": "Mezuniyet: RoboArm Ustası",
+      "file": "gorev_71_Mezuniyet_RoboArm_Ustasi.json"
+    }
+  ]
+}

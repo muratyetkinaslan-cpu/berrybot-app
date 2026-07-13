@@ -1,0 +1,285 @@
+{
+  "id": "73f0c501-fc5c-4396-aabe-05de98c9648b",
+  "name": "Görev 47 — Röle: Işığı Aç-Kapa",
+  "filename": "gorev_47_Role_Isigi_Ac_Kapa",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "variables_set",
+                "fields": {
+                  "VAR": {
+                    "id": "vid_role_durum",
+                    "name": "role_durum",
+                    "type": ""
+                  }
+                },
+                "inputs": {
+                  "VALUE": {
+                    "block": {
+                      "type": "logic_boolean",
+                      "fields": {
+                        "BOOL": "FALSE"
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_relay",
+                    "fields": {
+                      "PIN": 3,
+                      "STATE": "OFF"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_forever",
+                        "inputs": {
+                          "DO": {
+                            "block": {
+                              "type": "controls_if",
+                              "inputs": {
+                                "IF0": {
+                                  "block": {
+                                    "type": "rx_button_pressed",
+                                    "fields": {
+                                      "PIN": 2
+                                    }
+                                  }
+                                },
+                                "DO0": {
+                                  "block": {
+                                    "type": "rx_delay_ms",
+                                    "inputs": {
+                                      "MS": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 50
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "controls_whileUntil",
+                                        "fields": {
+                                          "MODE": "WHILE"
+                                        },
+                                        "inputs": {
+                                          "BOOL": {
+                                            "block": {
+                                              "type": "rx_button_pressed",
+                                              "fields": {
+                                                "PIN": 2
+                                              }
+                                            }
+                                          },
+                                          "DO": {
+                                            "block": {
+                                              "type": "rx_delay_ms",
+                                              "inputs": {
+                                                "MS": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 10
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "controls_if",
+                                            "inputs": {
+                                              "IF0": {
+                                                "block": {
+                                                  "type": "variables_get",
+                                                  "fields": {
+                                                    "VAR": {
+                                                      "id": "vid_role_durum",
+                                                      "name": "role_durum",
+                                                      "type": ""
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "DO0": {
+                                                "block": {
+                                                  "type": "rx_relay",
+                                                  "fields": {
+                                                    "PIN": 3,
+                                                    "STATE": "OFF"
+                                                  },
+                                                  "next": {
+                                                    "block": {
+                                                      "type": "variables_set",
+                                                      "fields": {
+                                                        "VAR": {
+                                                          "id": "vid_role_durum",
+                                                          "name": "role_durum",
+                                                          "type": ""
+                                                        }
+                                                      },
+                                                      "inputs": {
+                                                        "VALUE": {
+                                                          "block": {
+                                                            "type": "logic_boolean",
+                                                            "fields": {
+                                                              "BOOL": "FALSE"
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "next": {
+                                                        "block": {
+                                                          "type": "rx_print",
+                                                          "inputs": {
+                                                            "TEXT": {
+                                                              "block": {
+                                                                "type": "text",
+                                                                "fields": {
+                                                                  "TEXT": "Role: KAPALI"
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "ELSE": {
+                                                "block": {
+                                                  "type": "rx_relay",
+                                                  "fields": {
+                                                    "PIN": 3,
+                                                    "STATE": "ON"
+                                                  },
+                                                  "next": {
+                                                    "block": {
+                                                      "type": "variables_set",
+                                                      "fields": {
+                                                        "VAR": {
+                                                          "id": "vid_role_durum",
+                                                          "name": "role_durum",
+                                                          "type": ""
+                                                        }
+                                                      },
+                                                      "inputs": {
+                                                        "VALUE": {
+                                                          "block": {
+                                                            "type": "logic_boolean",
+                                                            "fields": {
+                                                              "BOOL": "TRUE"
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "next": {
+                                                        "block": {
+                                                          "type": "rx_print",
+                                                          "inputs": {
+                                                            "TEXT": {
+                                                              "block": {
+                                                                "type": "text",
+                                                                "fields": {
+                                                                  "TEXT": "Role: ACIK"
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "extraState": {
+                                              "elseCount": 1
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_buzzer_tone",
+                                                "fields": {
+                                                  "PIN": 8
+                                                },
+                                                "inputs": {
+                                                  "FREQ": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 1000
+                                                      }
+                                                    }
+                                                  },
+                                                  "DUR": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 60
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_delay_ms",
+                                  "inputs": {
+                                    "MS": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 20
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "role_durum",
+        "id": "vid_role_durum"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917222,
+  "updatedAt": 1783960917222
+}

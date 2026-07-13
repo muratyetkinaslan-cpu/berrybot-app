@@ -1,0 +1,383 @@
+{
+  "id": "f6eb4844-f002-4df1-b85f-854fa01c9f4d",
+  "name": "Görev 44 — Mesafe Göstergesi + Bar",
+  "filename": "gorev_44_Mesafe_Gostergesi_Bar",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_print",
+                "inputs": {
+                  "TEXT": {
+                    "block": {
+                      "type": "text",
+                      "fields": {
+                        "TEXT": "Park sensoru basladi"
+                      }
+                    }
+                  }
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_forever",
+                    "inputs": {
+                      "DO": {
+                        "block": {
+                          "type": "variables_set",
+                          "fields": {
+                            "VAR": {
+                              "id": "vid_mesafe",
+                              "name": "mesafe",
+                              "type": ""
+                            }
+                          },
+                          "inputs": {
+                            "VALUE": {
+                              "block": {
+                                "type": "rx_ultrasonic_distance",
+                                "fields": {
+                                  "TRIG": 12,
+                                  "ECHO": 13
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "variables_set",
+                              "fields": {
+                                "VAR": {
+                                  "id": "vid_bar",
+                                  "name": "bar",
+                                  "type": ""
+                                }
+                              },
+                              "inputs": {
+                                "VALUE": {
+                                  "block": {
+                                    "type": "rx_map",
+                                    "inputs": {
+                                      "VALUE": {
+                                        "block": {
+                                          "type": "math_constrain",
+                                          "inputs": {
+                                            "VALUE": {
+                                              "block": {
+                                                "type": "variables_get",
+                                                "fields": {
+                                                  "VAR": {
+                                                    "id": "vid_mesafe",
+                                                    "name": "mesafe",
+                                                    "type": ""
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "LOW": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 5
+                                                }
+                                              }
+                                            },
+                                            "HIGH": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 40
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "FROM_LOW": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 40
+                                          }
+                                        }
+                                      },
+                                      "FROM_HIGH": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 5
+                                          }
+                                        }
+                                      },
+                                      "TO_LOW": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 0
+                                          }
+                                        }
+                                      },
+                                      "TO_HIGH": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 15
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "variables_set",
+                                  "fields": {
+                                    "VAR": {
+                                      "id": "vid_cubuk",
+                                      "name": "cubuk",
+                                      "type": ""
+                                    }
+                                  },
+                                  "inputs": {
+                                    "VALUE": {
+                                      "block": {
+                                        "type": "text",
+                                        "fields": {
+                                          "TEXT": ""
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "controls_for",
+                                      "fields": {
+                                        "VAR": {
+                                          "id": "vid_i",
+                                          "name": "i",
+                                          "type": ""
+                                        }
+                                      },
+                                      "inputs": {
+                                        "FROM": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 1
+                                            }
+                                          }
+                                        },
+                                        "TO": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 15
+                                            }
+                                          }
+                                        },
+                                        "BY": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 1
+                                            }
+                                          }
+                                        },
+                                        "DO": {
+                                          "block": {
+                                            "type": "controls_if",
+                                            "inputs": {
+                                              "IF0": {
+                                                "block": {
+                                                  "type": "logic_compare",
+                                                  "fields": {
+                                                    "OP": "LTE"
+                                                  },
+                                                  "inputs": {
+                                                    "A": {
+                                                      "block": {
+                                                        "type": "variables_get",
+                                                        "fields": {
+                                                          "VAR": {
+                                                            "id": "vid_i",
+                                                            "name": "i",
+                                                            "type": ""
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "B": {
+                                                      "block": {
+                                                        "type": "variables_get",
+                                                        "fields": {
+                                                          "VAR": {
+                                                            "id": "vid_bar",
+                                                            "name": "bar",
+                                                            "type": ""
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "DO0": {
+                                                "block": {
+                                                  "type": "variables_set",
+                                                  "fields": {
+                                                    "VAR": {
+                                                      "id": "vid_cubuk",
+                                                      "name": "cubuk",
+                                                      "type": ""
+                                                    }
+                                                  },
+                                                  "inputs": {
+                                                    "VALUE": {
+                                                      "block": {
+                                                        "type": "text_join",
+                                                        "extraState": {
+                                                          "itemCount": 2
+                                                        },
+                                                        "inputs": {
+                                                          "ADD0": {
+                                                            "block": {
+                                                              "type": "variables_get",
+                                                              "fields": {
+                                                                "VAR": {
+                                                                  "id": "vid_cubuk",
+                                                                  "name": "cubuk",
+                                                                  "type": ""
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "ADD1": {
+                                                            "block": {
+                                                              "type": "text",
+                                                              "fields": {
+                                                                "TEXT": "#"
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_print",
+                                          "inputs": {
+                                            "TEXT": {
+                                              "block": {
+                                                "type": "text_join",
+                                                "extraState": {
+                                                  "itemCount": 3
+                                                },
+                                                "inputs": {
+                                                  "ADD0": {
+                                                    "block": {
+                                                      "type": "variables_get",
+                                                      "fields": {
+                                                        "VAR": {
+                                                          "id": "vid_mesafe",
+                                                          "name": "mesafe",
+                                                          "type": ""
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "ADD1": {
+                                                    "block": {
+                                                      "type": "text",
+                                                      "fields": {
+                                                        "TEXT": " cm  |"
+                                                      }
+                                                    }
+                                                  },
+                                                  "ADD2": {
+                                                    "block": {
+                                                      "type": "variables_get",
+                                                      "fields": {
+                                                        "VAR": {
+                                                          "id": "vid_cubuk",
+                                                          "name": "cubuk",
+                                                          "type": ""
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "rx_delay_ms",
+                                              "inputs": {
+                                                "MS": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 200
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "mesafe",
+        "id": "vid_mesafe"
+      },
+      {
+        "name": "bar",
+        "id": "vid_bar"
+      },
+      {
+        "name": "cubuk",
+        "id": "vid_cubuk"
+      },
+      {
+        "name": "i",
+        "id": "vid_i"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783960917219,
+  "updatedAt": 1783960917219
+}

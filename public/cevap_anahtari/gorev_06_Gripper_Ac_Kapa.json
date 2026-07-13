@@ -1,0 +1,104 @@
+{
+  "id": "9a4c0a40-d111-49f3-ba4a-4d01cdca5425",
+  "name": "Görev 6 — Gripper: Aç-Kapa",
+  "filename": "gorev_06_Gripper_Ac_Kapa",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "controls_repeat_ext",
+                "inputs": {
+                  "TIMES": {
+                    "block": {
+                      "type": "math_number",
+                      "fields": {
+                        "NUM": 3
+                      }
+                    }
+                  },
+                  "DO": {
+                    "block": {
+                      "type": "rx_servo_angle",
+                      "fields": {
+                        "PIN": 7
+                      },
+                      "inputs": {
+                        "ANGLE": {
+                          "block": {
+                            "type": "math_number",
+                            "fields": {
+                              "NUM": 140
+                            }
+                          }
+                        }
+                      },
+                      "next": {
+                        "block": {
+                          "type": "rx_delay_s",
+                          "inputs": {
+                            "S": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 1
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "rx_servo_angle",
+                              "fields": {
+                                "PIN": 7
+                              },
+                              "inputs": {
+                                "ANGLE": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 40
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_delay_s",
+                                  "inputs": {
+                                    "S": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 1
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": null,
+  "createdAt": 1783960917177,
+  "updatedAt": 1783960917177
+}
