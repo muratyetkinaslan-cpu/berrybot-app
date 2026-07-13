@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useData, getLocalPhoto } from "./useData";
 import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
-import TankRobot3D from "./TankRobot3D";
-import PicoBricks3D from "./PicoBricks3D";
+import RoboArm3D from "./RoboArm3D";
 
 
 // ═══════════════════════════════════════════════════════════
@@ -48,42 +47,23 @@ const KITS = {
       border: "#3a2860", tp: "#f0e8ff", ts: "#a090c0", tm: "#6b5a90",
     },
   },
-  tank: {
-    id: "tank",
-    name: "Tank Robot",
-    tagline: "Paletli Keşif Aracı",
-    desc: "Arazi çalışan paletli tank. Güçlü motorlar, ağır taşıma, mekanik mücadele.",
-    icon: "🪖",
-    primaryColor: "#4ade80",
-    accentColor: "#16a34a",
-    bgGradient: "linear-gradient(135deg,#0a1f15,#143e2a,#0f2e20)",
-    Component3D: TankRobot3D,
+  roboarm: {
+    id: "roboarm",
+    name: "RoboArm",
+    tagline: "4 Eksenli Robot Kol",
+    desc: "Ahşap gövdeli 4 eksenli robot kol. Servo kontrolünden pick&place otomasyona tam mühendislik.",
+    icon: "🦾",
+    primaryColor: "#E8611A",
+    accentColor: "#c9791f",
+    bgGradient: "linear-gradient(135deg,#241505,#3a2410,#1c1005)",
+    Component3D: RoboArm3D,
     theme: {
-      // Brand colors (yeşil)
-      orange: "#4ade80", od: "#16a34a", ol: "#86efac",
-      purple: "#22c55e", pl: "#4ade80", pd: "#15803d",
-      // Base UI palette (yeşil-asker tonları)
-      bg: "#0a1410", card: "#0f1f17", input: "#070d0a", dark: "#040806",
-      border: "#1f3a2a", tp: "#e8f5ee", ts: "#90c0a0", tm: "#5a7a68",
-    },
-  },
-  picobricks: {
-    id: "picobricks",
-    name: "PicoBricks",
-    tagline: "Kart Bazlı Maker Kiti",
-    desc: "Modüler kart sistemi. Hızlı prototipleme, sensör + aktüatör maker projeleri.",
-    icon: "🧱",
-    primaryColor: "#fb923c",
-    accentColor: "#ea580c",
-    bgGradient: "linear-gradient(135deg,#2a1505,#3a1f08,#1f1004)",
-    Component3D: PicoBricks3D,
-    theme: {
-      // Brand colors (turuncu)
-      orange: "#fb923c", od: "#ea580c", ol: "#fdba74",
-      purple: "#f59e0b", pl: "#fbbf24", pd: "#b45309",
-      // Base UI palette (sıcak turuncu-kahverengi tonları)
-      bg: "#1a0e05", card: "#241608", input: "#0f0803", dark: "#0a0502",
-      border: "#3a2810", tp: "#fff5e8", ts: "#c0a090", tm: "#7a5a48",
+      // Brand colors (ahsap-turuncu)
+      orange: "#E8611A", od: "#b54a10", ol: "#ff8a45",
+      purple: "#c9791f", pl: "#e6a558", pd: "#8a5212",
+      // Base UI palette (sicak ahsap tonlari)
+      bg: "#1c1208", card: "#281a0d", input: "#120b05", dark: "#0c0803",
+      border: "#443014", tp: "#f8efe2", ts: "#c4a884", tm: "#7d6548",
     },
   },
 };
@@ -1123,7 +1103,7 @@ function LoginPage({onLogin, kit, onChangeKit}){
         <div style={{textAlign:"center",marginTop:0,width:"100%",position:"relative",zIndex:3}}>
           <div style={{display:"inline-flex",alignItems:"center",gap:14,flexWrap:"wrap",justifyContent:"center"}}>
             <img
-              src={kit?.id === "picobricks" ? "/logos/picobricks.png" : `/logos/${kit?.id || "berrybot"}.png`}
+              src={`/logos/${kit?.id || "berrybot"}.png`}
               alt={kit?.name || "BerryBot"}
               style={{
                 maxWidth:"100%",
@@ -1309,15 +1289,6 @@ function LoginPage({onLogin, kit, onChangeKit}){
               <img src="/logos/robogpt.png" alt="RoboGPT" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain",filter:"drop-shadow(0 2px 8px #0008)"}}/>
             </div>
 
-            {/* PicoBricks */}
-            <div style={{
-              flex:"1 1 0",
-              display:"flex",alignItems:"center",justifyContent:"center",
-              height:60,
-              animation:"logo-float 3s infinite ease-in-out .8s",
-            }}>
-              <img src="/logos/picobricks.png" alt="PicoBricks" style={{maxHeight:"100%",maxWidth:"100%",objectFit:"contain",filter:"drop-shadow(0 2px 6px #0008)"}}/>
-            </div>
           </div>
         </div>
       </div>
@@ -1620,7 +1591,7 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit,tasksLoading
 
   // Kit-aware task list:
   //  - BerryBot: hardcoded TASKS array (36 görev) MERGED with DB customTasks (admin overrides)
-  //  - Tank/PicoBricks: only customTasks (admin-managed, may be empty)
+  //  - RoboArm: only customTasks (admin-managed, may be empty)
   const kitTasks = (() => {
     // Helper to convert DB task → TASKS-format object
     const fromDb = (t) => ({
@@ -1696,7 +1667,7 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit,tasksLoading
     );
   }
 
-  // Empty state for Tank/PicoBricks when admin hasn't added tasks yet
+  // Empty state for RoboArm when admin hasn't added tasks yet
   if (kitTasks.length === 0) {
     return (
       <div style={{padding:"60px 20px",textAlign:"center",maxWidth:600,margin:"0 auto"}}>
@@ -3917,8 +3888,8 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh,customTasks})
         </select>}
         {role==="student"&&<select value={kit} onChange={e=>setKit(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`2px solid ${KITS[kit]?.primaryColor||T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",fontWeight:700,gridColumn:"span 2"}}>
           <option value="berrybot">🍓 BerryBot</option>
-          <option value="tank" disabled={DEMO_MODE}>🪖 Tank Robot{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
-          <option value="picobricks" disabled={DEMO_MODE}>🧱 PicoBricks{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+          <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+          
         </select>}
         {role==="parent"&&<select value={childId} onChange={e=>setChildId(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",gridColumn:"span 2"}}>
           <option value="">Çocuk seç...</option>
@@ -6073,7 +6044,6 @@ function KitSelector({ onSelect }) {
   const kits = Object.values(KITS);
 
   const logoFor = (kitId) => {
-    if (kitId === "picobricks") return "/logos/picobricks.png";
     return `/logos/${kitId}.png`;
   };
 
@@ -6302,7 +6272,7 @@ function KitSelector({ onSelect }) {
                 minHeight: 0,
                 margin: "clamp(4px, 0.8vh, 8px)",
                 overflow: "hidden",
-                background: kit.id === "berrybot" ? `radial-gradient(ellipse at center,#6B3FA055 0%,#2a1050 50%,#0f0828 100%)` : kit.id === "tank" ? `radial-gradient(ellipse at center,#15803d66 0%,#14532d 45%,#052e16 100%)` : `radial-gradient(ellipse at center,#fb923c66 0%,#9a3412 45%,#451a03 100%)`,
+                background: kit.id === "berrybot" ? `radial-gradient(ellipse at center,#6B3FA055 0%,#2a1050 50%,#0f0828 100%)` : `radial-gradient(ellipse at center,#E8611A55 0%,#3a2410 45%,#1c1005 100%)`,
               }}>
                 {/* Targeting crosshair */}
                 {isHovered && <svg style={{
@@ -6477,7 +6447,7 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, c
 
   // Each kit shows ONLY its own tasks:
   //  - BerryBot: 36 hardcoded TASKS as templates + custom DB additions
-  //  - Tank/PicoBricks: only customTasks from DB (no defaults)
+  //  - RoboArm: only customTasks from DB (no defaults)
   const kitTasks = (() => {
     const dbTasks = customTasks
       .filter(t => (t.kit || "berrybot") === selKit)
@@ -6691,8 +6661,8 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, c
               style={{ ...inputStyle, fontWeight: 700, fontSize: 16, color: KITS[editing.kit]?.primaryColor || T.tp, borderColor: KITS[editing.kit]?.primaryColor || T.border }}
             >
               <option value="berrybot">🍓 BerryBot</option>
-              <option value="tank" disabled={DEMO_MODE}>🪖 Tank Robot{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
-              <option value="picobricks" disabled={DEMO_MODE}>🧱 PicoBricks{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+              <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+              
             </select>
           </div>
           {/* Basic info */}
@@ -7049,8 +7019,8 @@ function AdminHomeworkEditor({ hwTemplates, onSave, onDelete, onUpload, onRefres
               <select value={editing.kit} onChange={e => setEditing({ ...editing, kit: e.target.value })}
                 style={{ ...inputStyle, fontWeight: 700, fontSize: 16 }}>
                 <option value="berrybot">🍓 BerryBot</option>
-                <option value="tank" disabled={DEMO_MODE}>🪖 Tank Robot{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
-                <option value="picobricks" disabled={DEMO_MODE}>🧱 PicoBricks{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+                <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+                
               </select>
             </div>
 
@@ -7299,8 +7269,8 @@ function InstructorHomeworkV2({ user, users, hwTemplates, hwAssignments, onAssig
               }}>
                 <option value="all">🌐 Tüm Kitler</option>
                 <option value="berrybot">🍓 BerryBot</option>
-                <option value="tank">🪖 Tank</option>
-                <option value="picobricks">🧱 PicoBricks</option>
+                <option value="roboarm">🦾 RoboArm</option>
+                
               </select>
               <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={{
                 padding: "6px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.input, color: T.tp, fontSize: 12,
