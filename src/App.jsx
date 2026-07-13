@@ -3,7 +3,7 @@ import { useData, getLocalPhoto } from "./useData";
 import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
 import RoboArm3D from "./RoboArm3D";
-import TaskBrief from "./TaskBrief";
+import TaskBrief, { AnswerAnim } from "./TaskBrief";
 
 
 // ═══════════════════════════════════════════════════════════
@@ -2767,12 +2767,17 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
               🗝️ Cevap Anahtarı · Görev #{t.id}
             </div>
             {t.answer ? (
-              <div style={{background:`${T.dark}cc`,borderRadius:16,border:`1px solid ${T.ok}44`,padding:"20px 22px"}}>
-                <div style={{fontSize:11,color:T.ok,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",marginBottom:12}}>✅ Örnek Çözüm</div>
-                <div style={{fontSize:15.5,color:T.tp,lineHeight:1.75,fontFamily:"ui-monospace, monospace",whiteSpace:"pre-wrap",wordBreak:"break-word"}}>
-                  {t.answer}
+              <>
+                <div style={{background:`${T.dark}cc`,borderRadius:16,border:`1px solid ${T.ok}44`,padding:"16px 20px",marginBottom:14}}>
+                  <AnswerAnim task={t} T={T} />
                 </div>
-              </div>
+                <div style={{background:`${T.dark}cc`,borderRadius:16,border:`1px solid ${T.ok}44`,padding:"20px 22px"}}>
+                  <div style={{fontSize:11,color:T.ok,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",marginBottom:12}}>✅ Örnek Çözüm</div>
+                  <div style={{fontSize:15.5,color:T.tp,lineHeight:1.75,fontFamily:"ui-monospace, monospace",whiteSpace:"pre-wrap",wordBreak:"break-word"}}>
+                    {t.answer}
+                  </div>
+                </div>
+              </>
             ) : (
               <div style={{padding:40,textAlign:"center"}}>
                 <div style={{fontSize:56,opacity:.4,marginBottom:12}}>🗝️</div>
@@ -3515,12 +3520,28 @@ function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,o
   const xp=TLIST.filter(t=>sp[t.id]?.status===TS.APPROVED).reduce((a,t)=>a+t.xp,0);
   const totalTasks = TLIST.length || 1;
   const unlockedSet=new Set(answerUnlocks.filter(au=>au.student_id===s.id).map(au=>au.task_id));
+  const[unlockingAll,setUnlockingAll]=useState(false);
+  const handleUnlockAll=async()=>{
+    if(!window.confirm(`${s.name} için KİLİTLİ olan tüm görevler aynı anda açılsın mı?\n\n(Onaylanmış ve devam eden görevlere dokunulmaz.)`))return;
+    setUnlockingAll(true);
+    try{
+      const n=await db.unlockAllTasks(s.id);
+      alert(n>0?`🔓 ${n} görev açıldı! Öğrenci artık hepsine erişebilir.`:"Açılacak kilitli görev kalmamış — hepsi zaten açık.");
+    }catch(e){alert("Hata: "+(e.message||e));}
+    setUnlockingAll(false);
+  };
   return(<div>
     <button onClick={onBack} style={{fontSize:14,padding:"6px 14px",borderRadius:8,background:T.border,color:T.ts,border:"none",cursor:"pointer",marginBottom:12}}>← Geri</button>
     <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
       <div style={{width:52,height:52,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:700,background:T.orange+"15",color:T.orange}}>{s.name[0]}</div>
       <div><h2 style={{margin:0,fontSize:20}}>{s.name}</h2><div style={{fontSize:14,color:T.tm}}>{getLevel(xp).icon} Lv.{getLevel(xp).lv} • {xp} XP</div></div>
-      <div style={{marginLeft:"auto",fontSize:28,fontWeight:800,color:T.orange}}>{cnt}/{totalTasks}</div>
+      <button onClick={handleUnlockAll} disabled={unlockingAll} style={{
+        marginLeft:"auto",fontSize:13,fontWeight:800,padding:"9px 16px",borderRadius:10,
+        background:unlockingAll?T.border:`linear-gradient(135deg,${T.orange},${T.od})`,
+        color:"#fff",border:"none",cursor:unlockingAll?"wait":"pointer",
+        boxShadow:`0 3px 12px ${T.orange}44`,whiteSpace:"nowrap",
+      }}>{unlockingAll?"Açılıyor...":"🔓 Tüm Görevleri Aç"}</button>
+      <div style={{fontSize:28,fontWeight:800,color:T.orange}}>{cnt}/{totalTasks}</div>
     </div>
 
     {canReview&&onToggleUnlock&&<div style={{marginBottom:12,padding:"10px 14px",borderRadius:10,background:`${T.purple}22`,border:`1px solid ${T.purple}55`,fontSize:13,color:T.ts,display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>

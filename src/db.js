@@ -401,6 +401,40 @@ export async function setStudentProgressTo(studentId, fromTask) {
   console.log('🔧 setStudentProgressTo:', studentId, 'from task', fromTask, 'kit', kit);
 }
 
+// ═══ TÜM GÖREVLERİ AÇ — kilitli olan her görevi 'active' yapar ═══
+// Onaylanmış / onay bekleyen / devam eden görevlere DOKUNMAZ.
+export async function unlockAllTasks(studentId) {
+  const ts = new Date().toISOString();
+  const { data: studentRow } = await supabase.from('bb_users')
+    .select('kit').eq('id', studentId).maybeSingle();
+  const kit = studentRow?.kit || 'berrybot';
+
+  const { data: progRows } = await supabase.from('bb_progress')
+    .select('task_id, status').eq('student_id', studentId).eq('kit', kit);
+
+  const lockedIds = (progRows || [])
+    .filter(r => r.status === 'locked')
+    .map(r => r.task_id);
+
+  if (lockedIds.length === 0) {
+    console.log('🔓 unlockAllTasks: açılacak kilitli görev yok');
+    return 0;
+  }
+
+  const { error } = await supabase.from('bb_progress')
+    .update({ status: 'active', updated_at: ts })
+    .eq('student_id', studentId)
+    .in('task_id', lockedIds);
+  if (error) {
+    console.error('unlockAllTasks error:', error);
+    throw new Error('Görevler açılamadı: ' + (error.message || ''));
+  }
+
+  addLog({ type: 'admin_unlock_all', userId: studentId, detail: `Admin: ${lockedIds.length} görev aynı anda açıldı (${kit})` });
+  console.log('🔓 unlockAllTasks:', studentId, lockedIds.length, 'görev açıldı');
+  return lockedIds.length;
+}
+
 // ═══ REALTIME ═══
 export function subscribeToAll(onUpdate) {
   const channels = [];

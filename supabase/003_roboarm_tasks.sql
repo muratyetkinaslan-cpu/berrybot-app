@@ -38,23 +38,23 @@ DELETE FROM bb_tasks WHERE kit = 'roboarm';
 INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, xp, emoji, description, answer, learnings, position, active, created_at, updated_at) VALUES
 
 -- ═══ BÖLÜM 1: SERVO TEMELLERİ (Hafta 1) ═══
-('roboarm', 1, 'İlk Hareket: Taban 30°→100°', 'Servo Temelleri', 1, 10, 10, '🦾',
- 'Robot kolun tabanını (en alttaki motor) 30 dereceden 100 dereceye çevir. Arada 1 saniye beklesin. Taban motoru pin 0''a takılı.',
- 'servo_yaz(0, 30) → bekle(1sn) → servo_yaz(0, 100). İpucu: Başlangıçta blokları sırayla diz.',
+('roboarm', 1, 'İlk Hareket: Tabanı Döndür', 'Servo Temelleri', 1, 10, 10, '🦾',
+ 'Tabanı önce 30 dereceye getir. 1 saniye bekle. Sonra 60 dereceye getir. 1 saniye bekle. En son 150 dereceye getir. Döngü kullanma — kodun sadece 1 kere çalışsın.',
+ 'servo_yaz(0, 30) → bekle(1 sn) → servo_yaz(0, 60) → bekle(1 sn) → servo_yaz(0, 150). Bitti! Kod yukarıdan aşağı bir kez çalışır ve durur.',
  '["Servo motor kavramı","Açı (derece) kavramı","Pin bağlantısı","Sıralı komut çalıştırma"]'::jsonb, 1, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 2, 'Tekrarla: 5 Kez Git-Gel', 'Servo Temelleri', 1, 12, 10, '🔁',
- 'Görev 1''deki hareketi 5 kez tekrarlat. Kol 30 dereceye gitsin, sonra 100 dereceye, sonra tekrar başa dönsün. Her seferinde 1 saniye beklesin. Tekrar bloğunu kullan!',
- 'repeat(5){ servo_yaz(0,30); bekle(1); servo_yaz(0,100); bekle(1); }',
+ 'Şimdi tekrar bloğunu öğren! Kol 30 dereceye gitsin. 1 saniye bekle. Sonra 150 dereceye gitsin. 1 saniye bekle. Bu ikisini tekrar bloğunun İÇİNE koy ve 5 kez tekrarlat.',
+ 'repeat(5){ servo_yaz(0,30); bekle(1); servo_yaz(0,150); bekle(1); } — Bloklar tekrarın içinde olduğu için 5 kez çalışır.',
  '["Tekrar (repeat) bloğu","Döngü kavramına giriş","Kod tekrarından kaçınma","Bekleme süresi"]'::jsonb, 2, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 3, 'Yumuşak Hareket: Hız Değişkeni', 'Servo Temelleri', 2, 15, 15, '🎚️',
- 'Kol birden zıplamasın, yavaş yavaş gitsin! 30''dan 100''e birer derece ilerlesin, her adımda 100 ms beklesin. Bekleme süresini ''hiz'' adında bir kutuya (değişkene) koy. Sayıyı küçültünce kol hızlanır, büyütünce yavaşlar.',
+ 'Kol birden zıplamasın, yavaşça süzülsün! ''hiz'' adında bir değişken yap, içine 100 yaz. Döngüyle 30''dan 150''ye BİRER derece ilerle. Her adımda ''hiz'' kadar milisaniye bekle. Sonra hiz''ı 50 yap ve farkı izle — kol 2 kat hızlandı mı?',
  'hiz=100; for(aci=30; aci<=100; aci++){ servo_yaz(0,aci); bekle_ms(hiz); }. hiz=50 yapınca 2 kat hızlanır.',
  '["Değişken tanımlama","for döngüsü","Adım adım (kademeli) hareket","Milisaniye kavramı"]'::jsonb, 3, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 4, 'Dört Eksen Tanışma', 'Servo Temelleri', 1, 12, 10, '🧭',
- 'Robot kolunun 4 motoru var: taban (pin 0), omuz (pin 1), dirsek (pin 2), tutucu/gripper (pin 3). Hepsini sırayla 90 dereceye getir. Her motordan sonra 1 saniye bekle. Kol dimdik ''hazır'' pozisyonuna gelsin.',
+ 'Robot kolun 4 motoru var: taban pin 0, omuz pin 1, dirsek pin 2, tutucu pin 3. Önce tabanı 90 dereceye getir. 1 saniye bekle. Sonra omzu 90''a getir. 1 saniye bekle. Sonra dirseği 90''a getir. 1 saniye bekle. En son tutucuyu 90''a getir. Kol dimdik ''hazır'' duruşta olacak.',
  'servo_yaz(0,90); bekle(1); servo_yaz(1,90); bekle(1); servo_yaz(2,90); bekle(1); servo_yaz(3,90);',
  '["4 eksen mimarisi","Kalibrasyon duruşu (90°)","Pin-eklem eşlemesi","Güvenli başlangıç pozisyonu"]'::jsonb, 4, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
@@ -64,12 +64,12 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
  '["Mekanik sınırlar","Servo koruma bilinci","Değişkenle sınır saklama","Gözlem ve not alma"]'::jsonb, 5, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 6, 'Selam Veren Kol', 'Servo Temelleri', 2, 15, 15, '👋',
- 'Robotun sana el sallasın! Önce omuz 60 dereceye eğilsin. Sonra bilek 3 kez sağa sola sallansın (60 ve 120 derece arası). En son kol hazır duruşa dönsün.',
+ 'Robot sana el sallasın! Önce omzu 60 dereceye getir. Sonra bileği 60 dereceye getir, yarım saniye bekle, 120 dereceye getir, yarım saniye bekle. Bu sallanmayı 3 kez tekrarla. En son bütün motorları 90 dereceye getir — kol hazır duruşa dönsün.',
  'servo_yaz(1,60); repeat(3){ servo_yaz(2,60); bekle_ms(300); servo_yaz(2,120); bekle_ms(300); } → hepsi 90°.',
  '["Çoklu eksen koordinasyonu","Tekrar + sıralı akış","İnsansı hareket tasarımı"]'::jsonb, 6, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 7, 'Gripper: Aç-Kapa', 'Servo Temelleri', 1, 10, 10, '🤏',
- 'Robotun elini (gripper) aç kapa yap! Pin 3''teki motorla: tam aç (150 derece), 1 saniye bekle, tam kapat (30 derece). Bunu 3 kez tekrarla.',
+ 'Robotun elini aç-kapa yap! Tutucuyu 150 dereceye getir — el AÇILIR. 1 saniye bekle. Tutucuyu 30 dereceye getir — el KAPANIR. 1 saniye bekle. Bu aç-kapa hareketini 3 kez tekrarla.',
  'repeat(3){ servo_yaz(3,150); bekle(1); servo_yaz(3,30); bekle(1); }',
  '["Gripper mekanizması","Açık/kapalı açı değerleri","Kavrama mantığına giriş"]'::jsonb, 7, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
