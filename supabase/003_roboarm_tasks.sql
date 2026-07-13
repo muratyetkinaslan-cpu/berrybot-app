@@ -39,42 +39,42 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 
 -- ═══ BÖLÜM 1: SERVO TEMELLERİ (Hafta 1) ═══
 ('roboarm', 1, 'İlk Hareket: Taban 30°→100°', 'Servo Temelleri', 1, 10, 10, '🦾',
- 'Base rotation (taban) servosunu 30 dereceden 100 dereceye 1 saniyede hareket ettir. Servo pin 0''a bağlı olmalı.',
+ 'Robot kolun tabanını (en alttaki motor) 30 dereceden 100 dereceye çevir. Arada 1 saniye beklesin. Taban motoru pin 0''a takılı.',
  'servo_yaz(0, 30) → bekle(1sn) → servo_yaz(0, 100). İpucu: Başlangıçta blokları sırayla diz.',
  '["Servo motor kavramı","Açı (derece) kavramı","Pin bağlantısı","Sıralı komut çalıştırma"]'::jsonb, 1, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 2, 'Tekrarla: 5 Kez Git-Gel', 'Servo Temelleri', 1, 12, 10, '🔁',
- 'Görev 1''deki hareketi (30°→100°→30°) "repeat 5 times" bloğu ile 5 kez tekrarlat. Her yön değişiminde 1 saniye bekle.',
+ 'Görev 1''deki hareketi 5 kez tekrarlat. Kol 30 dereceye gitsin, sonra 100 dereceye, sonra tekrar başa dönsün. Her seferinde 1 saniye beklesin. Tekrar bloğunu kullan!',
  'repeat(5){ servo_yaz(0,30); bekle(1); servo_yaz(0,100); bekle(1); }',
  '["Tekrar (repeat) bloğu","Döngü kavramına giriş","Kod tekrarından kaçınma","Bekleme süresi"]'::jsonb, 2, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 3, 'Yumuşak Hareket: Hız Değişkeni', 'Servo Temelleri', 2, 15, 15, '🎚️',
- 'Tabanı 30°''den 100°''ye TEK derece adımlarla, her adımda 100 ms bekleyerek döngüyle oynat. Bekleme süresini "hiz" adlı bir değişkene bağla; hiz''ı değiştirince kolun hızının değiştiğini gözle.',
+ 'Kol birden zıplamasın, yavaş yavaş gitsin! 30''dan 100''e birer derece ilerlesin, her adımda 100 ms beklesin. Bekleme süresini ''hiz'' adında bir kutuya (değişkene) koy. Sayıyı küçültünce kol hızlanır, büyütünce yavaşlar.',
  'hiz=100; for(aci=30; aci<=100; aci++){ servo_yaz(0,aci); bekle_ms(hiz); }. hiz=50 yapınca 2 kat hızlanır.',
  '["Değişken tanımlama","for döngüsü","Adım adım (kademeli) hareket","Milisaniye kavramı"]'::jsonb, 3, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 4, 'Dört Eksen Tanışma', 'Servo Temelleri', 1, 12, 10, '🧭',
- 'Dört servoyu (pin 0: taban, pin 1: omuz, pin 2: dirsek/bilek, pin 3: gripper) sırayla 90°''ye getir. Her servo hareketinden sonra 1 saniye bekle. Kol "hazır duruş"a gelsin.',
+ 'Robot kolunun 4 motoru var: taban (pin 0), omuz (pin 1), dirsek (pin 2), tutucu/gripper (pin 3). Hepsini sırayla 90 dereceye getir. Her motordan sonra 1 saniye bekle. Kol dimdik ''hazır'' pozisyonuna gelsin.',
  'servo_yaz(0,90); bekle(1); servo_yaz(1,90); bekle(1); servo_yaz(2,90); bekle(1); servo_yaz(3,90);',
  '["4 eksen mimarisi","Kalibrasyon duruşu (90°)","Pin-eklem eşlemesi","Güvenli başlangıç pozisyonu"]'::jsonb, 4, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 5, 'Sınırları Keşfet', 'Servo Temelleri', 2, 15, 15, '⚠️',
- 'Her eksenin güvenli minimum ve maksimum açısını bularak bir kağıda not et. Servolar zorlanmadan (ses yapmadan) gidebildiği en uç açıları bul. Bulduğun değerleri değişkenlere kaydet: taban_min, taban_max...',
+ 'Her motorun en fazla nereye kadar dönebildiğini bul. Motor ''vızzz'' diye ses çıkarıp zorlanıyorsa DUR, geri çek! Bulduğun en küçük ve en büyük açıları kağıda yaz. Sonra bunları koda değişken olarak koy.',
  'Örnek: taban 5–175, omuz 20–160, dirsek 15–165, gripper 30–150 (her kitte küçük fark olabilir). Zorlanan servo VIZILDAR — hemen geri çek!',
  '["Mekanik sınırlar","Servo koruma bilinci","Değişkenle sınır saklama","Gözlem ve not alma"]'::jsonb, 5, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 6, 'Selam Veren Kol', 'Servo Temelleri', 2, 15, 15, '👋',
- 'Kol "selam" versin: omuz 60°''ye eğilsin, bilek 3 kez 60°↔120° sallanacak, sonra kol hazır duruşa dönsün.',
+ 'Robotun sana el sallasın! Önce omuz 60 dereceye eğilsin. Sonra bilek 3 kez sağa sola sallansın (60 ve 120 derece arası). En son kol hazır duruşa dönsün.',
  'servo_yaz(1,60); repeat(3){ servo_yaz(2,60); bekle_ms(300); servo_yaz(2,120); bekle_ms(300); } → hepsi 90°.',
  '["Çoklu eksen koordinasyonu","Tekrar + sıralı akış","İnsansı hareket tasarımı"]'::jsonb, 6, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 7, 'Gripper: Aç-Kapa', 'Servo Temelleri', 1, 10, 10, '🤏',
- 'Gripper servosunu (pin 3) kullanarak pençeyi tam aç (150°), 1 saniye bekle, tam kapat (30°). Bunu 3 kez tekrarla.',
+ 'Robotun elini (gripper) aç kapa yap! Pin 3''teki motorla: tam aç (150 derece), 1 saniye bekle, tam kapat (30 derece). Bunu 3 kez tekrarla.',
  'repeat(3){ servo_yaz(3,150); bekle(1); servo_yaz(3,30); bekle(1); }',
  '["Gripper mekanizması","Açık/kapalı açı değerleri","Kavrama mantığına giriş"]'::jsonb, 7, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 8, 'İlk Kavrama: Küpü Tut', 'Servo Temelleri', 3, 20, 20, '🧊',
- 'Bir oyun küpünü kolun önüne koy. Gripper''ı aç, kolu küpe indir, gripper''ı küpü SIKMADAN ama DÜŞÜRMEDEN kapat, kolu yukarı kaldır. Küp 5 saniye havada kalsın.',
+ 'İlk kez bir şey tutacaksın! Küpü kolun önüne koy. Robotun elini aç, kolu aşağı indir, eli kapat ve küpü tut. Çok sıkma (motor zorlanır), az da sıkma (küp düşer). Sonra kolu kaldır — küp 5 saniye havada kalsın!',
  'Kavrama açısı kritik: küp ~3cm ise gripper ~75-85° arasında ideal tutar. Çok sıkarsan servo zorlanır, az sıkarsan düşer.',
  '["Hassas kavrama","Deneme-yanılma kalibrasyonu","Tork ve kuvvet dengesi","Pick (alma) operasyonu"]'::jsonb, 8, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
@@ -92,12 +92,12 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 11, 'İç İçe Döngü: Tarama Deseni', 'Döngü & Değişken', 3, 20, 20, '🔬',
  'İç içe iki döngüyle tarama yap: dış döngü omuzu 60°, 90°, 120° yapar; her omuz açısında iç döngü tabanı 40°''den 140°''ye süpürür. 3B tarama simülasyonu!',
  'for(omuz of [60,90,120]){ servo(1,omuz); for(t=40;t<=140;t+=2){ servo(0,t); bekle_ms(20); } }',
- '["İç içe döngü (nested loop)","2 eksenli koordinasyon","Tarama algoritması","Liste üzerinde gezinme"]'::jsonb, 11, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["İç içe döngü (döngü içinde döngü)","2 eksenli koordinasyon","Tarama algoritması","Liste üzerinde gezinme"]'::jsonb, 11, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 12, 'Fonksiyon Yaz: git_pozisyona()', 'Döngü & Değişken', 3, 20, 25, '📦',
  'Üç parametre alan bir fonksiyon yaz: git_pozisyona(taban, omuz, dirsek). Fonksiyon her ekseni verilen açıya yumuşakça götürsün. Sonra bu fonksiyonla 3 farklı pozisyona sırayla git.',
  'function git_pozisyona(t,o,d){ servo(0,t); servo(1,o); servo(2,d); bekle_ms(600); } → git_pozisyona(45,70,110) gibi çağır.',
- '["Fonksiyon tanımlama","Parametre kavramı","Kodun yeniden kullanımı","Soyutlama"]'::jsonb, 12, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Fonksiyon tanımlama","Parametre kavramı","Kodun yeniden kullanımı","Karmaşık işi tek isim altında toplama"]'::jsonb, 12, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 13, 'Rastgele Dans', 'Döngü & Değişken', 3, 18, 20, '🎲',
  'random (rastgele) bloğu kullanarak kol 10 kez rastgele pozisyona gitsin: taban 20-160, omuz 50-130 arası rastgele açılar. Her pozisyonda yarım saniye dursun. Güvenli sınırların DIŞINA çıkma!',
@@ -113,12 +113,12 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 15, 'Gamepad: Tek Eksen Sürüşü', 'Gamepad', 2, 15, 15, '🎮',
  'Sol analog çubuğun sol/sağ hareketiyle tabanı kontrol et: sola basılıyken açı azalsın, sağa basılıyken artsın (0.7 derecelik adımlar). Sınırları aşma: 1° ve 179°''de dur.',
  'if(sol_stick_sol && rotasyon>1){ rotasyon -= 0.7; } if(sol_stick_sag && rotasyon<179){ rotasyon += 0.7; } servo(0, rotasyon);',
- '["Gamepad girişi okuma","Koşullu artırma/azaltma","Sınır kontrolü (clamping)","Gerçek zamanlı kontrol"]'::jsonb, 15, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Gamepad girişi okuma","Koşullu artırma/azaltma","Sınır kontrolü (sınırda durdurma)","Gerçek zamanlı kontrol"]'::jsonb, 15, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 16, 'Gamepad: 4 Eksen Tam Kontrol', 'Gamepad', 3, 25, 25, '🕹️',
  'Tüm kolu gamepad''e bağla: sol stick yatay=taban, sol stick dikey=omuz, sağ stick dikey=dirsek, LB/RB tuşları=gripper aç/kapa. Her eksende sınır koruması olsun.',
  'Her eksen için görev 15 kalıbını tekrarla. Gripper: if(LB){gripper-=1} if(RB){gripper+=1} + sınırlar.',
- '["Çoklu giriş yönetimi","Eş zamanlı eksen kontrolü","Buton vs analog fark","Tam teleoperasyon"]'::jsonb, 16, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Çoklu giriş yönetimi","Eş zamanlı eksen kontrolü","Buton vs analog fark","Tam uzaktan kumandayla sürme"]'::jsonb, 16, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 17, 'Turbo Modu', 'Gamepad', 3, 15, 20, '⚡',
  'A tuşu basılıyken kol 3 kat hızlı hareket etsin (adım 0.7 yerine 2.1), bırakınca normale dönsün. Hız değişkenini tuşa göre değiştir.',
@@ -133,7 +133,7 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 19, 'Gamepad ile Küp Taşıma Yarışı', 'Gamepad', 3, 25, 25, '🏁',
  'Gamepad''le kolu kullanarak bir küpü A noktasından alıp 20 cm uzaktaki B noktasına bırak. Süre tut! 3 deneme yap, en iyi süreni not et. Sınıf rekoru kimde?',
  'Teknik yok — pilotluk becerisi! İpucu: küpe yaklaşırken yavaşla (turbo kapalı), kavrarken gripper açısını görev 8''den hatırla.',
- '["El-göz koordinasyonu","Hassas teleoperasyon","Süre baskısı altında kontrol","Rekabetçi öğrenme"]'::jsonb, 19, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["El-göz koordinasyonu","Hassas uzaktan kumandayla sürme","Süre baskısı altında kontrol","Rekabetçi öğrenme"]'::jsonb, 19, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 20, 'Makro Kaydı: Tuşla Oynat', 'Gamepad', 4, 25, 30, '🎬',
  'X tuşuna basınca kol önceden kodladığın 3 pozisyonluk bir hareket dizisini (makro) otomatik oynatsın; bittiğinde kontrol tekrar gamepad''e geçsin.',
@@ -148,8 +148,8 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 
 ('roboarm', 22, 'Sayaçlı Buton', 'Buton', 2, 15, 15, '🔢',
  'Butona her basışta bir sayaç 1 artsın. Sayaç 1 ise kol sola (taban 45°), 2 ise ortaya (90°), 3 ise sağa (135°) gitsin; 4. basışta sayaç sıfırlansın ve ev pozisyonuna dönsün.',
- 'sayac++; if(sayac==1)... else if(sayac==3)... else{ sayac=0; ev(); }. İpucu: buton bırakılana kadar bekle, yoksa tek basış 10 sayılır (debounce)!',
- '["Sayaç değişkeni","if-else if zinciri","Buton sıçraması (debounce)","Durum makinesi temeli"]'::jsonb, 22, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ 'sayac++; if(sayac==1)... else if(sayac==3)... else{ sayac=0; ev(); }. İpucu: buton bırakılana kadar bekle, yoksa tek basış 10 sayılır (buton zıplaması engelleme)!',
+ '["Sayaç değişkeni","if-else if zinciri","Buton sıçraması (buton zıplaması engelleme)","Farklı durumlar arasında geçiş"]'::jsonb, 22, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 23, 'Basılı Tutma vs Tek Basış', 'Buton', 3, 18, 20, '⏱️',
  'Butona KISA basınca gripper aç/kapa değişsin (toggle); 2 saniyeden UZUN basılı tutunca kol ev pozisyonuna dönsün. Basış süresini ölç.',
@@ -160,7 +160,7 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 24, 'Potla Taban Kontrolü', 'Potansiyometre', 2, 15, 15, '🎛️',
  'Potansiyometreyi analog pine bağla. Pot değerini (0-1023) oku ve 0-180 derece aralığına dönüştürüp (map) tabanı döndür. Potu çevir, kol seni takip etsin!',
  'deger = analog_oku(A0); aci = map(deger, 0,1023, 0,180); servo(0, aci);',
- '["Analog giriş","ADC kavramı (0-1023)","map (aralık dönüşümü)","Sürekli okuma döngüsü"]'::jsonb, 24, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Analog giriş","Analog değer 0-1023 arası okunur","map: bir sayı aralığını başka aralığa çevirme","Sürekli okuma döngüsü"]'::jsonb, 24, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 25, 'Çift Pot: Kukla Modu', 'Potansiyometre', 3, 20, 20, '🎭',
  'İki potansiyometre bağla: biri tabanı, diğeri omuzu kontrol etsin. İki elinle iki potu çevirerek kolu kukla gibi oynat ve bir küpe dokunmayı dene.',
@@ -175,23 +175,23 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 27, 'Ölü Bölge (Deadzone)', 'Potansiyometre', 4, 20, 25, '🎯',
  'Pot tam ortadayken (değer 480-540 arası) kol hareket ETMESİN (ölü bölge); orta noktadan uzaklaştıkça kol o yöne gittikçe hızlanarak dönsün. Joystick mantığının temelini kur.',
  'fark = deger - 512; if(abs(fark) > 30){ rotasyon += fark / 200.0; } — fark büyüdükçe adım büyür.',
- '["Deadzone kavramı","Oransal kontrol (P-control temeli)","Mutlak değer","İşaretli fark hesabı"]'::jsonb, 27, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Ortada hareketsiz bölge","Uzaklaştıkça hızlanma mantığı","Mutlak değer","İşaretli fark hesabı"]'::jsonb, 27, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 -- ═══ BÖLÜM 6: MESAFE SENSÖRÜ (Hafta 4) ═══
 ('roboarm', 28, 'Mesafe Oku ve Yazdır', 'Mesafe Sensörü', 2, 12, 15, '📏',
- 'HC-SR04 ultrasonik sensörü bağla, önündeki cismin mesafesini cm olarak oku ve Serial Monitor''e saniyede 2 kez yazdır. Elini yaklaştırıp uzaklaştırarak değerleri gözle.',
+ 'HC-SR04 ultrasonik (ses dalgalı) mesafe sensörünü bağla, önündeki cismin mesafesini cm olarak oku ve Serial Monitor''e saniyede 2 kez yazdır. Elini yaklaştırıp uzaklaştırarak değerleri gözle.',
  'mesafe = ultrasonik_oku(); seri_yazdir(mesafe); bekle_ms(500);',
  '["Ultrasonik ses prensibi","Mesafe ölçümü (cm)","Serial Monitor kullanımı","Sensör verisi doğrulama"]'::jsonb, 28, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 29, 'Yaklaşınca Kaç!', 'Mesafe Sensörü', 3, 18, 20, '🙈',
  'Sensörü kolun önüne yerleştir. Bir cisim 10 cm''den fazla yaklaşınca kol geriye çekilsin (omuz yukarı), cisim uzaklaşınca eski pozisyona dönsün.',
- 'if(mesafe < 10){ servo(1, 130); } else { servo(1, 90); } — titremesin diye histerezis ekle: geri dönüş eşiği 15 cm olsun.',
- '["Eşik (threshold) kavramı","Refleks davranış","Histerezis (çift eşik)","Sensör-motor bağlantısı"]'::jsonb, 29, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ 'if(mesafe < 10){ servo(1, 130); } else { servo(1, 90); } — titremesin diye açma ve kapama sınırını farklı yap (böylece titremez): geri dönüş eşiği 15 cm olsun.',
+ '["Eşik (sınır değeri) kavramı","Refleks davranış","İki farklı sınır kullanma","Sensör-motor bağlantısı"]'::jsonb, 29, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 30, 'Mesafeyle Eksen Sürme', 'Mesafe Sensörü', 3, 20, 20, '🫲',
  'Elinin sensöre uzaklığı tabanı kontrol etsin: 5 cm = 30°, 30 cm = 150°. Elini havada ileri-geri oynatarak kolu "dokunmadan" yönet — Jedi modu!',
  'aci = map(mesafe, 5,30, 30,150); aci = sinirla(aci, 30,150); servo(0, aci); — ölçüm gürültüsü için son 5 okumanın ortalamasını al.',
- '["Sensör-servo eşleme","Hareketli ortalama (filtreleme)","Gürültü kavramı","Temassız arayüz"]'::jsonb, 30, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Sensör-servo eşleme","Birkaç ölçümün ortalamasını alma","Gürültü kavramı","Temassız arayüz"]'::jsonb, 30, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 31, 'Nesne Var mı? Kavra!', 'Mesafe Sensörü', 4, 25, 30, '🤖',
  'Sensör gripper yakınına baksın. Gripper''ın önüne (7 cm''den yakına) bir küp gelirse kol OTOMATİK kavrasın, 3 saniye tutsun, sonra bıraksın ve tekrar beklesin. İlk otonom davranışın!',
@@ -233,12 +233,12 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 38, 'Açıya Göre Renk', 'RGB LED', 3, 18, 20, '🌈',
  'Taban açısı LED rengini belirlesin: 0°=tam kırmızı, 90°=tam yeşil, 180°=tam mavi; aradaki açılarda renkler yumuşak geçsin (map ile kanal hesapla).',
  '0-90 arası: k=map(a,0,90,255,0); y=map(a,0,90,0,255); m=0. 90-180 arası: benzer şekilde yeşilden maviye.',
- '["Renk kanalı hesaplama","Çoklu map kullanımı","Doğrusal interpolasyon","Görsel veri sunumu"]'::jsonb, 38, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Renk kanalı hesaplama","Çoklu map kullanımı","Doğrusal araları yumuşak doldurma","Görsel veri sunumu"]'::jsonb, 38, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 39, 'Kavrama Işığı', 'RGB LED', 2, 12, 15, '💜',
  'Gripper bir şey tutarken (kapalı, açı < 85°) LED mor yansın; boşken beyaz. Mesafe sensörüyle birleştir: nesne yaklaşırken sarı "hazırlan" ışığı!',
  'if(mesafe<10 && gripper>85) rgb(255,200,0); else if(gripper<85) rgb(160,0,255); else rgb(255,255,255);',
- '["Çoklu koşul (&&)","3 durumlu gösterge","Sensör füzyonuna giriş"]'::jsonb, 39, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Çoklu koşul (&&)","3 durumlu gösterge","Birden çok sensörü birlikte kullanmana giriş"]'::jsonb, 39, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 -- ═══ BÖLÜM 9: LDR IŞIK SENSÖRÜ (Hafta 5-6) ═══
 ('roboarm', 40, 'Işık Değeri Oku', 'LDR', 1, 10, 10, '☀️',
@@ -249,12 +249,12 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 41, 'Işığa Dönen Kol (Ayçiçeği)', 'LDR', 4, 25, 30, '🌻',
  'İki LDR''yi kolun soluna ve sağına yerleştir. Kol hangi taraf daha aydınlıksa O TARAFA dönsün — ayçiçeği gibi ışığı takip etsin! El feneriyle kolu yönlendir.',
  'fark = sol_ldr - sag_ldr; if(fark > 50) rotasyon += 1; if(fark < -50) rotasyon -= 1; servo(0, rotasyon);',
- '["Diferansiyel sensör okuma","Işık takip algoritması","Güneş paneli takip sistemleri","Kapalı çevrim kontrol"]'::jsonb, 41, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Diferansiyel sensör okuma","Işık takip algoritması","Güneş paneli takip sistemleri","Sensöre bakarak sürekli düzeltme"]'::jsonb, 41, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 42, 'Karanlık Modu', 'LDR', 2, 15, 15, '🌙',
  'Ortam kararınca (LDR < eşik) kol otomatik "uyku pozisyonuna" katlansın ve LED kısık maviye dönsün; ışık gelince uyanıp ev pozisyonuna geçsin ve bip çalsın.',
  'if(isik < 200 && uyanik){ katlan(); uyanik=false; } if(isik > 350 && !uyanik){ ev(); ton_cal(880,150); uyanik=true; }',
- '["Durum değişkeni (uyanık/uyku)","Histerezis ile kararlılık","Enerji tasarrufu senaryosu"]'::jsonb, 42, true, extract(epoch from now())*1000, extract(epoch from now())*1000);
+ '["Durum değişkeni (uyanık/uyku)","İki farklı sınırla kararlı çalışma","Enerji tasarrufu senaryosu"]'::jsonb, 42, true, extract(epoch from now())*1000, extract(epoch from now())*1000);
 
 -- ═══ BÖLÜM 10: OLED EKRAN (Hafta 6) ═══
 INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, xp, emoji, description, answer, learnings, position, active, created_at, updated_at) VALUES
@@ -291,8 +291,8 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 
 ('roboarm', 49, 'Akıllı Fan Sistemi', 'Sıcaklık & Röle', 4, 25, 30, '🌬️',
  'Termostat yap: sıcaklık 28°C''yi geçince röle (fana bağlı) açılsın, 25°C''nin altına inince kapansın. Eşikler arası fark neden gerekli? OLED''de sıcaklık + fan durumu görünsün.',
- 'if(t > 28) role_ac(); if(t < 25) role_kapat(); — 25-28 arası histerezis: fan sürekli aç-kapa titremez (klima mantığı).',
- '["Termostat algoritması","Histerezis derin kavrayış","Gerçek ev otomasyonu","Çoklu modül sistemi"]'::jsonb, 49, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ 'if(t > 28) role_ac(); if(t < 25) role_kapat(); — 25-28 arası iki farklı sınır: fan sürekli aç-kapa titremez (klima mantığı).',
+ '["Termostat algoritması","İki farklı sınır kullanmayı iyi öğrenme","Gerçek ev otomasyonu","Çoklu modül sistemi"]'::jsonb, 49, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 50, 'Sıcaklık Alarmı + Güvenlik Kolu', 'Sıcaklık & Röle', 4, 25, 30, '🚨',
  'Güvenlik senaryosu: sıcaklık 30°C''yi aşarsa (sensörü elinle ısıt) → LED kırmızı yanıp sönsün, buzzer alarm çalsın, VE kol "acil kapatma butonuna basma" hareketi yapsın (önceden belirlediğin pozisyona uzanıp gripper''la dokunsun).',
@@ -308,17 +308,17 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 52, 'Silindir Parkuru: Halkayı Geçir', 'Parkur', 4, 30, 30, '🎯',
  'Delikli küpü kavra ve silindir parkurunun direğine GEÇİR. Küpün deliği direğe hizalanmalı — bilek açısı kritik! Önce gamepad''le dene, hizayı bulunca açıları koda geçir.',
  'İpucu: küpü direğin TAM üstüne getir (taban+omuz), sonra SADECE omzu yavaşça indir. Deliğin yönü bilek açısıyla ayarlanır.',
- '["Hassas hizalama","Eksen ayrıştırma tekniği","Teleoperasyondan otomasyona geçiş","Tolerans kavramı"]'::jsonb, 52, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Hassas hizalama","Eksen ayrıştırma tekniği","Uzaktan kumandayla sürmedan otomasyona geçiş","Tolerans kavramı"]'::jsonb, 52, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 53, 'Kule Yap: 3 Küp Üst Üste', 'Parkur', 4, 30, 30, '🗼',
  '3 küpü sırayla al ve aynı noktaya ÜST ÜSTE diz. Her katta bırakma yüksekliği (omuz açısı) bir küp boyu artmalı — yükseklik farkını değişkenle hesapla.',
  'for(kat=0; kat<3; kat++){ al(kaynak[kat]); birak_omuz = taban_omuz - kat*8; git_ve_birak(hedef, birak_omuz); }',
- '["Değişken yükseklik hesabı","Döngü + pozisyon aritmetiği","İstifleme (palletizing)","Hassas bırakma"]'::jsonb, 53, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Değişken yükseklik hesabı","Döngü + pozisyon aritmetiği","İstifleme (üst üste dizme)","Hassas bırakma"]'::jsonb, 53, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 54, 'Renk Ayrıştırma Simülasyonu', 'Parkur', 3, 25, 25, '🎨',
  '3 küpü sırayla al; her küp için butona basılma SAYISI rengini temsil etsin (1=sol kutu, 2=orta, 3=sağ). Operatör (arkadaşın) butona basar, kol küpü doğru kutuya taşır — insan+robot işbirliği!',
  'kup_al(); secim = buton_sayisi_bekle(); if(secim==1) git(sol); else if(secim==2) git(orta); else git(sag); birak();',
- '["İnsan-robot işbirliği (cobot)","Giriş bekleme + dallanma","Sıralı iş istasyonu","switch/case mantığı"]'::jsonb, 54, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["İnsan-robot işbirliği (insanla çalışan robot)","Giriş bekleme + dallanma","Sıralı iş istasyonu","switch/case mantığı"]'::jsonb, 54, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 55, 'X-O-X: İlk Hamle', 'Parkur', 3, 25, 25, '⭕',
  'X-O-X tablasını kolun önüne sabitle. 9 hücrenin (3x3) pozisyon açılarını bul ve 9 elemanlı bir diziye kaydet. Sonra kol bir küpü alıp ORTA hücreye (5. hücre) bıraksın.',
@@ -344,17 +344,17 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 59, 'Işıkla Komut: Fener Kodu', 'Otomasyon', 4, 25, 30, '🔦',
  'LDR''ye fenerle "komut" gönder: 1 kısa flaş = kolu sola çevir, 2 flaş = sağa, 3 flaş = küp al-bırak makrosu. 2 saniyelik pencerede flaşları say.',
  'flaş sayma: pencere boyunca isik>esik geçişlerini say; switch(sayi){ 1: sola(); 2: saga(); 3: makro(); }',
- '["Optik haberleşme","Darbe sayma","Zaman penceresi","Uzaktan komut protokolü"]'::jsonb, 59, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Işıkla mesaj gönderme","Kaç kez yanıp söndüğünü sayma","Zaman penceresi","Uzaktan komut protokolü"]'::jsonb, 59, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 60, 'Gece Bekçisi Robot', 'Otomasyon', 4, 30, 30, '🌃',
  'Tüm sensörleri birleştir: ortam karanlıksa (LDR) kol radar taraması yapsın (görev 32); 15 cm''den yakın hareket algılarsa alarm çalsın, LED kırmızı flaş yapsın ve kol "davetsiz misafire" dönsün. Aydınlıkta uyusun.',
  'if(karanlik){ tara(); if(en_yakin<15){ alarm(); rgb_flas(); servo(0,hedef_aci); } } else { uyku(); }',
- '["Sensör füzyonu","Güvenlik sistemi mimarisi","Koşullu görev zinciri","4 modül entegrasyonu"]'::jsonb, 60, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Birden çok sensörü birlikte kullanma","Güvenlik sistemi mimarisi","Koşullu görev zinciri","4 modül entegrasyonu"]'::jsonb, 60, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 61, 'Teach & Repeat: Öğret-Tekrarla', 'Otomasyon', 5, 35, 40, '🧠',
  'Gerçek endüstri özelliği: "öğretme modunda" gamepad''le kolu gezdir; butona her bastığında mevcut 4 eksen açısı diziye kaydedilsin (en fazla 10 nokta). "Oynatma modunda" kol kaydedilen rotayı sırayla, sonsuz döngüde tekrarlasın.',
  'kayit: if(A_basildi){ rota.push([taban,omuz,dirsek,gripper]); } oynat: while(true){ for(p of rota){ git(p); bekle(1); } }',
- '["Teach pendant kavramı","Dinamik dizi (push)","Mod mimarisi (kayıt/oynat)","Gerçek endüstriyel iş akışı"]'::jsonb, 61, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Robota hareketi elle öğretme","Dinamik dizi (push)","Mod mimarisi (kayıt/oynat)","Gerçek endüstriyel iş akışı"]'::jsonb, 61, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 62, 'Pot ile Kayıt Hızı', 'Otomasyon', 3, 20, 25, '⏩',
  'Görev 61''deki oynatma hızını potansiyometreye bağla: pot sola = ağır çekim (2 sn/nokta), pot sağa = hızlı (0.2 sn/nokta). Operatör üretim hızını canlı ayarlasın.',
@@ -364,12 +364,12 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 63, 'Hassasiyet Testi: Aynı Noktaya 10 Kez', 'Otomasyon', 3, 20, 25, '🎯',
  'Tekrarlanabilirlik deneyi: kolun ucuna kalem bantla, kağıda 10 kez aynı pozisyona in-kalk yaptır. Oluşan nokta bulutunun çapını ölç — robotunun tekrarlanabilirliği kaç mm? Sonucu rapor et.',
  'repeat(10){ git(hedef); bekle(1); git(yukari); bekle(1); } — noktalar 5mm çembere sığıyorsa süper!',
- '["Tekrarlanabilirlik (repeatability)","Deneysel ölçüm","Mühendislik raporu","Kalite kontrol kavramı"]'::jsonb, 63, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Hep aynı yere gidebilme","Deneysel ölçüm","Mühendislik raporu","Kalite kontrol kavramı"]'::jsonb, 63, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 64, 'Servo Yumuşatma: Easing', 'Otomasyon', 5, 30, 35, '〰️',
  'Kol hareketleri robotik değil AKICI olsun: doğrusal adım yerine sinüs yumuşatması uygula — başta yavaş, ortada hızlı, sonda yavaş. Aynı hareketi iki yöntemle yap, farkı videoya çek.',
  'for(i=0;i<=100;i++){ t=i/100.0; e=(1-cos(t*PI))/2; aci = baslangic + (hedef-baslangic)*e; servo(0,aci); bekle_ms(10); }',
- '["Easing fonksiyonları","Trigonometri uygulaması","İvmelenme profili","Profesyonel hareket kalitesi"]'::jsonb, 64, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Yumuşak hızlanma-yavaşlama","Trigonometri uygulaması","İvmelenme profili","Profesyonel hareket kalitesi"]'::jsonb, 64, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 -- ═══ BÖLÜM 14: FİNAL PROJELERİ (Hafta 8) ═══
 ('roboarm', 65, 'Final Hazırlık: Sistem Şeması', 'Final Projesi', 3, 30, 25, '📐',
@@ -395,7 +395,7 @@ INSERT INTO bb_tasks (kit, task_id, title, category, difficulty, expected_min, x
 ('roboarm', 69, 'Kod Temizliği & Yorumlama', 'Final Projesi', 3, 25, 25, '🧹',
  'Final projenin kodunu profesyonelleştir: her fonksiyona açıklama yorumu, anlamlı değişken adları (a1 değil taban_acisi), tekrar eden kodları fonksiyona çevir. Eğitmen kodunu "başkası okuyabilir mi?" gözüyle inceleyecek.',
  'İyi kod = 6 ay sonra açtığında anladığın kod. Yorum satırı: neyi değil NEDEN yaptığını anlatır.',
- '["Temiz kod prensipleri","Yorum yazma kültürü","Refactoring","Kod okunabilirliği"]'::jsonb, 69, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
+ '["Temiz kod prensipleri","Yorum yazma kültürü","Kodu daha düzenli hale getirme","Kod okunabilirliği"]'::jsonb, 69, true, extract(epoch from now())*1000, extract(epoch from now())*1000),
 
 ('roboarm', 70, 'Demo Günü Sunumu', 'Final Projesi', 4, 40, 40, '🎤',
  'Projeni sınıfa/velilere 5 dakikada sun: problem neydi, nasıl çözdün, canlı demo, bir aksilik planı (demo çökerse ne yapacaksın?). Sunum akışını kartlara yaz, en az 1 kez prova yap.',

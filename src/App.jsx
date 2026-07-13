@@ -3,6 +3,7 @@ import { useData, getLocalPhoto } from "./useData";
 import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
 import RoboArm3D from "./RoboArm3D";
+import TaskBrief from "./TaskBrief";
 
 
 // ═══════════════════════════════════════════════════════════
@@ -1740,6 +1741,14 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit,tasksLoading
     "Çizgi Takip":{c:"#60a5fa",bg:"#0a1a3a",icon:"〰️",scene:"🛤️"},
     "Sumo Robot":{c:"#f87171",bg:"#3a0a0a",icon:"🤼",scene:"🏆"},
     "Işık Takip":{c:"#facc15",bg:"#2a2a0a",icon:"🌟",scene:"💫"},
+    // âââ RoboArm kategorileri âââ
+    "Servo Temelleri":{c:"#fb923c",icon:"🦾"},"DÃ¶ngÃ¼ & DeÄiÅken":{c:"#a78bfa",icon:"🔁",bg:"#241505",scene:"🦾"},
+    "Gamepad":{c:"#22d3ee",icon:"🎮"},"Buton":{c:"#f472b6",icon:"🔘",bg:"#241505",scene:"🦾"},
+    "Potansiyometre":{c:"#facc15",icon:"🎛️"},"Mesafe SensÃ¶rÃ¼":{c:"#34d399",icon:"📏",bg:"#241505",scene:"🦾"},
+    "Buzzer":{c:"#fb7185",icon:"🔔"},"LDR":{c:"#fde047",icon:"💡",bg:"#241505",scene:"🦾"},
+    "OLED Ekran":{c:"#60a5fa",icon:"🖥️"},"SÄ±caklÄ±k & RÃ¶le":{c:"#f87171",icon:"🌡️",bg:"#241505",scene:"🦾"},
+    "Parkur":{c:"#4ade80",icon:"🎯"},"Otomasyon":{c:"#e8611a",icon:"🏭",bg:"#241505",scene:"🦾"},
+    "Final Projesi":{c:"#ffd166",icon:"🎓",bg:"#241505",scene:"🦾"},
   };
 
   // Build positions for all 36 tasks on a horizontal map
@@ -2429,6 +2438,14 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
     "Mesafe/Navigasyon":{c:"#34d399",icon:"🧭"},"Engel Algılama":{c:"#fb7185",icon:"🚧"},
     "Çizgi Takip":{c:"#60a5fa",icon:"〰️"},"Sumo Robot":{c:"#f87171",icon:"🤼"},
     "Işık Takip":{c:"#facc15",icon:"🌟"},
+    // âââ RoboArm kategorileri âââ
+    "Servo Temelleri":{c:"#fb923c",icon:"🦾"},"DÃ¶ngÃ¼ & DeÄiÅken":{c:"#a78bfa",icon:"🔁"},
+    "Gamepad":{c:"#22d3ee",icon:"🎮"},"Buton":{c:"#f472b6",icon:"🔘"},
+    "Potansiyometre":{c:"#facc15",icon:"🎛️"},"Mesafe SensÃ¶rÃ¼":{c:"#34d399",icon:"📏"},
+    "Buzzer":{c:"#fb7185",icon:"🔔"},"LDR":{c:"#fde047",icon:"💡"},
+    "OLED Ekran":{c:"#60a5fa",icon:"🖥️"},"SÄ±caklÄ±k & RÃ¶le":{c:"#f87171",icon:"🌡️"},
+    "Parkur":{c:"#4ade80",icon:"🎯"},"Otomasyon":{c:"#e8611a",icon:"🏭"},
+    "Final Projesi":{c:"#ffd166",icon:"🎓"},
   };
   const theme=catThemes[t.cat]||{c:T.orange,icon:"🎯"};
 
@@ -2660,13 +2677,9 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
           </button>
         </div>
 
-        {/* IMAGE TAB */}
+        {/* IMAGE TAB — görsel yoksa zengin görev brifing kartı */}
         {mediaTab==="image"&&((!hasImg||imgError) ? (
-          <div style={{width:"100%",height:360,background:`linear-gradient(135deg,${theme.c}30,${T.dark})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}}>
-            <span style={{fontSize:108}}>{t.img}</span>
-            <span style={{fontSize:14,color:T.tm}}>{t.image_url ? "Görsel yüklenemedi" : "Görsel henüz eklenmedi"}</span>
-            <span style={{fontSize:12,color:T.tm}}>Görev #{t.id}</span>
-          </div>
+          <TaskBrief task={t} theme={theme} T={T} />
         ) : (
           <div onClick={()=>imgLoaded&&setImgZoom(true)} style={{width:"100%",maxHeight:520,minHeight:360,background:T.dark,position:"relative",cursor:imgLoaded?"zoom-in":"default",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>
             <img src={imgSrc} alt={`Görev ${t.id}`} onLoad={()=>setImgLoaded(true)} onError={()=>setImgError(true)}
@@ -2749,11 +2762,28 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
             </div>
           </div>
         ):(
-          <div style={{padding:60,textAlign:"center",background:T.dark}}>
-            <div style={{fontSize:64,opacity:.4,marginBottom:12}}>🗝️</div>
-            <div style={{fontSize:17,fontWeight:700,color:T.ts,marginBottom:8}}>Cevap anahtarı henüz yüklenmemiş</div>
-            <div style={{fontSize:13,color:T.tm,maxWidth:340,margin:"0 auto",lineHeight:1.5}}>
-              Bu görevin cevap anahtarı yakında eklenecek.
+          <div style={{padding:"30px 28px",background:`linear-gradient(160deg,${T.dark},${T.card})`,minHeight:360}}>
+            <div style={{fontSize:10,letterSpacing:2.5,textTransform:"uppercase",color:T.ok,fontWeight:900,marginBottom:14,display:"flex",alignItems:"center",gap:7}}>
+              🗝️ Cevap Anahtarı · Görev #{t.id}
+            </div>
+            {t.answer ? (
+              <div style={{background:`${T.dark}cc`,borderRadius:16,border:`1px solid ${T.ok}44`,padding:"20px 22px"}}>
+                <div style={{fontSize:11,color:T.ok,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase",marginBottom:12}}>✅ Örnek Çözüm</div>
+                <div style={{fontSize:15.5,color:T.tp,lineHeight:1.75,fontFamily:"ui-monospace, monospace",whiteSpace:"pre-wrap",wordBreak:"break-word"}}>
+                  {t.answer}
+                </div>
+              </div>
+            ) : (
+              <div style={{padding:40,textAlign:"center"}}>
+                <div style={{fontSize:56,opacity:.4,marginBottom:12}}>🗝️</div>
+                <div style={{fontSize:16,fontWeight:700,color:T.ts}}>Bu görev için cevap metni girilmemiş</div>
+              </div>
+            )}
+            <div style={{marginTop:14,padding:"12px 16px",borderRadius:12,background:`linear-gradient(90deg,${T.ok}18,transparent)`,border:`1px solid ${T.ok}33`,display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:19}}>🎉</span>
+              <span style={{fontSize:13.5,color:T.tp,lineHeight:1.5}}>
+                Eğitmenin bu görevin cevabını senin için açtı. Kendi çözümünle karşılaştır!
+              </span>
             </div>
           </div>
         ))}
