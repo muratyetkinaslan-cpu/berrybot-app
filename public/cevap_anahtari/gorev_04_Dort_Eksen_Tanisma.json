@@ -1,0 +1,150 @@
+{
+  "id": "b4bc8d57-fd0c-41b6-9763-12544485c862",
+  "name": "Görev 4 — Dört Eksen Tanışma",
+  "filename": "gorev_04_Dort_Eksen_Tanisma",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_servo_v3",
+                    "fields": {
+                      "CHANNEL": "0"
+                    },
+                    "inputs": {
+                      "ANGLE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 90
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_delay_s",
+                        "inputs": {
+                          "S": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_v3",
+                            "fields": {
+                              "CHANNEL": "1"
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_delay_s",
+                                "inputs": {
+                                  "S": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_v3",
+                                    "fields": {
+                                      "CHANNEL": "2"
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 90
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_delay_s",
+                                        "inputs": {
+                                          "S": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 1
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_servo_v3",
+                                            "fields": {
+                                              "CHANNEL": "3"
+                                            },
+                                            "inputs": {
+                                              "ANGLE": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 90
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": null,
+  "createdAt": 1783958492057,
+  "updatedAt": 1783958492057
+}

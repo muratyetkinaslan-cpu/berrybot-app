@@ -1,0 +1,661 @@
+{
+  "id": "31b67aaf-1e47-4a0a-a161-4a42ed43974a",
+  "name": "Görev 61 — Pot ile Kayıt Hızı",
+  "filename": "gorev_61_Pot_ile_Kayit_Hizi",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_oled_init",
+                    "fields": {
+                      "SDA": 4,
+                      "SCL": 5,
+                      "I2C_BUS": "0",
+                      "SIZE": "128x64",
+                      "ADDR": "0x3C"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "variables_set",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_t1",
+                            "name": "t1",
+                            "type": ""
+                          }
+                        },
+                        "inputs": {
+                          "VALUE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 60
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "variables_set",
+                            "fields": {
+                              "VAR": {
+                                "id": "var_o1",
+                                "name": "o1",
+                                "type": ""
+                              }
+                            },
+                            "inputs": {
+                              "VALUE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 70
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "variables_set",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "var_d1",
+                                    "name": "d1",
+                                    "type": ""
+                                  }
+                                },
+                                "inputs": {
+                                  "VALUE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 120
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "variables_set",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_t2",
+                                        "name": "t2",
+                                        "type": ""
+                                      }
+                                    },
+                                    "inputs": {
+                                      "VALUE": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 90
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "variables_set",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_o2",
+                                            "name": "o2",
+                                            "type": ""
+                                          }
+                                        },
+                                        "inputs": {
+                                          "VALUE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 110
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "variables_set",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "var_d2",
+                                                "name": "d2",
+                                                "type": ""
+                                              }
+                                            },
+                                            "inputs": {
+                                              "VALUE": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 90
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "variables_set",
+                                                "fields": {
+                                                  "VAR": {
+                                                    "id": "var_t3",
+                                                    "name": "t3",
+                                                    "type": ""
+                                                  }
+                                                },
+                                                "inputs": {
+                                                  "VALUE": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 130
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "variables_set",
+                                                    "fields": {
+                                                      "VAR": {
+                                                        "id": "var_o3",
+                                                        "name": "o3",
+                                                        "type": ""
+                                                      }
+                                                    },
+                                                    "inputs": {
+                                                      "VALUE": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 70
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "variables_set",
+                                                        "fields": {
+                                                          "VAR": {
+                                                            "id": "var_d3",
+                                                            "name": "d3",
+                                                            "type": ""
+                                                          }
+                                                        },
+                                                        "inputs": {
+                                                          "VALUE": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 120
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_bekleme",
+                        "name": "bekleme",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "rx_map",
+                          "inputs": {
+                            "VALUE": {
+                              "block": {
+                                "type": "rx_potentiometer",
+                                "fields": {
+                                  "PIN": "26"
+                                }
+                              }
+                            },
+                            "FROM_LOW": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 0
+                                }
+                              }
+                            },
+                            "FROM_HIGH": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 100
+                                }
+                              }
+                            },
+                            "TO_LOW": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 2000
+                                }
+                              }
+                            },
+                            "TO_HIGH": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 200
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_oled_clear",
+                        "next": {
+                          "block": {
+                            "type": "rx_oled_text",
+                            "fields": {
+                              "ALIGN": "TOPLEFT",
+                              "X": 0,
+                              "Y": 0,
+                              "SIZE": "1"
+                            },
+                            "inputs": {
+                              "TEXT": {
+                                "block": {
+                                  "type": "text_join",
+                                  "extraState": {
+                                    "itemCount": 2
+                                  },
+                                  "inputs": {
+                                    "ADD0": {
+                                      "block": {
+                                        "type": "text",
+                                        "fields": {
+                                          "TEXT": "Hiz(ms): "
+                                        }
+                                      }
+                                    },
+                                    "ADD1": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_bekleme",
+                                            "name": "bekleme",
+                                            "type": ""
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_oled_show",
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_v3",
+                                    "fields": {
+                                      "CHANNEL": "0"
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_t1",
+                                              "name": "t1",
+                                              "type": ""
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_servo_v3",
+                                        "fields": {
+                                          "CHANNEL": "1"
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "variables_get",
+                                              "fields": {
+                                                "VAR": {
+                                                  "id": "var_o1",
+                                                  "name": "o1",
+                                                  "type": ""
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_servo_v3",
+                                            "fields": {
+                                              "CHANNEL": "2"
+                                            },
+                                            "inputs": {
+                                              "ANGLE": {
+                                                "block": {
+                                                  "type": "variables_get",
+                                                  "fields": {
+                                                    "VAR": {
+                                                      "id": "var_d1",
+                                                      "name": "d1",
+                                                      "type": ""
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_delay_ms",
+                                                "inputs": {
+                                                  "MS": {
+                                                    "block": {
+                                                      "type": "variables_get",
+                                                      "fields": {
+                                                        "VAR": {
+                                                          "id": "var_bekleme",
+                                                          "name": "bekleme",
+                                                          "type": ""
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "rx_servo_v3",
+                                                    "fields": {
+                                                      "CHANNEL": "0"
+                                                    },
+                                                    "inputs": {
+                                                      "ANGLE": {
+                                                        "block": {
+                                                          "type": "variables_get",
+                                                          "fields": {
+                                                            "VAR": {
+                                                              "id": "var_t2",
+                                                              "name": "t2",
+                                                              "type": ""
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "rx_servo_v3",
+                                                        "fields": {
+                                                          "CHANNEL": "1"
+                                                        },
+                                                        "inputs": {
+                                                          "ANGLE": {
+                                                            "block": {
+                                                              "type": "variables_get",
+                                                              "fields": {
+                                                                "VAR": {
+                                                                  "id": "var_o2",
+                                                                  "name": "o2",
+                                                                  "type": ""
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_servo_v3",
+                                                            "fields": {
+                                                              "CHANNEL": "2"
+                                                            },
+                                                            "inputs": {
+                                                              "ANGLE": {
+                                                                "block": {
+                                                                  "type": "variables_get",
+                                                                  "fields": {
+                                                                    "VAR": {
+                                                                      "id": "var_d2",
+                                                                      "name": "d2",
+                                                                      "type": ""
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            "next": {
+                                                              "block": {
+                                                                "type": "rx_delay_ms",
+                                                                "inputs": {
+                                                                  "MS": {
+                                                                    "block": {
+                                                                      "type": "variables_get",
+                                                                      "fields": {
+                                                                        "VAR": {
+                                                                          "id": "var_bekleme",
+                                                                          "name": "bekleme",
+                                                                          "type": ""
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "next": {
+                                                                  "block": {
+                                                                    "type": "rx_servo_v3",
+                                                                    "fields": {
+                                                                      "CHANNEL": "0"
+                                                                    },
+                                                                    "inputs": {
+                                                                      "ANGLE": {
+                                                                        "block": {
+                                                                          "type": "variables_get",
+                                                                          "fields": {
+                                                                            "VAR": {
+                                                                              "id": "var_t3",
+                                                                              "name": "t3",
+                                                                              "type": ""
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    },
+                                                                    "next": {
+                                                                      "block": {
+                                                                        "type": "rx_servo_v3",
+                                                                        "fields": {
+                                                                          "CHANNEL": "1"
+                                                                        },
+                                                                        "inputs": {
+                                                                          "ANGLE": {
+                                                                            "block": {
+                                                                              "type": "variables_get",
+                                                                              "fields": {
+                                                                                "VAR": {
+                                                                                  "id": "var_o3",
+                                                                                  "name": "o3",
+                                                                                  "type": ""
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        },
+                                                                        "next": {
+                                                                          "block": {
+                                                                            "type": "rx_servo_v3",
+                                                                            "fields": {
+                                                                              "CHANNEL": "2"
+                                                                            },
+                                                                            "inputs": {
+                                                                              "ANGLE": {
+                                                                                "block": {
+                                                                                  "type": "variables_get",
+                                                                                  "fields": {
+                                                                                    "VAR": {
+                                                                                      "id": "var_d3",
+                                                                                      "name": "d3",
+                                                                                      "type": ""
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            },
+                                                                            "next": {
+                                                                              "block": {
+                                                                                "type": "rx_delay_ms",
+                                                                                "inputs": {
+                                                                                  "MS": {
+                                                                                    "block": {
+                                                                                      "type": "variables_get",
+                                                                                      "fields": {
+                                                                                        "VAR": {
+                                                                                          "id": "var_bekleme",
+                                                                                          "name": "bekleme",
+                                                                                          "type": ""
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "t1",
+        "id": "var_t1"
+      },
+      {
+        "name": "o1",
+        "id": "var_o1"
+      },
+      {
+        "name": "d1",
+        "id": "var_d1"
+      },
+      {
+        "name": "t2",
+        "id": "var_t2"
+      },
+      {
+        "name": "o2",
+        "id": "var_o2"
+      },
+      {
+        "name": "d2",
+        "id": "var_d2"
+      },
+      {
+        "name": "t3",
+        "id": "var_t3"
+      },
+      {
+        "name": "o3",
+        "id": "var_o3"
+      },
+      {
+        "name": "d3",
+        "id": "var_d3"
+      },
+      {
+        "name": "bekleme",
+        "id": "var_bekleme"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492129,
+  "updatedAt": 1783958492129
+}

@@ -1,0 +1,513 @@
+{
+  "id": "d327703e-b3eb-49c2-aa0c-f94afae42920",
+  "name": "Görev 20 — Pozisyon Hafızası: Rota Tekrarı",
+  "filename": "gorev_20_Pozisyon_Hafizasi_Rota_Tekrari",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "procedures_defnoreturn",
+                    "extraState": {
+                      "params": [
+                        {
+                          "name": "taban",
+                          "id": "var_taban"
+                        },
+                        {
+                          "name": "omuz",
+                          "id": "var_omuz"
+                        },
+                        {
+                          "name": "dirsek",
+                          "id": "var_dirsek"
+                        }
+                      ]
+                    },
+                    "fields": {
+                      "NAME": "git_pozisyona"
+                    },
+                    "inputs": {
+                      "STACK": {
+                        "block": {
+                          "type": "rx_servo_v3",
+                          "fields": {
+                            "CHANNEL": "0"
+                          },
+                          "inputs": {
+                            "ANGLE": {
+                              "block": {
+                                "type": "variables_get",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "var_taban",
+                                    "name": "taban",
+                                    "type": ""
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "rx_servo_v3",
+                              "fields": {
+                                "CHANNEL": "1"
+                              },
+                              "inputs": {
+                                "ANGLE": {
+                                  "block": {
+                                    "type": "variables_get",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_omuz",
+                                        "name": "omuz",
+                                        "type": ""
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_servo_v3",
+                                  "fields": {
+                                    "CHANNEL": "2"
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_dirsek",
+                                            "name": "dirsek",
+                                            "type": ""
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_delay_ms",
+                                      "inputs": {
+                                        "MS": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 600
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "controls_repeat_ext",
+                        "inputs": {
+                          "TIMES": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 3
+                              }
+                            }
+                          },
+                          "DO": {
+                            "block": {
+                              "type": "procedures_callnoreturn",
+                              "extraState": {
+                                "name": "git_pozisyona",
+                                "params": [
+                                  "taban",
+                                  "omuz",
+                                  "dirsek"
+                                ]
+                              },
+                              "inputs": {
+                                "ARG0": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 90
+                                    }
+                                  }
+                                },
+                                "ARG1": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 90
+                                    }
+                                  }
+                                },
+                                "ARG2": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 90
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_delay_s",
+                                  "inputs": {
+                                    "S": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 1
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "procedures_callnoreturn",
+                                      "extraState": {
+                                        "name": "git_pozisyona",
+                                        "params": [
+                                          "taban",
+                                          "omuz",
+                                          "dirsek"
+                                        ]
+                                      },
+                                      "inputs": {
+                                        "ARG0": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 40
+                                            }
+                                          }
+                                        },
+                                        "ARG1": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 70
+                                            }
+                                          }
+                                        },
+                                        "ARG2": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 120
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_delay_s",
+                                          "inputs": {
+                                            "S": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 1
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "procedures_callnoreturn",
+                                              "extraState": {
+                                                "name": "git_pozisyona",
+                                                "params": [
+                                                  "taban",
+                                                  "omuz",
+                                                  "dirsek"
+                                                ]
+                                              },
+                                              "inputs": {
+                                                "ARG0": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 140
+                                                    }
+                                                  }
+                                                },
+                                                "ARG1": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 70
+                                                    }
+                                                  }
+                                                },
+                                                "ARG2": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 120
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "next": {
+                                                "block": {
+                                                  "type": "rx_delay_s",
+                                                  "inputs": {
+                                                    "S": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 1
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "next": {
+                                                    "block": {
+                                                      "type": "procedures_callnoreturn",
+                                                      "extraState": {
+                                                        "name": "git_pozisyona",
+                                                        "params": [
+                                                          "taban",
+                                                          "omuz",
+                                                          "dirsek"
+                                                        ]
+                                                      },
+                                                      "inputs": {
+                                                        "ARG0": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 90
+                                                            }
+                                                          }
+                                                        },
+                                                        "ARG1": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 120
+                                                            }
+                                                          }
+                                                        },
+                                                        "ARG2": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 60
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "next": {
+                                                        "block": {
+                                                          "type": "rx_delay_s",
+                                                          "inputs": {
+                                                            "S": {
+                                                              "block": {
+                                                                "type": "math_number",
+                                                                "fields": {
+                                                                  "NUM": 1
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_v3",
+                            "fields": {
+                              "CHANNEL": "0"
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_v3",
+                                "fields": {
+                                  "CHANNEL": "1"
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 90
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_v3",
+                                    "fields": {
+                                      "CHANNEL": "2"
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 90
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_servo_v3",
+                                        "fields": {
+                                          "CHANNEL": "3"
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 90
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_oled_clear",
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_oled_text",
+                                                "fields": {
+                                                  "ALIGN": "TOPLEFT",
+                                                  "X": 25,
+                                                  "Y": 20,
+                                                  "SIZE": "2"
+                                                },
+                                                "inputs": {
+                                                  "TEXT": {
+                                                    "block": {
+                                                      "type": "text",
+                                                      "fields": {
+                                                        "TEXT": "USTA!"
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "rx_oled_show",
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "procedures_callnoreturn",
+                                                        "extraState": {
+                                                          "name": "zafer_melodisi",
+                                                          "params": []
+                                                        },
+                                                        "inputs": {},
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_rgb_rainbow",
+                                                            "inputs": {
+                                                              "STEP": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 0
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "taban",
+        "id": "var_taban"
+      },
+      {
+        "name": "omuz",
+        "id": "var_omuz"
+      },
+      {
+        "name": "dirsek",
+        "id": "var_dirsek"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492068,
+  "updatedAt": 1783958492068
+}

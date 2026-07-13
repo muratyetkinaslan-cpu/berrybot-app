@@ -1,0 +1,114 @@
+{
+  "id": "fab41720-87b5-4c12-b55e-85e1ba8a284e",
+  "name": "Görev 2 — Tekrarla: 5 Kez Git-Gel",
+  "filename": "gorev_02_Tekrarla_5_Kez_Git_Gel",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "controls_repeat_ext",
+                    "inputs": {
+                      "TIMES": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 5
+                          }
+                        }
+                      },
+                      "DO": {
+                        "block": {
+                          "type": "rx_servo_v3",
+                          "fields": {
+                            "CHANNEL": "0"
+                          },
+                          "inputs": {
+                            "ANGLE": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 30
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "rx_delay_s",
+                              "inputs": {
+                                "S": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 1
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_servo_v3",
+                                  "fields": {
+                                    "CHANNEL": "0"
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 150
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_delay_s",
+                                      "inputs": {
+                                        "S": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 1
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": null,
+  "createdAt": 1783958492055,
+  "updatedAt": 1783958492055
+}

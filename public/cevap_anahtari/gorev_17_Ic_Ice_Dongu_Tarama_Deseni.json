@@ -1,0 +1,275 @@
+{
+  "id": "2fc60b86-7557-4038-a895-fb89aa8c78e1",
+  "name": "Görev 17 — İç İçe Döngü: Tarama Deseni",
+  "filename": "gorev_17_Ic_Ice_Dongu_Tarama_Deseni",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "controls_for",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_omuz",
+                        "name": "omuz",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "FROM": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 60
+                          }
+                        }
+                      },
+                      "TO": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 120
+                          }
+                        }
+                      },
+                      "BY": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 30
+                          }
+                        }
+                      },
+                      "DO": {
+                        "block": {
+                          "type": "rx_servo_v3",
+                          "fields": {
+                            "CHANNEL": "1"
+                          },
+                          "inputs": {
+                            "ANGLE": {
+                              "block": {
+                                "type": "variables_get",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "var_omuz",
+                                    "name": "omuz",
+                                    "type": ""
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "rx_delay_ms",
+                              "inputs": {
+                                "MS": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 300
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "controls_for",
+                                  "fields": {
+                                    "VAR": {
+                                      "id": "var_t",
+                                      "name": "t",
+                                      "type": ""
+                                    }
+                                  },
+                                  "inputs": {
+                                    "FROM": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 40
+                                        }
+                                      }
+                                    },
+                                    "TO": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 140
+                                        }
+                                      }
+                                    },
+                                    "BY": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 2
+                                        }
+                                      }
+                                    },
+                                    "DO": {
+                                      "block": {
+                                        "type": "rx_servo_v3",
+                                        "fields": {
+                                          "CHANNEL": "0"
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "variables_get",
+                                              "fields": {
+                                                "VAR": {
+                                                  "id": "var_t",
+                                                  "name": "t",
+                                                  "type": ""
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_delay_ms",
+                                            "inputs": {
+                                              "MS": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 20
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "controls_for",
+                                      "fields": {
+                                        "VAR": {
+                                          "id": "var_t",
+                                          "name": "t",
+                                          "type": ""
+                                        }
+                                      },
+                                      "inputs": {
+                                        "FROM": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 140
+                                            }
+                                          }
+                                        },
+                                        "TO": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 40
+                                            }
+                                          }
+                                        },
+                                        "BY": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 2
+                                            }
+                                          }
+                                        },
+                                        "DO": {
+                                          "block": {
+                                            "type": "rx_servo_v3",
+                                            "fields": {
+                                              "CHANNEL": "0"
+                                            },
+                                            "inputs": {
+                                              "ANGLE": {
+                                                "block": {
+                                                  "type": "variables_get",
+                                                  "fields": {
+                                                    "VAR": {
+                                                      "id": "var_t",
+                                                      "name": "t",
+                                                      "type": ""
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_delay_ms",
+                                                "inputs": {
+                                                  "MS": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 20
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "omuz",
+        "id": "var_omuz"
+      },
+      {
+        "name": "t",
+        "id": "var_t"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492066,
+  "updatedAt": 1783958492066
+}

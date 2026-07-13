@@ -1,0 +1,347 @@
+{
+  "id": "07c371b8-5e44-4187-bdc8-76a8b0c36fc9",
+  "name": "Görev 7 — İlk Kavrama: Küpü Tut",
+  "filename": "gorev_07_Ilk_Kavrama_Kupu_Tut",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_servo_v3",
+                    "fields": {
+                      "CHANNEL": "3"
+                    },
+                    "inputs": {
+                      "ANGLE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 140
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_delay_s",
+                        "inputs": {
+                          "S": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_v3",
+                            "fields": {
+                              "CHANNEL": "1"
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 60
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_v3",
+                                "fields": {
+                                  "CHANNEL": "2"
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 120
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_delay_s",
+                                    "inputs": {
+                                      "S": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 1
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_servo_v3",
+                                        "fields": {
+                                          "CHANNEL": "3"
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 80
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_delay_s",
+                                            "inputs": {
+                                              "S": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 1
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_servo_v3",
+                                                "fields": {
+                                                  "CHANNEL": "1"
+                                                },
+                                                "inputs": {
+                                                  "ANGLE": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 110
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "rx_servo_v3",
+                                                    "fields": {
+                                                      "CHANNEL": "2"
+                                                    },
+                                                    "inputs": {
+                                                      "ANGLE": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 90
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "rx_delay_s",
+                                                        "inputs": {
+                                                          "S": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 5
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_servo_v3",
+                                                            "fields": {
+                                                              "CHANNEL": "3"
+                                                            },
+                                                            "inputs": {
+                                                              "ANGLE": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 140
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            "next": {
+                                                              "block": {
+                                                                "type": "rx_servo_v3",
+                                                                "fields": {
+                                                                  "CHANNEL": "0"
+                                                                },
+                                                                "inputs": {
+                                                                  "ANGLE": {
+                                                                    "block": {
+                                                                      "type": "math_number",
+                                                                      "fields": {
+                                                                        "NUM": 90
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "next": {
+                                                                  "block": {
+                                                                    "type": "rx_servo_v3",
+                                                                    "fields": {
+                                                                      "CHANNEL": "1"
+                                                                    },
+                                                                    "inputs": {
+                                                                      "ANGLE": {
+                                                                        "block": {
+                                                                          "type": "math_number",
+                                                                          "fields": {
+                                                                            "NUM": 90
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    },
+                                                                    "next": {
+                                                                      "block": {
+                                                                        "type": "rx_servo_v3",
+                                                                        "fields": {
+                                                                          "CHANNEL": "2"
+                                                                        },
+                                                                        "inputs": {
+                                                                          "ANGLE": {
+                                                                            "block": {
+                                                                              "type": "math_number",
+                                                                              "fields": {
+                                                                                "NUM": 90
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        },
+                                                                        "next": {
+                                                                          "block": {
+                                                                            "type": "rx_servo_v3",
+                                                                            "fields": {
+                                                                              "CHANNEL": "3"
+                                                                            },
+                                                                            "inputs": {
+                                                                              "ANGLE": {
+                                                                                "block": {
+                                                                                  "type": "math_number",
+                                                                                  "fields": {
+                                                                                    "NUM": 90
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            },
+                                                                            "next": {
+                                                                              "block": {
+                                                                                "type": "rx_oled_clear",
+                                                                                "next": {
+                                                                                  "block": {
+                                                                                    "type": "rx_oled_text",
+                                                                                    "fields": {
+                                                                                      "ALIGN": "TOPLEFT",
+                                                                                      "X": 25,
+                                                                                      "Y": 20,
+                                                                                      "SIZE": "2"
+                                                                                    },
+                                                                                    "inputs": {
+                                                                                      "TEXT": {
+                                                                                        "block": {
+                                                                                          "type": "text",
+                                                                                          "fields": {
+                                                                                            "TEXT": "USTA!"
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    },
+                                                                                    "next": {
+                                                                                      "block": {
+                                                                                        "type": "rx_oled_show",
+                                                                                        "next": {
+                                                                                          "block": {
+                                                                                            "type": "procedures_callnoreturn",
+                                                                                            "extraState": {
+                                                                                              "name": "zafer_melodisi",
+                                                                                              "params": []
+                                                                                            },
+                                                                                            "inputs": {},
+                                                                                            "next": {
+                                                                                              "block": {
+                                                                                                "type": "rx_rgb_rainbow",
+                                                                                                "inputs": {
+                                                                                                  "STEP": {
+                                                                                                    "block": {
+                                                                                                      "type": "math_number",
+                                                                                                      "fields": {
+                                                                                                        "NUM": 0
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": null,
+  "createdAt": 1783958492058,
+  "updatedAt": 1783958492058
+}

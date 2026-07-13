@@ -1,0 +1,326 @@
+{
+  "id": "fbd1e313-2bdf-4c98-b167-1203aff9afdc",
+  "name": "Görev 12 — Durum Işığı",
+  "filename": "gorev_12_Durum_Isigi",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_rgb_init",
+                "fields": {
+                  "PIN": 6,
+                  "COUNT": 1
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_pca9685_init",
+                    "fields": {
+                      "SDA": 4,
+                      "SCL": 5,
+                      "ADDR": "40"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "procedures_defnoreturn",
+                        "extraState": {
+                          "params": [
+                            {
+                              "name": "t",
+                              "id": "var_t"
+                            },
+                            {
+                              "name": "o",
+                              "id": "var_o"
+                            },
+                            {
+                              "name": "d",
+                              "id": "var_d"
+                            }
+                          ]
+                        },
+                        "fields": {
+                          "NAME": "git_pozisyona"
+                        },
+                        "inputs": {
+                          "STACK": {
+                            "block": {
+                              "type": "rx_rgb_set_all",
+                              "fields": {
+                                "COLOUR": "#ff0000"
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_servo_v3",
+                                  "fields": {
+                                    "CHANNEL": "0"
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_t",
+                                            "name": "t",
+                                            "type": ""
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_servo_v3",
+                                      "fields": {
+                                        "CHANNEL": "1"
+                                      },
+                                      "inputs": {
+                                        "ANGLE": {
+                                          "block": {
+                                            "type": "variables_get",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "var_o",
+                                                "name": "o",
+                                                "type": ""
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_servo_v3",
+                                          "fields": {
+                                            "CHANNEL": "2"
+                                          },
+                                          "inputs": {
+                                            "ANGLE": {
+                                              "block": {
+                                                "type": "variables_get",
+                                                "fields": {
+                                                  "VAR": {
+                                                    "id": "var_d",
+                                                    "name": "d",
+                                                    "type": ""
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "rx_delay_ms",
+                                              "inputs": {
+                                                "MS": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 600
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "next": {
+                                                "block": {
+                                                  "type": "rx_rgb_set_all",
+                                                  "fields": {
+                                                    "COLOUR": "#00ff00"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "procedures_callnoreturn",
+                            "extraState": {
+                              "name": "git_pozisyona",
+                              "params": [
+                                "t",
+                                "o",
+                                "d"
+                              ]
+                            },
+                            "inputs": {
+                              "ARG0": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 45
+                                  }
+                                }
+                              },
+                              "ARG1": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 70
+                                  }
+                                }
+                              },
+                              "ARG2": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 110
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_delay_s",
+                                "inputs": {
+                                  "S": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 1
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "procedures_callnoreturn",
+                                    "extraState": {
+                                      "name": "git_pozisyona",
+                                      "params": [
+                                        "t",
+                                        "o",
+                                        "d"
+                                      ]
+                                    },
+                                    "inputs": {
+                                      "ARG0": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 135
+                                          }
+                                        }
+                                      },
+                                      "ARG1": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 70
+                                          }
+                                        }
+                                      },
+                                      "ARG2": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 110
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_delay_s",
+                                        "inputs": {
+                                          "S": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 1
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "procedures_callnoreturn",
+                                            "extraState": {
+                                              "name": "git_pozisyona",
+                                              "params": [
+                                                "t",
+                                                "o",
+                                                "d"
+                                              ]
+                                            },
+                                            "inputs": {
+                                              "ARG0": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 90
+                                                  }
+                                                }
+                                              },
+                                              "ARG1": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 90
+                                                  }
+                                                }
+                                              },
+                                              "ARG2": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 90
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "t",
+        "id": "var_t"
+      },
+      {
+        "name": "o",
+        "id": "var_o"
+      },
+      {
+        "name": "d",
+        "id": "var_d"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492062,
+  "updatedAt": 1783958492062
+}

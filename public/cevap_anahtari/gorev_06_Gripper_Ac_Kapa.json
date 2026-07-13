@@ -1,0 +1,114 @@
+{
+  "id": "8a571f98-2f79-415f-a0b8-ce15e94db8fa",
+  "name": "Görev 6 — Gripper: Aç-Kapa",
+  "filename": "gorev_06_Gripper_Ac_Kapa",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "controls_repeat_ext",
+                    "inputs": {
+                      "TIMES": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 3
+                          }
+                        }
+                      },
+                      "DO": {
+                        "block": {
+                          "type": "rx_servo_v3",
+                          "fields": {
+                            "CHANNEL": "3"
+                          },
+                          "inputs": {
+                            "ANGLE": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 140
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "rx_delay_s",
+                              "inputs": {
+                                "S": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 1
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_servo_v3",
+                                  "fields": {
+                                    "CHANNEL": "3"
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 40
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_delay_s",
+                                      "inputs": {
+                                        "S": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 1
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": null,
+  "createdAt": 1783958492058,
+  "updatedAt": 1783958492058
+}

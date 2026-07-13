@@ -1,0 +1,110 @@
+{
+  "id": "0dd2453a-8c94-421d-8dad-dc7f8d7b6a25",
+  "name": "Görev 28 — Mesafe Oku ve Yazdır",
+  "filename": "gorev_28_Mesafe_Oku_ve_Yazdir",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {},
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_mesafe",
+                        "name": "mesafe",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "rx_ultrasonic_distance",
+                          "fields": {
+                            "TRIG": 3,
+                            "ECHO": 2
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_print",
+                        "inputs": {
+                          "TEXT": {
+                            "block": {
+                              "type": "text_join",
+                              "extraState": {
+                                "itemCount": 2
+                              },
+                              "inputs": {
+                                "ADD0": {
+                                  "block": {
+                                    "type": "text",
+                                    "fields": {
+                                      "TEXT": "Mesafe (cm): "
+                                    }
+                                  }
+                                },
+                                "ADD1": {
+                                  "block": {
+                                    "type": "variables_get",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_mesafe",
+                                        "name": "mesafe",
+                                        "type": ""
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_delay_ms",
+                            "inputs": {
+                              "MS": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 500
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "mesafe",
+        "id": "var_mesafe"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492074,
+  "updatedAt": 1783958492074
+}

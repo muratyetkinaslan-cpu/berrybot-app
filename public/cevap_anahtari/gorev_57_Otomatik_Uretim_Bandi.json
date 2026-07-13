@@ -1,0 +1,426 @@
+{
+  "id": "dde84c5e-acd5-4661-ab7a-02e9b903511f",
+  "name": "Görev 57 — Otomatik Üretim Bandı",
+  "filename": "gorev_57_Otomatik_Uretim_Bandi",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_oled_init",
+                    "fields": {
+                      "SDA": 4,
+                      "SCL": 5,
+                      "I2C_BUS": "0",
+                      "SIZE": "128x64",
+                      "ADDR": "0x3C"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "variables_set",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_sayac",
+                            "name": "sayac",
+                            "type": ""
+                          }
+                        },
+                        "inputs": {
+                          "VALUE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "procedures_defnoreturn",
+                            "extraState": {
+                              "params": [
+                                {
+                                  "name": "taban",
+                                  "id": "var_taban"
+                                },
+                                {
+                                  "name": "omuz",
+                                  "id": "var_omuz"
+                                },
+                                {
+                                  "name": "dirsek",
+                                  "id": "var_dirsek"
+                                }
+                              ]
+                            },
+                            "fields": {
+                              "NAME": "git_pozisyona"
+                            },
+                            "inputs": {
+                              "STACK": {
+                                "block": {
+                                  "type": "rx_servo_v3",
+                                  "fields": {
+                                    "CHANNEL": "0"
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_taban",
+                                            "name": "taban",
+                                            "type": ""
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_servo_v3",
+                                      "fields": {
+                                        "CHANNEL": "1"
+                                      },
+                                      "inputs": {
+                                        "ANGLE": {
+                                          "block": {
+                                            "type": "variables_get",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "var_omuz",
+                                                "name": "omuz",
+                                                "type": ""
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_servo_v3",
+                                          "fields": {
+                                            "CHANNEL": "2"
+                                          },
+                                          "inputs": {
+                                            "ANGLE": {
+                                              "block": {
+                                                "type": "variables_get",
+                                                "fields": {
+                                                  "VAR": {
+                                                    "id": "var_dirsek",
+                                                    "name": "dirsek",
+                                                    "type": ""
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "rx_delay_ms",
+                                              "inputs": {
+                                                "MS": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 700
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "procedures_defnoreturn",
+                                "extraState": {},
+                                "fields": {
+                                  "NAME": "kavra"
+                                },
+                                "inputs": {
+                                  "STACK": {
+                                    "block": {
+                                      "type": "rx_servo_v3",
+                                      "fields": {
+                                        "CHANNEL": "3"
+                                      },
+                                      "inputs": {
+                                        "ANGLE": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 40
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_delay_ms",
+                                          "inputs": {
+                                            "MS": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 500
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "procedures_defnoreturn",
+                                    "extraState": {},
+                                    "fields": {
+                                      "NAME": "birak"
+                                    },
+                                    "inputs": {
+                                      "STACK": {
+                                        "block": {
+                                          "type": "rx_servo_v3",
+                                          "fields": {
+                                            "CHANNEL": "3"
+                                          },
+                                          "inputs": {
+                                            "ANGLE": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 140
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "rx_delay_ms",
+                                              "inputs": {
+                                                "MS": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 500
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_servo_v3",
+                                        "fields": {
+                                          "CHANNEL": "3"
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 140
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_servo_v3",
+                                            "fields": {
+                                              "CHANNEL": "0"
+                                            },
+                                            "inputs": {
+                                              "ANGLE": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 90
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_servo_v3",
+                                                "fields": {
+                                                  "CHANNEL": "1"
+                                                },
+                                                "inputs": {
+                                                  "ANGLE": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 90
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "rx_servo_v3",
+                                                    "fields": {
+                                                      "CHANNEL": "2"
+                                                    },
+                                                    "inputs": {
+                                                      "ANGLE": {
+                                                        "block": {
+                                                          "type": "math_number",
+                                                          "fields": {
+                                                            "NUM": 90
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "rx_servo_v3",
+                                                        "fields": {
+                                                          "CHANNEL": "3"
+                                                        },
+                                                        "inputs": {
+                                                          "ANGLE": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 90
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_oled_clear",
+                                                            "next": {
+                                                              "block": {
+                                                                "type": "rx_oled_text",
+                                                                "fields": {
+                                                                  "ALIGN": "TOPLEFT",
+                                                                  "X": 25,
+                                                                  "Y": 20,
+                                                                  "SIZE": "2"
+                                                                },
+                                                                "inputs": {
+                                                                  "TEXT": {
+                                                                    "block": {
+                                                                      "type": "text",
+                                                                      "fields": {
+                                                                        "TEXT": "USTA!"
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                },
+                                                                "next": {
+                                                                  "block": {
+                                                                    "type": "rx_oled_show",
+                                                                    "next": {
+                                                                      "block": {
+                                                                        "type": "procedures_callnoreturn",
+                                                                        "extraState": {
+                                                                          "name": "zafer_melodisi",
+                                                                          "params": []
+                                                                        },
+                                                                        "inputs": {},
+                                                                        "next": {
+                                                                          "block": {
+                                                                            "type": "rx_rgb_rainbow",
+                                                                            "inputs": {
+                                                                              "STEP": {
+                                                                                "block": {
+                                                                                  "type": "math_number",
+                                                                                  "fields": {
+                                                                                    "NUM": 0
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "sayac",
+        "id": "var_sayac"
+      },
+      {
+        "name": "taban",
+        "id": "var_taban"
+      },
+      {
+        "name": "omuz",
+        "id": "var_omuz"
+      },
+      {
+        "name": "dirsek",
+        "id": "var_dirsek"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492117,
+  "updatedAt": 1783958492117
+}

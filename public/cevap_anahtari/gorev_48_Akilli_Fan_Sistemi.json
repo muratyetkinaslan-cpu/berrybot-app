@@ -1,0 +1,421 @@
+{
+  "id": "3a8fa50e-e5b5-4bc3-8404-36cd62d741ec",
+  "name": "Görev 48 — Akıllı Fan Sistemi",
+  "filename": "gorev_48_Akilli_Fan_Sistemi",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_oled_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "I2C_BUS": "0",
+                  "SIZE": "128x64",
+                  "ADDR": "0x3C"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_relay",
+                    "fields": {
+                      "PIN": 12,
+                      "STATE": "OFF"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "variables_set",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_fan",
+                            "name": "fan",
+                            "type": ""
+                          }
+                        },
+                        "inputs": {
+                          "VALUE": {
+                            "block": {
+                              "type": "logic_boolean",
+                              "fields": {
+                                "BOOL": "FALSE"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_t",
+                        "name": "t",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "rx_internal_temp"
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "controls_if",
+                        "inputs": {
+                          "IF0": {
+                            "block": {
+                              "type": "logic_operation",
+                              "fields": {
+                                "OP": "AND"
+                              },
+                              "inputs": {
+                                "A": {
+                                  "block": {
+                                    "type": "logic_compare",
+                                    "fields": {
+                                      "OP": "GT"
+                                    },
+                                    "inputs": {
+                                      "A": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_t",
+                                              "name": "t",
+                                              "type": ""
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "B": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 28
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "B": {
+                                  "block": {
+                                    "type": "logic_negate",
+                                    "inputs": {
+                                      "BOOL": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_fan",
+                                              "name": "fan",
+                                              "type": ""
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "DO0": {
+                            "block": {
+                              "type": "rx_relay",
+                              "fields": {
+                                "PIN": 12,
+                                "STATE": "ON"
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "variables_set",
+                                  "fields": {
+                                    "VAR": {
+                                      "id": "var_fan",
+                                      "name": "fan",
+                                      "type": ""
+                                    }
+                                  },
+                                  "inputs": {
+                                    "VALUE": {
+                                      "block": {
+                                        "type": "logic_boolean",
+                                        "fields": {
+                                          "BOOL": "TRUE"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "controls_if",
+                            "inputs": {
+                              "IF0": {
+                                "block": {
+                                  "type": "logic_operation",
+                                  "fields": {
+                                    "OP": "AND"
+                                  },
+                                  "inputs": {
+                                    "A": {
+                                      "block": {
+                                        "type": "logic_compare",
+                                        "fields": {
+                                          "OP": "LT"
+                                        },
+                                        "inputs": {
+                                          "A": {
+                                            "block": {
+                                              "type": "variables_get",
+                                              "fields": {
+                                                "VAR": {
+                                                  "id": "var_t",
+                                                  "name": "t",
+                                                  "type": ""
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "B": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 25
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "B": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_fan",
+                                            "name": "fan",
+                                            "type": ""
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "DO0": {
+                                "block": {
+                                  "type": "rx_relay",
+                                  "fields": {
+                                    "PIN": 12,
+                                    "STATE": "OFF"
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "variables_set",
+                                      "fields": {
+                                        "VAR": {
+                                          "id": "var_fan",
+                                          "name": "fan",
+                                          "type": ""
+                                        }
+                                      },
+                                      "inputs": {
+                                        "VALUE": {
+                                          "block": {
+                                            "type": "logic_boolean",
+                                            "fields": {
+                                              "BOOL": "FALSE"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_oled_clear",
+                                "next": {
+                                  "block": {
+                                    "type": "rx_oled_text",
+                                    "fields": {
+                                      "ALIGN": "TOPLEFT",
+                                      "X": 0,
+                                      "Y": 0,
+                                      "SIZE": "1"
+                                    },
+                                    "inputs": {
+                                      "TEXT": {
+                                        "block": {
+                                          "type": "text_join",
+                                          "extraState": {
+                                            "itemCount": 2
+                                          },
+                                          "inputs": {
+                                            "ADD0": {
+                                              "block": {
+                                                "type": "text",
+                                                "fields": {
+                                                  "TEXT": "Sicaklik: "
+                                                }
+                                              }
+                                            },
+                                            "ADD1": {
+                                              "block": {
+                                                "type": "variables_get",
+                                                "fields": {
+                                                  "VAR": {
+                                                    "id": "var_t",
+                                                    "name": "t",
+                                                    "type": ""
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "controls_if",
+                                        "inputs": {
+                                          "IF0": {
+                                            "block": {
+                                              "type": "variables_get",
+                                              "fields": {
+                                                "VAR": {
+                                                  "id": "var_fan",
+                                                  "name": "fan",
+                                                  "type": ""
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "DO0": {
+                                            "block": {
+                                              "type": "rx_oled_text",
+                                              "fields": {
+                                                "ALIGN": "TOPLEFT",
+                                                "X": 0,
+                                                "Y": 24,
+                                                "SIZE": "2"
+                                              },
+                                              "inputs": {
+                                                "TEXT": {
+                                                  "block": {
+                                                    "type": "text",
+                                                    "fields": {
+                                                      "TEXT": "FAN: ACIK"
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "ELSE": {
+                                            "block": {
+                                              "type": "rx_oled_text",
+                                              "fields": {
+                                                "ALIGN": "TOPLEFT",
+                                                "X": 0,
+                                                "Y": 24,
+                                                "SIZE": "1"
+                                              },
+                                              "inputs": {
+                                                "TEXT": {
+                                                  "block": {
+                                                    "type": "text",
+                                                    "fields": {
+                                                      "TEXT": "FAN: KAPALI"
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "extraState": {
+                                          "elseCount": 1
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_oled_show",
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_delay_ms",
+                                                "inputs": {
+                                                  "MS": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 500
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "fan",
+        "id": "var_fan"
+      },
+      {
+        "name": "t",
+        "id": "var_t"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492100,
+  "updatedAt": 1783958492100
+}

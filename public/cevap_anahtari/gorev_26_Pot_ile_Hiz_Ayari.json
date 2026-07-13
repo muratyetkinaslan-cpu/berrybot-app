@@ -1,0 +1,352 @@
+{
+  "id": "895232d4-20d8-4317-a8ed-edc1d06c057f",
+  "name": "Görev 26 — Pot ile Hız Ayarı",
+  "filename": "gorev_26_Pot_ile_Hiz_Ayari",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_hiz",
+                        "name": "hiz",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 30
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "controls_for",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_a",
+                        "name": "a",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "FROM": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 30
+                          }
+                        }
+                      },
+                      "TO": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 150
+                          }
+                        }
+                      },
+                      "BY": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 1
+                          }
+                        }
+                      },
+                      "DO": {
+                        "block": {
+                          "type": "variables_set",
+                          "fields": {
+                            "VAR": {
+                              "id": "var_hiz",
+                              "name": "hiz",
+                              "type": ""
+                            }
+                          },
+                          "inputs": {
+                            "VALUE": {
+                              "block": {
+                                "type": "rx_map",
+                                "inputs": {
+                                  "VALUE": {
+                                    "block": {
+                                      "type": "rx_potentiometer",
+                                      "fields": {
+                                        "PIN": "26"
+                                      }
+                                    }
+                                  },
+                                  "FROM_LOW": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 0
+                                      }
+                                    }
+                                  },
+                                  "FROM_HIGH": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 100
+                                      }
+                                    }
+                                  },
+                                  "TO_LOW": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 10
+                                      }
+                                    }
+                                  },
+                                  "TO_HIGH": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 100
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "rx_servo_v3",
+                              "fields": {
+                                "CHANNEL": "0"
+                              },
+                              "inputs": {
+                                "ANGLE": {
+                                  "block": {
+                                    "type": "variables_get",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_a",
+                                        "name": "a",
+                                        "type": ""
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_delay_ms",
+                                  "inputs": {
+                                    "MS": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_hiz",
+                                            "name": "hiz",
+                                            "type": ""
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "controls_for",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_a",
+                            "name": "a",
+                            "type": ""
+                          }
+                        },
+                        "inputs": {
+                          "FROM": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 150
+                              }
+                            }
+                          },
+                          "TO": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 30
+                              }
+                            }
+                          },
+                          "BY": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 1
+                              }
+                            }
+                          },
+                          "DO": {
+                            "block": {
+                              "type": "variables_set",
+                              "fields": {
+                                "VAR": {
+                                  "id": "var_hiz",
+                                  "name": "hiz",
+                                  "type": ""
+                                }
+                              },
+                              "inputs": {
+                                "VALUE": {
+                                  "block": {
+                                    "type": "rx_map",
+                                    "inputs": {
+                                      "VALUE": {
+                                        "block": {
+                                          "type": "rx_potentiometer",
+                                          "fields": {
+                                            "PIN": "26"
+                                          }
+                                        }
+                                      },
+                                      "FROM_LOW": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 0
+                                          }
+                                        }
+                                      },
+                                      "FROM_HIGH": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 100
+                                          }
+                                        }
+                                      },
+                                      "TO_LOW": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 10
+                                          }
+                                        }
+                                      },
+                                      "TO_HIGH": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 100
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_servo_v3",
+                                  "fields": {
+                                    "CHANNEL": "0"
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_a",
+                                            "name": "a",
+                                            "type": ""
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_delay_ms",
+                                      "inputs": {
+                                        "MS": {
+                                          "block": {
+                                            "type": "variables_get",
+                                            "fields": {
+                                              "VAR": {
+                                                "id": "var_hiz",
+                                                "name": "hiz",
+                                                "type": ""
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "hiz",
+        "id": "var_hiz"
+      },
+      {
+        "name": "a",
+        "id": "var_a"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492073,
+  "updatedAt": 1783958492073
+}

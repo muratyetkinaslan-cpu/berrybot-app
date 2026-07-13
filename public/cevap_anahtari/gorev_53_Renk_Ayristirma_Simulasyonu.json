@@ -1,0 +1,829 @@
+{
+  "id": "cf26b355-ac59-435c-adba-426c6f5d141a",
+  "name": "Görev 53 — Renk Ayrıştırma Simülasyonu",
+  "filename": "gorev_53_Renk_Ayristirma_Simulasyonu",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "procedures_defnoreturn",
+                    "extraState": {
+                      "params": [
+                        {
+                          "name": "taban",
+                          "id": "var_taban"
+                        },
+                        {
+                          "name": "omuz",
+                          "id": "var_omuz"
+                        },
+                        {
+                          "name": "dirsek",
+                          "id": "var_dirsek"
+                        }
+                      ]
+                    },
+                    "fields": {
+                      "NAME": "git_pozisyona"
+                    },
+                    "inputs": {
+                      "STACK": {
+                        "block": {
+                          "type": "rx_servo_v3",
+                          "fields": {
+                            "CHANNEL": "0"
+                          },
+                          "inputs": {
+                            "ANGLE": {
+                              "block": {
+                                "type": "variables_get",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "var_taban",
+                                    "name": "taban",
+                                    "type": ""
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "next": {
+                            "block": {
+                              "type": "rx_servo_v3",
+                              "fields": {
+                                "CHANNEL": "1"
+                              },
+                              "inputs": {
+                                "ANGLE": {
+                                  "block": {
+                                    "type": "variables_get",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_omuz",
+                                        "name": "omuz",
+                                        "type": ""
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_servo_v3",
+                                  "fields": {
+                                    "CHANNEL": "2"
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_dirsek",
+                                            "name": "dirsek",
+                                            "type": ""
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_delay_ms",
+                                      "inputs": {
+                                        "MS": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 700
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "procedures_defnoreturn",
+                        "extraState": {},
+                        "fields": {
+                          "NAME": "kavra"
+                        },
+                        "inputs": {
+                          "STACK": {
+                            "block": {
+                              "type": "rx_servo_v3",
+                              "fields": {
+                                "CHANNEL": "3"
+                              },
+                              "inputs": {
+                                "ANGLE": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 40
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_delay_ms",
+                                  "inputs": {
+                                    "MS": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 500
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "procedures_defnoreturn",
+                            "extraState": {},
+                            "fields": {
+                              "NAME": "birak"
+                            },
+                            "inputs": {
+                              "STACK": {
+                                "block": {
+                                  "type": "rx_servo_v3",
+                                  "fields": {
+                                    "CHANNEL": "3"
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 140
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_delay_ms",
+                                      "inputs": {
+                                        "MS": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 500
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_v3",
+                                "fields": {
+                                  "CHANNEL": "3"
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 140
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "procedures_callnoreturn",
+                    "extraState": {
+                      "name": "git_pozisyona",
+                      "params": [
+                        "taban",
+                        "omuz",
+                        "dirsek"
+                      ]
+                    },
+                    "inputs": {
+                      "ARG0": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 90
+                          }
+                        }
+                      },
+                      "ARG1": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 65
+                          }
+                        }
+                      },
+                      "ARG2": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 120
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "procedures_callnoreturn",
+                        "extraState": {
+                          "name": "kavra",
+                          "params": []
+                        },
+                        "inputs": {},
+                        "next": {
+                          "block": {
+                            "type": "procedures_callnoreturn",
+                            "extraState": {
+                              "name": "git_pozisyona",
+                              "params": [
+                                "taban",
+                                "omuz",
+                                "dirsek"
+                              ]
+                            },
+                            "inputs": {
+                              "ARG0": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              },
+                              "ARG1": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 115
+                                  }
+                                }
+                              },
+                              "ARG2": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 85
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "variables_set",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "var_secim",
+                                    "name": "secim",
+                                    "type": ""
+                                  }
+                                },
+                                "inputs": {
+                                  "VALUE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 0
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "variables_set",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_baslangic",
+                                        "name": "baslangic",
+                                        "type": ""
+                                      }
+                                    },
+                                    "inputs": {
+                                      "VALUE": {
+                                        "block": {
+                                          "type": "rx_millis"
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "controls_whileUntil",
+                                        "fields": {
+                                          "MODE": "WHILE"
+                                        },
+                                        "inputs": {
+                                          "BOOL": {
+                                            "block": {
+                                              "type": "logic_compare",
+                                              "fields": {
+                                                "OP": "LT"
+                                              },
+                                              "inputs": {
+                                                "A": {
+                                                  "block": {
+                                                    "type": "math_arithmetic",
+                                                    "fields": {
+                                                      "OP": "MINUS"
+                                                    },
+                                                    "inputs": {
+                                                      "A": {
+                                                        "block": {
+                                                          "type": "rx_millis"
+                                                        }
+                                                      },
+                                                      "B": {
+                                                        "block": {
+                                                          "type": "variables_get",
+                                                          "fields": {
+                                                            "VAR": {
+                                                              "id": "var_baslangic",
+                                                              "name": "baslangic",
+                                                              "type": ""
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "B": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 2000
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "DO": {
+                                            "block": {
+                                              "type": "controls_if",
+                                              "inputs": {
+                                                "IF0": {
+                                                  "block": {
+                                                    "type": "rx_button_pressed",
+                                                    "fields": {
+                                                      "PIN": 10
+                                                    }
+                                                  }
+                                                },
+                                                "DO0": {
+                                                  "block": {
+                                                    "type": "variables_set",
+                                                    "fields": {
+                                                      "VAR": {
+                                                        "id": "var_secim",
+                                                        "name": "secim",
+                                                        "type": ""
+                                                      }
+                                                    },
+                                                    "inputs": {
+                                                      "VALUE": {
+                                                        "block": {
+                                                          "type": "math_arithmetic",
+                                                          "fields": {
+                                                            "OP": "ADD"
+                                                          },
+                                                          "inputs": {
+                                                            "A": {
+                                                              "block": {
+                                                                "type": "variables_get",
+                                                                "fields": {
+                                                                  "VAR": {
+                                                                    "id": "var_secim",
+                                                                    "name": "secim",
+                                                                    "type": ""
+                                                                  }
+                                                                }
+                                                              }
+                                                            },
+                                                            "B": {
+                                                              "block": {
+                                                                "type": "math_number",
+                                                                "fields": {
+                                                                  "NUM": 1
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "rx_buzzer_tone",
+                                                        "fields": {
+                                                          "PIN": 20
+                                                        },
+                                                        "inputs": {
+                                                          "FREQ": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 1200
+                                                              }
+                                                            }
+                                                          },
+                                                          "DUR": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 50
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "controls_whileUntil",
+                                                            "fields": {
+                                                              "MODE": "WHILE"
+                                                            },
+                                                            "inputs": {
+                                                              "BOOL": {
+                                                                "block": {
+                                                                  "type": "rx_button_pressed",
+                                                                  "fields": {
+                                                                    "PIN": 10
+                                                                  }
+                                                                }
+                                                              },
+                                                              "DO": {
+                                                                "block": {
+                                                                  "type": "rx_delay_ms",
+                                                                  "inputs": {
+                                                                    "MS": {
+                                                                      "block": {
+                                                                        "type": "math_number",
+                                                                        "fields": {
+                                                                          "NUM": 10
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "next": {
+                                                "block": {
+                                                  "type": "rx_delay_ms",
+                                                  "inputs": {
+                                                    "MS": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 10
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "controls_if",
+                                            "inputs": {
+                                              "IF0": {
+                                                "block": {
+                                                  "type": "logic_compare",
+                                                  "fields": {
+                                                    "OP": "EQ"
+                                                  },
+                                                  "inputs": {
+                                                    "A": {
+                                                      "block": {
+                                                        "type": "variables_get",
+                                                        "fields": {
+                                                          "VAR": {
+                                                            "id": "var_secim",
+                                                            "name": "secim",
+                                                            "type": ""
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "B": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 1
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "DO0": {
+                                                "block": {
+                                                  "type": "variables_set",
+                                                  "fields": {
+                                                    "VAR": {
+                                                      "id": "var_hedef",
+                                                      "name": "hedef",
+                                                      "type": ""
+                                                    }
+                                                  },
+                                                  "inputs": {
+                                                    "VALUE": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 40
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "IF1": {
+                                                "block": {
+                                                  "type": "logic_compare",
+                                                  "fields": {
+                                                    "OP": "EQ"
+                                                  },
+                                                  "inputs": {
+                                                    "A": {
+                                                      "block": {
+                                                        "type": "variables_get",
+                                                        "fields": {
+                                                          "VAR": {
+                                                            "id": "var_secim",
+                                                            "name": "secim",
+                                                            "type": ""
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "B": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 2
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "DO1": {
+                                                "block": {
+                                                  "type": "variables_set",
+                                                  "fields": {
+                                                    "VAR": {
+                                                      "id": "var_hedef",
+                                                      "name": "hedef",
+                                                      "type": ""
+                                                    }
+                                                  },
+                                                  "inputs": {
+                                                    "VALUE": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 90
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "ELSE": {
+                                                "block": {
+                                                  "type": "variables_set",
+                                                  "fields": {
+                                                    "VAR": {
+                                                      "id": "var_hedef",
+                                                      "name": "hedef",
+                                                      "type": ""
+                                                    }
+                                                  },
+                                                  "inputs": {
+                                                    "VALUE": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 140
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "extraState": {
+                                              "elseIfCount": 1,
+                                              "elseCount": 1
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "procedures_callnoreturn",
+                                                "extraState": {
+                                                  "name": "git_pozisyona",
+                                                  "params": [
+                                                    "taban",
+                                                    "omuz",
+                                                    "dirsek"
+                                                  ]
+                                                },
+                                                "inputs": {
+                                                  "ARG0": {
+                                                    "block": {
+                                                      "type": "variables_get",
+                                                      "fields": {
+                                                        "VAR": {
+                                                          "id": "var_hedef",
+                                                          "name": "hedef",
+                                                          "type": ""
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "ARG1": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 70
+                                                      }
+                                                    }
+                                                  },
+                                                  "ARG2": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 115
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "procedures_callnoreturn",
+                                                    "extraState": {
+                                                      "name": "birak",
+                                                      "params": []
+                                                    },
+                                                    "inputs": {},
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "procedures_callnoreturn",
+                                                        "extraState": {
+                                                          "name": "git_pozisyona",
+                                                          "params": [
+                                                            "taban",
+                                                            "omuz",
+                                                            "dirsek"
+                                                          ]
+                                                        },
+                                                        "inputs": {
+                                                          "ARG0": {
+                                                            "block": {
+                                                              "type": "variables_get",
+                                                              "fields": {
+                                                                "VAR": {
+                                                                  "id": "var_hedef",
+                                                                  "name": "hedef",
+                                                                  "type": ""
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "ARG1": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 115
+                                                              }
+                                                            }
+                                                          },
+                                                          "ARG2": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 85
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "taban",
+        "id": "var_taban"
+      },
+      {
+        "name": "omuz",
+        "id": "var_omuz"
+      },
+      {
+        "name": "dirsek",
+        "id": "var_dirsek"
+      },
+      {
+        "name": "secim",
+        "id": "var_secim"
+      },
+      {
+        "name": "baslangic",
+        "id": "var_baslangic"
+      },
+      {
+        "name": "hedef",
+        "id": "var_hedef"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492107,
+  "updatedAt": 1783958492107
+}

@@ -1,0 +1,647 @@
+{
+  "id": "a7a60a59-2fb3-45b0-bd70-8ea93623e47c",
+  "name": "Görev 45 — Görev Sayacı Ekranı",
+  "filename": "gorev_45_Gorev_Sayaci_Ekrani",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_oled_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "I2C_BUS": "0",
+                  "SIZE": "128x64",
+                  "ADDR": "0x3C"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_pca9685_init",
+                    "fields": {
+                      "SDA": 4,
+                      "SCL": 5,
+                      "ADDR": "40"
+                    },
+                    "next": {
+                      "block": {
+                        "type": "variables_set",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_skor",
+                            "name": "skor",
+                            "type": ""
+                          }
+                        },
+                        "inputs": {
+                          "VALUE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 0
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "procedures_defnoreturn",
+                            "extraState": {},
+                            "fields": {
+                              "NAME": "zafer_melodisi"
+                            },
+                            "inputs": {
+                              "STACK": {
+                                "block": {
+                                  "type": "rx_buzzer_note",
+                                  "fields": {
+                                    "PIN": 20,
+                                    "NOTE": "523"
+                                  },
+                                  "inputs": {
+                                    "DUR": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 150
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_buzzer_note",
+                                      "fields": {
+                                        "PIN": 20,
+                                        "NOTE": "659"
+                                      },
+                                      "inputs": {
+                                        "DUR": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 150
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_buzzer_note",
+                                          "fields": {
+                                            "PIN": 20,
+                                            "NOTE": "784"
+                                          },
+                                          "inputs": {
+                                            "DUR": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 150
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "rx_buzzer_note",
+                                              "fields": {
+                                                "PIN": 20,
+                                                "NOTE": "1047"
+                                              },
+                                              "inputs": {
+                                                "DUR": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 300
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "next": {
+                                                "block": {
+                                                  "type": "rx_buzzer_off",
+                                                  "fields": {
+                                                    "PIN": 20
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_v3",
+                                "fields": {
+                                  "CHANNEL": "3"
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 140
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_v3",
+                                    "fields": {
+                                      "CHANNEL": "0"
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 90
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_servo_v3",
+                                        "fields": {
+                                          "CHANNEL": "1"
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 90
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_servo_v3",
+                                            "fields": {
+                                              "CHANNEL": "2"
+                                            },
+                                            "inputs": {
+                                              "ANGLE": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 90
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_servo_v3",
+                                                "fields": {
+                                                  "CHANNEL": "3"
+                                                },
+                                                "inputs": {
+                                                  "ANGLE": {
+                                                    "block": {
+                                                      "type": "math_number",
+                                                      "fields": {
+                                                        "NUM": 90
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "rx_oled_clear",
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "rx_oled_text",
+                                                        "fields": {
+                                                          "ALIGN": "TOPLEFT",
+                                                          "X": 25,
+                                                          "Y": 20,
+                                                          "SIZE": "2"
+                                                        },
+                                                        "inputs": {
+                                                          "TEXT": {
+                                                            "block": {
+                                                              "type": "text",
+                                                              "fields": {
+                                                                "TEXT": "USTA!"
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_oled_show",
+                                                            "next": {
+                                                              "block": {
+                                                                "type": "procedures_callnoreturn",
+                                                                "extraState": {
+                                                                  "name": "zafer_melodisi",
+                                                                  "params": []
+                                                                },
+                                                                "inputs": {},
+                                                                "next": {
+                                                                  "block": {
+                                                                    "type": "rx_rgb_rainbow",
+                                                                    "inputs": {
+                                                                      "STEP": {
+                                                                        "block": {
+                                                                          "type": "math_number",
+                                                                          "fields": {
+                                                                            "NUM": 0
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_mesafe",
+                        "name": "mesafe",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "rx_ultrasonic_distance",
+                          "fields": {
+                            "TRIG": 3,
+                            "ECHO": 2
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "controls_if",
+                        "inputs": {
+                          "IF0": {
+                            "block": {
+                              "type": "logic_compare",
+                              "fields": {
+                                "OP": "LT"
+                              },
+                              "inputs": {
+                                "A": {
+                                  "block": {
+                                    "type": "variables_get",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_mesafe",
+                                        "name": "mesafe",
+                                        "type": ""
+                                      }
+                                    }
+                                  }
+                                },
+                                "B": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 7
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "DO0": {
+                            "block": {
+                              "type": "rx_servo_v3",
+                              "fields": {
+                                "CHANNEL": "3"
+                              },
+                              "inputs": {
+                                "ANGLE": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 40
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_delay_s",
+                                  "inputs": {
+                                    "S": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 1
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "variables_set",
+                                      "fields": {
+                                        "VAR": {
+                                          "id": "var_skor",
+                                          "name": "skor",
+                                          "type": ""
+                                        }
+                                      },
+                                      "inputs": {
+                                        "VALUE": {
+                                          "block": {
+                                            "type": "math_arithmetic",
+                                            "fields": {
+                                              "OP": "ADD"
+                                            },
+                                            "inputs": {
+                                              "A": {
+                                                "block": {
+                                                  "type": "variables_get",
+                                                  "fields": {
+                                                    "VAR": {
+                                                      "id": "var_skor",
+                                                      "name": "skor",
+                                                      "type": ""
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "B": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 1
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_oled_clear",
+                                          "next": {
+                                            "block": {
+                                              "type": "rx_oled_text",
+                                              "fields": {
+                                                "ALIGN": "TOPLEFT",
+                                                "X": 40,
+                                                "Y": 20,
+                                                "SIZE": "3"
+                                              },
+                                              "inputs": {
+                                                "TEXT": {
+                                                  "block": {
+                                                    "type": "variables_get",
+                                                    "fields": {
+                                                      "VAR": {
+                                                        "id": "var_skor",
+                                                        "name": "skor",
+                                                        "type": ""
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "next": {
+                                                "block": {
+                                                  "type": "controls_if",
+                                                  "inputs": {
+                                                    "IF0": {
+                                                      "block": {
+                                                        "type": "logic_compare",
+                                                        "fields": {
+                                                          "OP": "GTE"
+                                                        },
+                                                        "inputs": {
+                                                          "A": {
+                                                            "block": {
+                                                              "type": "variables_get",
+                                                              "fields": {
+                                                                "VAR": {
+                                                                  "id": "var_skor",
+                                                                  "name": "skor",
+                                                                  "type": ""
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "B": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 10
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "DO0": {
+                                                      "block": {
+                                                        "type": "rx_oled_text",
+                                                        "fields": {
+                                                          "ALIGN": "TOPLEFT",
+                                                          "X": 20,
+                                                          "Y": 50,
+                                                          "SIZE": "1"
+                                                        },
+                                                        "inputs": {
+                                                          "TEXT": {
+                                                            "block": {
+                                                              "type": "text",
+                                                              "fields": {
+                                                                "TEXT": "SAMPIYON!"
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_oled_show",
+                                                            "next": {
+                                                              "block": {
+                                                                "type": "procedures_callnoreturn",
+                                                                "extraState": {
+                                                                  "name": "zafer_melodisi",
+                                                                  "params": []
+                                                                },
+                                                                "inputs": {}
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "ELSE": {
+                                                      "block": {
+                                                        "type": "rx_oled_show",
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_buzzer_tone",
+                                                            "fields": {
+                                                              "PIN": 20
+                                                            },
+                                                            "inputs": {
+                                                              "FREQ": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 1200
+                                                                  }
+                                                                }
+                                                              },
+                                                              "DUR": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 80
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "extraState": {
+                                                    "elseCount": 1
+                                                  },
+                                                  "next": {
+                                                    "block": {
+                                                      "type": "rx_servo_v3",
+                                                      "fields": {
+                                                        "CHANNEL": "3"
+                                                      },
+                                                      "inputs": {
+                                                        "ANGLE": {
+                                                          "block": {
+                                                            "type": "math_number",
+                                                            "fields": {
+                                                              "NUM": 140
+                                                            }
+                                                          }
+                                                        }
+                                                      },
+                                                      "next": {
+                                                        "block": {
+                                                          "type": "rx_delay_s",
+                                                          "inputs": {
+                                                            "S": {
+                                                              "block": {
+                                                                "type": "math_number",
+                                                                "fields": {
+                                                                  "NUM": 2
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_delay_ms",
+                            "inputs": {
+                              "MS": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 100
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "skor",
+        "id": "var_skor"
+      },
+      {
+        "name": "mesafe",
+        "id": "var_mesafe"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492097,
+  "updatedAt": 1783958492097
+}

@@ -1,0 +1,359 @@
+{
+  "id": "a5ce6d1a-c709-4274-b652-4a74474dc53f",
+  "name": "Görev 31 — Nesne Var mı? Kavra!",
+  "filename": "gorev_31_Nesne_Var_mi_Kavra",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_servo_v3",
+                    "fields": {
+                      "CHANNEL": "3"
+                    },
+                    "inputs": {
+                      "ANGLE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 140
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "rx_servo_v3",
+                        "fields": {
+                          "CHANNEL": "0"
+                        },
+                        "inputs": {
+                          "ANGLE": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 90
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_v3",
+                            "fields": {
+                              "CHANNEL": "1"
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_v3",
+                                "fields": {
+                                  "CHANNEL": "2"
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 90
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_v3",
+                                    "fields": {
+                                      "CHANNEL": "3"
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 90
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_oled_clear",
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_oled_text",
+                                            "fields": {
+                                              "ALIGN": "TOPLEFT",
+                                              "X": 25,
+                                              "Y": 20,
+                                              "SIZE": "2"
+                                            },
+                                            "inputs": {
+                                              "TEXT": {
+                                                "block": {
+                                                  "type": "text",
+                                                  "fields": {
+                                                    "TEXT": "USTA!"
+                                                  }
+                                                }
+                                              }
+                                            },
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_oled_show",
+                                                "next": {
+                                                  "block": {
+                                                    "type": "procedures_callnoreturn",
+                                                    "extraState": {
+                                                      "name": "zafer_melodisi",
+                                                      "params": []
+                                                    },
+                                                    "inputs": {},
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "rx_rgb_rainbow",
+                                                        "inputs": {
+                                                          "STEP": {
+                                                            "block": {
+                                                              "type": "math_number",
+                                                              "fields": {
+                                                                "NUM": 0
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_mesafe",
+                        "name": "mesafe",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "rx_ultrasonic_distance",
+                          "fields": {
+                            "TRIG": 3,
+                            "ECHO": 2
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "controls_if",
+                        "inputs": {
+                          "IF0": {
+                            "block": {
+                              "type": "logic_compare",
+                              "fields": {
+                                "OP": "LT"
+                              },
+                              "inputs": {
+                                "A": {
+                                  "block": {
+                                    "type": "variables_get",
+                                    "fields": {
+                                      "VAR": {
+                                        "id": "var_mesafe",
+                                        "name": "mesafe",
+                                        "type": ""
+                                      }
+                                    }
+                                  }
+                                },
+                                "B": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 7
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "DO0": {
+                            "block": {
+                              "type": "rx_buzzer_tone",
+                              "fields": {
+                                "PIN": 20
+                              },
+                              "inputs": {
+                                "FREQ": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 1200
+                                    }
+                                  }
+                                },
+                                "DUR": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 100
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_servo_v3",
+                                  "fields": {
+                                    "CHANNEL": "3"
+                                  },
+                                  "inputs": {
+                                    "ANGLE": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 40
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_delay_s",
+                                      "inputs": {
+                                        "S": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 3
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_servo_v3",
+                                          "fields": {
+                                            "CHANNEL": "3"
+                                          },
+                                          "inputs": {
+                                            "ANGLE": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 140
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "next": {
+                                            "block": {
+                                              "type": "rx_delay_s",
+                                              "inputs": {
+                                                "S": {
+                                                  "block": {
+                                                    "type": "math_number",
+                                                    "fields": {
+                                                      "NUM": 2
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_delay_ms",
+                            "inputs": {
+                              "MS": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 100
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "mesafe",
+        "id": "var_mesafe"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492076,
+  "updatedAt": 1783958492076
+}

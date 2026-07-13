@@ -1,0 +1,260 @@
+{
+  "id": "19177161-b383-44be-9f2f-2e0dd6639f2b",
+  "name": "Görev 5 — Selam Veren Kol",
+  "filename": "gorev_05_Selam_Veren_Kol",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                },
+                "next": {
+                  "block": {
+                    "type": "rx_servo_v3",
+                    "fields": {
+                      "CHANNEL": "1"
+                    },
+                    "inputs": {
+                      "ANGLE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 60
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "controls_repeat_ext",
+                        "inputs": {
+                          "TIMES": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 3
+                              }
+                            }
+                          },
+                          "DO": {
+                            "block": {
+                              "type": "rx_servo_v3",
+                              "fields": {
+                                "CHANNEL": "2"
+                              },
+                              "inputs": {
+                                "ANGLE": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 60
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_delay_ms",
+                                  "inputs": {
+                                    "MS": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 300
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "next": {
+                                    "block": {
+                                      "type": "rx_servo_v3",
+                                      "fields": {
+                                        "CHANNEL": "2"
+                                      },
+                                      "inputs": {
+                                        "ANGLE": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 120
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "next": {
+                                        "block": {
+                                          "type": "rx_delay_ms",
+                                          "inputs": {
+                                            "MS": {
+                                              "block": {
+                                                "type": "math_number",
+                                                "fields": {
+                                                  "NUM": 300
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_v3",
+                            "fields": {
+                              "CHANNEL": "0"
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "math_number",
+                                  "fields": {
+                                    "NUM": 90
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_v3",
+                                "fields": {
+                                  "CHANNEL": "1"
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "math_number",
+                                      "fields": {
+                                        "NUM": 90
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_v3",
+                                    "fields": {
+                                      "CHANNEL": "2"
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 90
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_servo_v3",
+                                        "fields": {
+                                          "CHANNEL": "3"
+                                        },
+                                        "inputs": {
+                                          "ANGLE": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 90
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "next": {
+                                          "block": {
+                                            "type": "rx_oled_clear",
+                                            "next": {
+                                              "block": {
+                                                "type": "rx_oled_text",
+                                                "fields": {
+                                                  "ALIGN": "TOPLEFT",
+                                                  "X": 25,
+                                                  "Y": 20,
+                                                  "SIZE": "2"
+                                                },
+                                                "inputs": {
+                                                  "TEXT": {
+                                                    "block": {
+                                                      "type": "text",
+                                                      "fields": {
+                                                        "TEXT": "USTA!"
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                "next": {
+                                                  "block": {
+                                                    "type": "rx_oled_show",
+                                                    "next": {
+                                                      "block": {
+                                                        "type": "procedures_callnoreturn",
+                                                        "extraState": {
+                                                          "name": "zafer_melodisi",
+                                                          "params": []
+                                                        },
+                                                        "inputs": {},
+                                                        "next": {
+                                                          "block": {
+                                                            "type": "rx_rgb_rainbow",
+                                                            "inputs": {
+                                                              "STEP": {
+                                                                "block": {
+                                                                  "type": "math_number",
+                                                                  "fields": {
+                                                                    "NUM": 0
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "code": null,
+  "createdAt": 1783958492057,
+  "updatedAt": 1783958492057
+}

@@ -1,0 +1,231 @@
+{
+  "id": "163a0b39-521d-48b3-ab05-d9816b1fd266",
+  "name": "Görev 25 — Çift Pot: Kukla Modu",
+  "filename": "gorev_25_Cift_Pot_Kukla_Modu",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_aci1",
+                        "name": "aci1",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "rx_map",
+                          "inputs": {
+                            "VALUE": {
+                              "block": {
+                                "type": "rx_potentiometer",
+                                "fields": {
+                                  "PIN": "26"
+                                }
+                              }
+                            },
+                            "FROM_LOW": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 0
+                                }
+                              }
+                            },
+                            "FROM_HIGH": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 100
+                                }
+                              }
+                            },
+                            "TO_LOW": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 30
+                                }
+                              }
+                            },
+                            "TO_HIGH": {
+                              "block": {
+                                "type": "math_number",
+                                "fields": {
+                                  "NUM": 150
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "variables_set",
+                        "fields": {
+                          "VAR": {
+                            "id": "var_aci2",
+                            "name": "aci2",
+                            "type": ""
+                          }
+                        },
+                        "inputs": {
+                          "VALUE": {
+                            "block": {
+                              "type": "rx_map",
+                              "inputs": {
+                                "VALUE": {
+                                  "block": {
+                                    "type": "rx_potentiometer",
+                                    "fields": {
+                                      "PIN": "28"
+                                    }
+                                  }
+                                },
+                                "FROM_LOW": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 0
+                                    }
+                                  }
+                                },
+                                "FROM_HIGH": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 100
+                                    }
+                                  }
+                                },
+                                "TO_LOW": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 50
+                                    }
+                                  }
+                                },
+                                "TO_HIGH": {
+                                  "block": {
+                                    "type": "math_number",
+                                    "fields": {
+                                      "NUM": 130
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "rx_servo_v3",
+                            "fields": {
+                              "CHANNEL": "0"
+                            },
+                            "inputs": {
+                              "ANGLE": {
+                                "block": {
+                                  "type": "variables_get",
+                                  "fields": {
+                                    "VAR": {
+                                      "id": "var_aci1",
+                                      "name": "aci1",
+                                      "type": ""
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "rx_servo_v3",
+                                "fields": {
+                                  "CHANNEL": "1"
+                                },
+                                "inputs": {
+                                  "ANGLE": {
+                                    "block": {
+                                      "type": "variables_get",
+                                      "fields": {
+                                        "VAR": {
+                                          "id": "var_aci2",
+                                          "name": "aci2",
+                                          "type": ""
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_delay_ms",
+                                    "inputs": {
+                                      "MS": {
+                                        "block": {
+                                          "type": "math_number",
+                                          "fields": {
+                                            "NUM": 30
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "aci1",
+        "id": "var_aci1"
+      },
+      {
+        "name": "aci2",
+        "id": "var_aci2"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492072,
+  "updatedAt": 1783958492072
+}

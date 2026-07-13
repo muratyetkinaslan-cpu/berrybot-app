@@ -1,0 +1,343 @@
+{
+  "id": "ffcb5582-59b8-4365-b5d9-ef636f27e322",
+  "name": "Görev 30 — Mesafeyle Eksen Sürme (Jedi Modu)",
+  "filename": "gorev_30_Mesafeyle_Eksen_Surme_Jedi_Modu",
+  "mode": "blocks",
+  "blocksState": {
+    "blocks": {
+      "languageVersion": 0,
+      "blocks": [
+        {
+          "type": "rx_on_start",
+          "x": 40,
+          "y": 40,
+          "inputs": {
+            "DO": {
+              "block": {
+                "type": "rx_pca9685_init",
+                "fields": {
+                  "SDA": 4,
+                  "SCL": 5,
+                  "ADDR": "40"
+                }
+              }
+            }
+          },
+          "next": {
+            "block": {
+              "type": "rx_forever",
+              "inputs": {
+                "DO": {
+                  "block": {
+                    "type": "variables_set",
+                    "fields": {
+                      "VAR": {
+                        "id": "var_toplam",
+                        "name": "toplam",
+                        "type": ""
+                      }
+                    },
+                    "inputs": {
+                      "VALUE": {
+                        "block": {
+                          "type": "math_number",
+                          "fields": {
+                            "NUM": 0
+                          }
+                        }
+                      }
+                    },
+                    "next": {
+                      "block": {
+                        "type": "controls_repeat_ext",
+                        "inputs": {
+                          "TIMES": {
+                            "block": {
+                              "type": "math_number",
+                              "fields": {
+                                "NUM": 5
+                              }
+                            }
+                          },
+                          "DO": {
+                            "block": {
+                              "type": "variables_set",
+                              "fields": {
+                                "VAR": {
+                                  "id": "var_toplam",
+                                  "name": "toplam",
+                                  "type": ""
+                                }
+                              },
+                              "inputs": {
+                                "VALUE": {
+                                  "block": {
+                                    "type": "math_arithmetic",
+                                    "fields": {
+                                      "OP": "ADD"
+                                    },
+                                    "inputs": {
+                                      "A": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_toplam",
+                                              "name": "toplam",
+                                              "type": ""
+                                            }
+                                          }
+                                        }
+                                      },
+                                      "B": {
+                                        "block": {
+                                          "type": "rx_ultrasonic_distance",
+                                          "fields": {
+                                            "TRIG": 3,
+                                            "ECHO": 2
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "next": {
+                                "block": {
+                                  "type": "rx_delay_ms",
+                                  "inputs": {
+                                    "MS": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 20
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "next": {
+                          "block": {
+                            "type": "variables_set",
+                            "fields": {
+                              "VAR": {
+                                "id": "var_ort",
+                                "name": "ort",
+                                "type": ""
+                              }
+                            },
+                            "inputs": {
+                              "VALUE": {
+                                "block": {
+                                  "type": "math_arithmetic",
+                                  "fields": {
+                                    "OP": "DIVIDE"
+                                  },
+                                  "inputs": {
+                                    "A": {
+                                      "block": {
+                                        "type": "variables_get",
+                                        "fields": {
+                                          "VAR": {
+                                            "id": "var_toplam",
+                                            "name": "toplam",
+                                            "type": ""
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "B": {
+                                      "block": {
+                                        "type": "math_number",
+                                        "fields": {
+                                          "NUM": 5
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "next": {
+                              "block": {
+                                "type": "variables_set",
+                                "fields": {
+                                  "VAR": {
+                                    "id": "var_aci",
+                                    "name": "aci",
+                                    "type": ""
+                                  }
+                                },
+                                "inputs": {
+                                  "VALUE": {
+                                    "block": {
+                                      "type": "math_constrain",
+                                      "inputs": {
+                                        "VALUE": {
+                                          "block": {
+                                            "type": "rx_map",
+                                            "inputs": {
+                                              "VALUE": {
+                                                "block": {
+                                                  "type": "math_constrain",
+                                                  "inputs": {
+                                                    "VALUE": {
+                                                      "block": {
+                                                        "type": "variables_get",
+                                                        "fields": {
+                                                          "VAR": {
+                                                            "id": "var_ort",
+                                                            "name": "ort",
+                                                            "type": ""
+                                                          }
+                                                        }
+                                                      }
+                                                    },
+                                                    "LOW": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 5
+                                                        }
+                                                      }
+                                                    },
+                                                    "HIGH": {
+                                                      "block": {
+                                                        "type": "math_number",
+                                                        "fields": {
+                                                          "NUM": 30
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              },
+                                              "FROM_LOW": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 5
+                                                  }
+                                                }
+                                              },
+                                              "FROM_HIGH": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 30
+                                                  }
+                                                }
+                                              },
+                                              "TO_LOW": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 30
+                                                  }
+                                                }
+                                              },
+                                              "TO_HIGH": {
+                                                "block": {
+                                                  "type": "math_number",
+                                                  "fields": {
+                                                    "NUM": 150
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "LOW": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 30
+                                            }
+                                          }
+                                        },
+                                        "HIGH": {
+                                          "block": {
+                                            "type": "math_number",
+                                            "fields": {
+                                              "NUM": 150
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "next": {
+                                  "block": {
+                                    "type": "rx_servo_v3",
+                                    "fields": {
+                                      "CHANNEL": "0"
+                                    },
+                                    "inputs": {
+                                      "ANGLE": {
+                                        "block": {
+                                          "type": "variables_get",
+                                          "fields": {
+                                            "VAR": {
+                                              "id": "var_aci",
+                                              "name": "aci",
+                                              "type": ""
+                                            }
+                                          }
+                                        }
+                                      }
+                                    },
+                                    "next": {
+                                      "block": {
+                                        "type": "rx_delay_ms",
+                                        "inputs": {
+                                          "MS": {
+                                            "block": {
+                                              "type": "math_number",
+                                              "fields": {
+                                                "NUM": 40
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variables": [
+      {
+        "name": "toplam",
+        "id": "var_toplam"
+      },
+      {
+        "name": "ort",
+        "id": "var_ort"
+      },
+      {
+        "name": "aci",
+        "id": "var_aci"
+      }
+    ]
+  },
+  "code": null,
+  "createdAt": 1783958492075,
+  "updatedAt": 1783958492075
+}
