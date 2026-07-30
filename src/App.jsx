@@ -3,7 +3,6 @@ import { useData, getLocalPhoto } from "./useData";
 import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
 import RoboArm3D from "./RoboArm3D";
-import RoboPanzer3D from "./RoboPanzer3D";
 import TaskBrief, { AnswerAnim } from "./TaskBrief";
 
 
@@ -66,25 +65,6 @@ const KITS = {
       // Base UI palette (sicak ahsap tonlari)
       bg: "#1c1208", card: "#281a0d", input: "#120b05", dark: "#0c0803",
       border: "#443014", tp: "#f8efe2", ts: "#c4a884", tm: "#7d6548",
-    },
-  },
-  robopanzer: {
-    id: "robopanzer",
-    name: "RoboPanzer",
-    tagline: "Paletli Muharebe Tankı",
-    desc: "Radar, çizgi takibi, gece görüşü, komuta ekranı ve Nerf topçusuyla tam donanımlı eğitim tankı. Er'den Mareşal'e rütbeli görev sistemi.",
-    icon: "🪖",
-    primaryColor: "#5A7248",
-    accentColor: "#C8A24A",
-    bgGradient: "linear-gradient(135deg,#0e1408,#22301a,#131c0c)",
-    Component3D: RoboPanzer3D,
-    theme: {
-      // Brand colors (haki-altin)
-      orange: "#C8A24A", od: "#9c7c30", ol: "#e2c06a",
-      purple: "#5A7248", pl: "#87a06e", pd: "#3c5030",
-      // Base UI palette (koyu kamuflaj tonlari)
-      bg: "#141a0e", card: "#1e2815", input: "#0e1409", dark: "#090d05",
-      border: "#37452a", tp: "#eef4e4", ts: "#a8b894", tm: "#697a56",
     },
   },
 };
@@ -3960,7 +3940,6 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh,customTasks})
         {role==="student"&&<select value={kit} onChange={e=>setKit(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`2px solid ${KITS[kit]?.primaryColor||T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",fontWeight:700,gridColumn:"span 2"}}>
           <option value="berrybot">🍓 BerryBot</option>
           <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
-          <option value="robopanzer" disabled={DEMO_MODE}>🪖 RoboPanzer{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
           
         </select>}
         {role==="parent"&&<select value={childId} onChange={e=>setChildId(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",gridColumn:"span 2"}}>
@@ -6734,7 +6713,6 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, c
             >
               <option value="berrybot">🍓 BerryBot</option>
               <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
-              <option value="robopanzer" disabled={DEMO_MODE}>🪖 RoboPanzer{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
               
             </select>
           </div>
@@ -7093,7 +7071,6 @@ function AdminHomeworkEditor({ hwTemplates, onSave, onDelete, onUpload, onRefres
                 style={{ ...inputStyle, fontWeight: 700, fontSize: 16 }}>
                 <option value="berrybot">🍓 BerryBot</option>
                 <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
-                <option value="robopanzer" disabled={DEMO_MODE}>🪖 RoboPanzer{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
                 
               </select>
             </div>
@@ -7344,7 +7321,6 @@ function InstructorHomeworkV2({ user, users, hwTemplates, hwAssignments, onAssig
                 <option value="all">🌐 Tüm Kitler</option>
                 <option value="berrybot">🍓 BerryBot</option>
                 <option value="roboarm">🦾 RoboArm</option>
-                <option value="robopanzer">🪖 RoboPanzer</option>
                 
               </select>
               <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={{
