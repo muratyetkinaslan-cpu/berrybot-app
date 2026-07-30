@@ -3960,6 +3960,7 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh,customTasks})
         {role==="student"&&<select value={kit} onChange={e=>setKit(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`2px solid ${KITS[kit]?.primaryColor||T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",fontWeight:700,gridColumn:"span 2"}}>
           <option value="berrybot">🍓 BerryBot</option>
           <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+          <option value="robopanzer" disabled={DEMO_MODE}>🪖 RoboPanzer{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
           
         </select>}
         {role==="parent"&&<select value={childId} onChange={e=>setChildId(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",gridColumn:"span 2"}}>
@@ -6733,6 +6734,7 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, c
             >
               <option value="berrybot">🍓 BerryBot</option>
               <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+              <option value="robopanzer" disabled={DEMO_MODE}>🪖 RoboPanzer{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
               
             </select>
           </div>
@@ -7091,6 +7093,7 @@ function AdminHomeworkEditor({ hwTemplates, onSave, onDelete, onUpload, onRefres
                 style={{ ...inputStyle, fontWeight: 700, fontSize: 16 }}>
                 <option value="berrybot">🍓 BerryBot</option>
                 <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
+                <option value="robopanzer" disabled={DEMO_MODE}>🪖 RoboPanzer{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
                 
               </select>
             </div>
@@ -7341,6 +7344,7 @@ function InstructorHomeworkV2({ user, users, hwTemplates, hwAssignments, onAssig
                 <option value="all">🌐 Tüm Kitler</option>
                 <option value="berrybot">🍓 BerryBot</option>
                 <option value="roboarm">🦾 RoboArm</option>
+                <option value="robopanzer">🪖 RoboPanzer</option>
                 
               </select>
               <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={{
