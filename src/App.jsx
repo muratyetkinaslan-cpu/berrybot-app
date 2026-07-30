@@ -3,6 +3,7 @@ import { useData, getLocalPhoto } from "./useData";
 import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
 import RoboArm3D from "./RoboArm3D";
+import RoboPanzer3D from "./RoboPanzer3D";
 import TaskBrief, { AnswerAnim } from "./TaskBrief";
 
 
@@ -65,6 +66,25 @@ const KITS = {
       // Base UI palette (sicak ahsap tonlari)
       bg: "#1c1208", card: "#281a0d", input: "#120b05", dark: "#0c0803",
       border: "#443014", tp: "#f8efe2", ts: "#c4a884", tm: "#7d6548",
+    },
+  },
+  robopanzer: {
+    id: "robopanzer",
+    name: "RoboPanzer",
+    tagline: "Paletli Muharebe Tankı",
+    desc: "Radar, çizgi takibi, gece görüşü, komuta ekranı ve Nerf topçusuyla tam donanımlı eğitim tankı. Er'den Mareşal'e rütbeli görev sistemi.",
+    icon: "🪖",
+    primaryColor: "#5A7248",
+    accentColor: "#C8A24A",
+    bgGradient: "linear-gradient(135deg,#0e1408,#22301a,#131c0c)",
+    Component3D: RoboPanzer3D,
+    theme: {
+      // Brand colors (haki-altin)
+      orange: "#C8A24A", od: "#9c7c30", ol: "#e2c06a",
+      purple: "#5A7248", pl: "#87a06e", pd: "#3c5030",
+      // Base UI palette (koyu kamuflaj tonlari)
+      bg: "#141a0e", card: "#1e2815", input: "#0e1409", dark: "#090d05",
+      border: "#37452a", tp: "#eef4e4", ts: "#a8b894", tm: "#697a56",
     },
   },
 };
