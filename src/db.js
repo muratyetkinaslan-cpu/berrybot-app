@@ -71,7 +71,7 @@ export async function createUser(userData) {
 
 // ═══ PROGRESS ═══
 
-const PROGRESS_COLS = 'student_id,task_id,status,started_at,completed_at,approved_at,instructor_note,photo';
+const PROGRESS_COLS = 'student_id,task_id,status,started_at,completed_at,approved_at,instructor_note,photo,paused_at,paused_ms';
 
 // Fetch ALL progress with pagination
 export async function getAllProgress() {
@@ -94,6 +94,7 @@ export async function getAllProgress() {
       map[r.student_id][r.task_id] = {
         status: r.status, startedAt: r.started_at, completedAt: r.completed_at,
         approvedAt: r.approved_at, instructorNote: r.instructor_note, photo: r.photo,
+        pausedAt: r.paused_at, pausedMs: r.paused_ms || 0,
       };
     });
     
@@ -120,6 +121,7 @@ export async function getStudentProgress(studentId) {
     map[r.task_id] = {
       status: r.status, startedAt: r.started_at, completedAt: r.completed_at,
       approvedAt: r.approved_at, instructorNote: r.instructor_note, photo: r.photo,
+      pausedAt: r.paused_at, pausedMs: r.paused_ms || 0,
     };
   });
   return map;
@@ -147,7 +149,10 @@ async function updateStatus(studentId, taskId, fields) {
 // ═══ TASK ACTIONS ═══
 export async function startTask(studentId, taskId) {
   console.log('🚀 startTask:', { studentId, taskId });
-  const ok = await updateStatus(studentId, taskId, { status: 'in_progress', started_at: Date.now() });
+  const ok = await updateStatus(studentId, taskId, {
+    status: 'in_progress', started_at: Date.now(),
+    paused_at: null, paused_ms: 0,   // yeni başlangıç → sayaç sıfırdan
+  });
   console.log('🚀 startTask result:', ok);
   if (ok) addLog({ type: 'task_started', userId: studentId, taskId, detail: `Görev ${taskId} başladı` });
   return ok;
@@ -155,15 +160,136 @@ export async function startTask(studentId, taskId) {
 
 export async function submitTask(studentId, taskId, photoUrl) {
   console.log('📤 submitTask:', { studentId, taskId, photoUrl });
-  const ok = await updateStatus(studentId, taskId, { 
-    status: 'pending_review', 
-    completed_at: Date.now(), 
+
+  // Sayaç duraklatılmış halde teslim edilirse, açık duraklamayı kapat ki
+  // duraklamada geçen süre öğrencinin performans puanına yansımasın.
+  const { data: mevcut } = await supabase.from('bb_progress')
+    .select('paused_at, paused_ms').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+
+  const alanlar = {
+    status: 'pending_review',
+    completed_at: Date.now(),
     photo: photoUrl || null,  // ★ Artık gerçek URL veya null
-  });
+  };
+  if (mevcut?.paused_at) {
+    alanlar.paused_ms = (mevcut.paused_ms || 0) + (Date.now() - mevcut.paused_at);
+    alanlar.paused_at = null;
+  }
+
+  const ok = await updateStatus(studentId, taskId, alanlar);
   console.log('📤 submitTask result:', ok);
   if (!ok) return false;
   addLog({ type: 'task_completed', userId: studentId, taskId, detail: photoUrl ? 'Fotoğraf yüklendi, onaya gönderildi' : 'Onaya gönderildi' });
   return true;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GÖREV SÜRESİ KONTROLÜ (eğitmen/admin)
+//  Migration: supabase/007_task_timer.sql
+//
+//  Geçen süre = (paused_at ?? completed_at ?? now) - started_at - paused_ms
+//  Duraklamada geçen süre puana yansımaz.
+// ═══════════════════════════════════════════════════════════════
+
+/** Sayacı duraklat. Öğrencinin ekranında donar. */
+export async function pauseTaskTimer(instructorId, studentId, taskId) {
+  const { data: tp } = await supabase.from('bb_progress')
+    .select('started_at, paused_at, status').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+
+  if (!tp?.started_at) throw new Error('Görev henüz başlamamış, duraklatılacak sayaç yok.');
+  if (tp.status !== 'in_progress') throw new Error('Sadece devam eden görevin sayacı durdurulabilir.');
+  if (tp.paused_at) return true;  // zaten duraklı
+
+  const ok = await updateStatus(studentId, taskId, {
+    paused_at: Date.now(),
+    time_adjusted_by: instructorId, time_adjusted_at: Date.now(),
+  });
+  if (ok) addLog({ type: 'timer_paused', userId: instructorId, targetUser: studentId, taskId, detail: `Görev ${taskId} sayacı duraklatıldı` });
+  return ok;
+}
+
+/** Sayacı devam ettir. Duraklamada geçen süre toplama eklenir, puana sayılmaz. */
+export async function resumeTaskTimer(instructorId, studentId, taskId) {
+  const { data: tp } = await supabase.from('bb_progress')
+    .select('paused_at, paused_ms').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+
+  if (!tp?.paused_at) return true;  // zaten çalışıyor
+
+  const ok = await updateStatus(studentId, taskId, {
+    paused_at: null,
+    paused_ms: (tp.paused_ms || 0) + (Date.now() - tp.paused_at),
+    time_adjusted_by: instructorId, time_adjusted_at: Date.now(),
+  });
+  if (ok) addLog({ type: 'timer_resumed', userId: instructorId, targetUser: studentId, taskId, detail: `Görev ${taskId} sayacı devam ediyor` });
+  return ok;
+}
+
+/**
+ * Sayacı istenen süreden başlat.
+ * dakika = 0  → sayaç sıfırlanır ve çalışmaya başlar
+ * dakika = 12 → sayaç 12:00'dan devam eder
+ * Duraklı bir görevde çağrılırsa duraklı kalır, sadece gösterilen süre değişir.
+ */
+export async function setTaskElapsed(instructorId, studentId, taskId, dakika) {
+  const dk = Number(dakika);
+  if (!Number.isFinite(dk) || dk < 0) throw new Error('Süre 0 veya daha büyük bir sayı olmalı.');
+  if (dk > 24 * 60) throw new Error('Süre 24 saatten uzun olamaz.');
+
+  const { data: tp } = await supabase.from('bb_progress')
+    .select('status, paused_at, completed_at').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+  if (!tp) throw new Error('Görev kaydı bulunamadı.');
+
+  const simdi = Date.now();
+
+  // Süreyi neye göre geriye sayacağız?
+  //  Teslim edilmiş/onaylanmış görevde bitiş anı geçmişte kaldığı için
+  //  completed_at'e sabitlemek gerekir; yoksa süre negatife düşer.
+  const bitmis = (tp.status === 'pending_review' || tp.status === 'approved') && tp.completed_at;
+  const cikis = bitmis ? Number(tp.completed_at) : simdi;
+
+  const alanlar = {
+    started_at: cikis - Math.round(dk * 60000),
+    paused_ms: 0,
+    time_adjusted_by: instructorId, time_adjusted_at: simdi,
+  };
+
+  // Duraklıysa duraklı kalsın — sadece gösterilen süre değişsin
+  alanlar.paused_at = (!bitmis && tp.paused_at) ? cikis : null;
+
+  // Görev henüz başlamadıysa süre ayarlamak onu başlatır
+  if (tp.status === 'active' || tp.status === 'locked' || tp.status === 'rejected') {
+    alanlar.status = 'in_progress';
+    alanlar.completed_at = null;
+  }
+
+  const ok = await updateStatus(studentId, taskId, alanlar);
+  if (ok) addLog({
+    type: 'timer_set', userId: instructorId, targetUser: studentId, taskId,
+    detail: `Görev ${taskId} sayacı ${dk} dakikadan ayarlandı`,
+  });
+  return ok;
+}
+
+/** Birden çok öğrencinin aktif görev sayacını aynı anda duraklat/devam ettir. */
+export async function bulkTimerControl(instructorId, studentIds, islem) {
+  const ids = Array.isArray(studentIds) ? studentIds : [studentIds];
+  if (ids.length === 0) return { sayi: 0 };
+
+  const { data: satirlar } = await supabase.from('bb_progress')
+    .select('student_id, task_id, paused_at, paused_ms')
+    .in('student_id', ids).eq('status', 'in_progress');
+
+  let sayi = 0;
+  for (const r of satirlar || []) {
+    try {
+      if (islem === 'pause' && !r.paused_at) {
+        await pauseTaskTimer(instructorId, r.student_id, r.task_id); sayi++;
+      } else if (islem === 'resume' && r.paused_at) {
+        await resumeTaskTimer(instructorId, r.student_id, r.task_id); sayi++;
+      }
+    } catch (e) { console.warn('bulkTimerControl:', e.message); }
+  }
+  return { sayi };
 }
 
 // Storage'a foto yükle ve public URL döndür
@@ -262,7 +388,7 @@ export async function rejectTask(instructorId, studentId, taskId, note) {
 }
 
 export async function resubmitTask(studentId, taskId) {
-  await updateStatus(studentId, taskId, { status: 'in_progress', started_at: Date.now(), completed_at: null, instructor_note: null });
+  await updateStatus(studentId, taskId, { status: 'in_progress', started_at: Date.now(), completed_at: null, instructor_note: null, paused_at: null, paused_ms: 0 });
   addLog({ type: 'task_resubmit', userId: studentId, taskId, detail: 'Tekrar başlatıldı' });
 }
 

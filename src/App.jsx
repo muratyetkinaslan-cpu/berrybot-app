@@ -441,14 +441,38 @@ function gradeLabel(score){
   if(score>=60)return"🐌 YAVAŞ";
   return"😴 ÇOK YAVAŞ";
 }
+// ═══════════════════════════════════════════════════════════════
+//  GÖREV SÜRESİ — duraklatma farkındalı hesap
+//  Eğitmen sayacı duraklattığında geçen süre donar ve
+//  duraklamada geçen zaman performans puanına yansımaz.
+//  Migration: supabase/007_task_timer.sql
+// ═══════════════════════════════════════════════════════════════
+
+/** Sayaç şu an duraklatılmış mı? */
+function sayacDurdu(tp){ return !!tp?.pausedAt; }
+
+/** Devam eden bir görevde o ana kadar geçen net süre (ms). */
+function gecenSure(tp, now = Date.now()){
+  if(!tp?.startedAt) return 0;
+  const bitis = tp.pausedAt || tp.completedAt || tp.approvedAt || now;
+  return Math.max(0, bitis - tp.startedAt - (tp.pausedMs || 0));
+}
+
+/** Tamamlanmış bir görevin net süresi (ms), yoksa null. */
+function tamamlanmaSuresi(tp){
+  const bitis = tp?.completedAt || tp?.approvedAt;
+  if(!tp?.startedAt || !bitis) return null;
+  return Math.max(0, bitis - tp.startedAt - (tp.pausedMs || 0));
+}
+
 // Calculate avg score from all completed tasks for a student
 function calcAvgScore(sp){
   const scores=[];
   TASKS.forEach(t=>{
     const tp=sp[t.id];
     if(tp?.status===TS.APPROVED&&tp.startedAt&&(tp.completedAt||tp.approvedAt)){
-      const actual=(tp.completedAt||tp.approvedAt)-tp.startedAt;
-      const s=calcTaskScore(actual,t.expectedMin);
+      const actual=tamamlanmaSuresi(tp);
+      const s=actual!==null?calcTaskScore(actual,t.expectedMin):null;
       if(s)scores.push(s);
     }
   });
@@ -483,6 +507,7 @@ export default function App() {
     hwTemplates, hwAssignments, categories,
     login: doLogin, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh,
+    pauseTimer, resumeTimer, setTimerTo, bulkTimer,
     recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
     toggleAnswerUnlock,
     saveCustomTask, removeCustomTask, uploadMedia,
@@ -954,7 +979,7 @@ export default function App() {
 
         {/* ──── ADMIN ──── */}
         {user.role===ROLES.ADMIN&&(page==="dash"||page==="users")&&<UserManager users={users} prog={prog} onAddUser={addUser} onSetProgress={setProgressTo} onRefresh={refresh} customTasks={customTasks}/>}
-        {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} onBack={()=>nav("users")} customTasks={customTasks}/>}
+        {user.role===ROLES.ADMIN&&page==="sd"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} onBack={()=>nav("users")} customTasks={customTasks} onPauseTimer={pauseTimer} onResumeTimer={resumeTimer} onSetTimer={setTimerTo}/>}
         {user.role===ROLES.ADMIN&&page==="audit"&&<AuditLog logs={logs} users={users}/>}
         {user.role===ROLES.ADMIN&&page==="taskedit"&&<AdminTaskEditor customTasks={customTasks} onSave={saveCustomTask} onDelete={removeCustomTask} onUpload={uploadMedia} onRefresh={refresh} categories={categories} addNewCategory={addNewCategory}/>}
         {user.role===ROLES.ADMIN&&page==="hwedit"&&<AdminHomeworkEditor hwTemplates={hwTemplates} onSave={saveHwTemplate} onDelete={removeHwTemplate} onUpload={uploadHwMedia} onRefresh={refresh} categories={categories} addNewCategory={addNewCategory}/>}
@@ -962,9 +987,9 @@ export default function App() {
         {user.role===ROLES.ADMIN&&page==="cleanup"&&<DataCleanup user={user} T={T} onRefresh={refresh}/>}
 
         {/* ──── INSTRUCTOR ──── */}
-        {user.role===ROLES.INSTRUCTOR&&page==="dash"&&<InstructorDash user={user} users={users} prog={prog} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="dash"&&<InstructorDash user={user} users={users} prog={prog} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sdi");}} onBulkTimer={bulkTimer}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="class"&&<AdminClassroom users={users} prog={prog} classLayout={classLayout} saveLayout={handleSaveLayout} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
-        {user.role===ROLES.INSTRUCTOR&&page==="sdi"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} canReview onApprove={handleApprove} onReject={handleReject} onBack={()=>nav("dash")} customTasks={customTasks}/>}
+        {user.role===ROLES.INSTRUCTOR&&page==="sdi"&&selS&&<StudentDetail s={selS} prog={prog} users={users} answerUnlocks={answerUnlocks} onToggleUnlock={toggleAnswerUnlock} canReview onApprove={handleApprove} onReject={handleReject} onBack={()=>nav("dash")} customTasks={customTasks} onPauseTimer={pauseTimer} onResumeTimer={resumeTimer} onSetTimer={setTimerTo}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="pend"&&<PendingReviews user={user} users={users} prog={prog} onApprove={handleApprove} onReject={handleReject} customTasks={customTasks}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="show"&&<DailyShow users={users} prog={prog} logs={logs} onSel={s=>{setSelS(s);setPage("sdi");}}/>}
         {user.role===ROLES.INSTRUCTOR&&page==="tasks"&&<TaskBrowser showAns customTasks={customTasks}/>}
@@ -2151,8 +2176,8 @@ function MissionBoard({user,prog,onSel,onHelp,customTasks,activeKit,tasksLoading
           const pending=s===TS.PENDING;
           const rejected=s===TS.REJECTED;
           const started=sp[t.id]?.startedAt;
-          const completed=sp[t.id]?.completedAt||sp[t.id]?.approvedAt;
-          const dur=(started&&completed)?fd(completed-started):null;
+          const netSure=tamamlanmaSuresi(sp[t.id]);
+          const dur=netSure!==null?fd(netSure):null;
           const diff=diffLabel(t.diff);
 
           return(
@@ -2422,19 +2447,21 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
 
   // Live timer ticking every second when IN_PROGRESS
   useEffect(()=>{
-    if(tp.status===TS.IN_PROGRESS){
+    if(tp.status===TS.IN_PROGRESS&&!tp.pausedAt){
       const iv=setInterval(()=>setNow(Date.now()),1000);
       return ()=>clearInterval(iv);
     }
-  },[tp.status]);
+  },[tp.status,tp.pausedAt]);
 
   // Calculate elapsed/score
-  const elapsedMs=tp.startedAt?(now-tp.startedAt):0;
+  const duraklandi=sayacDurdu(tp);
+  const elapsedMs=gecenSure(tp,now);
   const elapsedMin=elapsedMs/60000;
   const expectedMin=t.expectedMin||15;
   const timeRatio=elapsedMin/expectedMin;
-  const timeColor=timeRatio<=0.8?"#22c55e":timeRatio<=1.0?"#3b82f6":timeRatio<=1.5?"#f59e0b":"#ef4444";
-  const finalScore=tp.completedAt&&tp.startedAt?calcTaskScore(tp.completedAt-tp.startedAt,expectedMin):null;
+  const timeColor=duraklandi?T.tm:(timeRatio<=0.8?"#22c55e":timeRatio<=1.0?"#3b82f6":timeRatio<=1.5?"#f59e0b":"#ef4444");
+  const netSure=tamamlanmaSuresi(tp);
+  const finalScore=netSure!==null?calcTaskScore(netSure,expectedMin):null;
 
   // Category theme matching MissionBoard
   const catThemes={
@@ -2982,7 +3009,7 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
             <div style={{position:"absolute",top:-10,right:-10,fontSize:80,opacity:.08,pointerEvents:"none"}}>⏱</div>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
               <div>
-                <div style={{fontSize:11,color:T.tm,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:2}}>⏱ Geçen Süre</div>
+                <div style={{fontSize:11,color:duraklandi?T.warn:T.tm,fontWeight:800,letterSpacing:2,textTransform:"uppercase",marginBottom:2}}>{duraklandi?"⏸ Duraklatıldı":"⏱ Geçen Süre"}</div>
                 <div style={{fontSize:32,fontWeight:900,color:timeColor,fontFamily:"monospace",lineHeight:1,letterSpacing:1,textShadow:`0 0 12px ${timeColor}66`}}>
                   {String(Math.floor(elapsedMin)).padStart(2,"0")}:{String(Math.floor(elapsedMs/1000)%60).padStart(2,"0")}
                 </div>
@@ -3005,13 +3032,15 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
               <div style={{position:"absolute",top:-2,left:"calc(100% - 2px)",width:2,height:14,background:T.tp,opacity:.5}}/>
             </div>
             <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:11,color:T.tm,fontWeight:600}}>
-              <span style={{color:timeColor}}>
-                {timeRatio<=0.5&&"⚡ Çok hızlı gidiyorsun!"}
-                {timeRatio>0.5&&timeRatio<=0.8&&"👍 Hızlısın, devam!"}
-                {timeRatio>0.8&&timeRatio<=1.0&&"✓ İyi gidiyorsun"}
-                {timeRatio>1.0&&timeRatio<=1.3&&"⏳ Hedefi geçtin"}
-                {timeRatio>1.3&&timeRatio<=1.6&&"⚠️ Yavaşladın"}
-                {timeRatio>1.6&&"🐌 Çok uzun sürdü"}
+              <span style={{color:duraklandi?T.warn:timeColor}}>
+                {duraklandi?"⏸ Eğitmenin sayacı durdurdu — bu süre puanına yansımıyor":<>
+                  {timeRatio<=0.5&&"⚡ Çok hızlı gidiyorsun!"}
+                  {timeRatio>0.5&&timeRatio<=0.8&&"👍 Hızlısın, devam!"}
+                  {timeRatio>0.8&&timeRatio<=1.0&&"✓ İyi gidiyorsun"}
+                  {timeRatio>1.0&&timeRatio<=1.3&&"⏳ Hedefi geçtin"}
+                  {timeRatio>1.3&&timeRatio<=1.6&&"⚠️ Yavaşladın"}
+                  {timeRatio>1.6&&"🐌 Çok uzun sürdü"}
+                </>}
               </span>
               <span>{Math.round(timeRatio*100)}%</span>
             </div>
@@ -3126,7 +3155,7 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
               <div style={{fontSize:42,fontWeight:900,color:gradeColor(finalScore),lineHeight:1}}>{finalScore}<span style={{fontSize:18,opacity:.7}}>/100</span></div>
               <div>
                 <div style={{fontSize:14,fontWeight:800,color:gradeColor(finalScore)}}>{gradeLabel(finalScore)}</div>
-                <div style={{fontSize:11,color:T.ts,marginTop:2}}>⏱ {fd((tp.completedAt||tp.approvedAt)-tp.startedAt)} (Hedef: {expectedMin}dk)</div>
+                <div style={{fontSize:11,color:T.ts,marginTop:2}}>⏱ {fd(netSure||0)} (Hedef: {expectedMin}dk)</div>
               </div>
             </div>
           </div>}
@@ -3164,10 +3193,12 @@ function StudentTaskView({user,task:t,prog,answerUnlocks=[],onStart,onSubmit,onR
 // ═══════════════════════════════════════
 //  INSTRUCTOR DASHBOARD
 // ═══════════════════════════════════════
-function InstructorDash({user,users,prog,onClearHelp,onSel}){
+function InstructorDash({user,users,prog,onClearHelp,onSel,onBulkTimer}){
   const[filter,setFilter]=useState("all"); // all | help | pending | online | stuck | top
   const[sortBy,setSortBy]=useState("progress"); // progress | score | name | pending | activity
   const[search,setSearch]=useState("");
+  const[sayacBusy,setSayacBusy]=useState(false);
+  const[sayacMsg,setSayacMsg]=useState(null);
 
   const my=users.filter(u=>u.role===ROLES.STUDENT);
 
@@ -3207,7 +3238,7 @@ function InstructorDash({user,users,prog,onClearHelp,onSel}){
     }),lastSeen);
 
     // Stuck = ACTIVE status for >30min
-    const stuck=currentTask&&sp[currentTask.id]?.startedAt&&(now-sp[currentTask.id].startedAt)>30*60*1000;
+    const stuck=currentTask&&!sayacDurdu(sp[currentTask.id])&&gecenSure(sp[currentTask.id],now)>30*60*1000;
 
     return{...s,sp,cnt,pd,xp,pct,avgScore,lv,helpRequest,online,lastSeen,currentTask,todayCount,lastActivity,stuck};
   });
@@ -3282,6 +3313,55 @@ function InstructorDash({user,users,prog,onClearHelp,onSel}){
         </div>
       </div>
     </div>
+
+    {/* ═══ SINIF SAYACI — toplu durdur / devam ═══ */}
+    {onBulkTimer&&(()=>{
+      const calisan=my.filter(s=>Object.values(prog[s.id]||{}).some(tp=>tp&&tp.status===TS.IN_PROGRESS&&!tp.pausedAt)).length;
+      const durmus=my.filter(s=>Object.values(prog[s.id]||{}).some(tp=>tp&&tp.pausedAt)).length;
+      if(calisan===0&&durmus===0)return null;
+      const uygula=async(islem)=>{
+        setSayacBusy(true);setSayacMsg(null);
+        try{
+          const r=await onBulkTimer(my.map(s=>s.id),islem);
+          setSayacMsg(r.sayi>0
+            ?`${r.sayi} görev sayacı ${islem==="pause"?"durduruldu":"devam ediyor"}.`
+            :"Değişecek sayaç yoktu.");
+        }catch(e){setSayacMsg("Hata: "+(e.message||e));}
+        setSayacBusy(false);
+        setTimeout(()=>setSayacMsg(null),5000);
+      };
+      return(<div className="ind-card" style={{
+        marginBottom:14,padding:14,borderRadius:14,
+        background:durmus>0?`linear-gradient(135deg,${T.warn}22,#2a1f0a)`:T.card,
+        border:`2px solid ${durmus>0?T.warn+"66":T.border}`,
+      }}>
+        <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+          <div style={{fontSize:26}}>{durmus>0?"⏸":"⏱"}</div>
+          <div style={{flex:1,minWidth:180}}>
+            <div style={{fontSize:15,fontWeight:900,color:durmus>0?T.warn:T.tp}}>Sınıf sayacı</div>
+            <div style={{fontSize:12,color:T.ts}}>
+              {calisan} çalışıyor{durmus>0?` · ${durmus} durduruldu`:""}
+            </div>
+          </div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {calisan>0&&<button onClick={()=>uygula("pause")} disabled={sayacBusy} style={{
+              padding:"9px 18px",borderRadius:9,border:"none",
+              background:`linear-gradient(135deg,${T.warn},#d97706)`,color:"#1a1035",
+              fontSize:13,fontWeight:800,cursor:sayacBusy?"wait":"pointer",
+            }}>⏸ Hepsini durdur</button>}
+            {durmus>0&&<button onClick={()=>uygula("resume")} disabled={sayacBusy} style={{
+              padding:"9px 18px",borderRadius:9,border:"none",
+              background:`linear-gradient(135deg,${T.ok},#22a55a)`,color:"#fff",
+              fontSize:13,fontWeight:800,cursor:sayacBusy?"wait":"pointer",
+            }}>▶ Hepsini devam ettir</button>}
+          </div>
+        </div>
+        {sayacMsg&&<div style={{marginTop:8,fontSize:12,color:T.ok,fontWeight:600}}>{sayacMsg}</div>}
+        <div style={{marginTop:8,fontSize:11,color:T.tm}}>
+          Ara verirken kullan — duraklamada geçen süre kimsenin puanına yansımaz.
+        </div>
+      </div>);
+    })()}
 
     {/* ═══ HELP REQUESTS — priority alert ═══ */}
     {helpCount>0&&<div className="ind-card" style={{
@@ -3489,10 +3569,126 @@ function FilterPill({active,onClick,label,count,color,highlight}){
 }
 
 // ═══════════════════════════════════════
+//  GÖREV SAYACI KONTROLÜ (eğitmen/admin)
+// ═══════════════════════════════════════
+function TimerControl({studentName,taskTitle,tp,expectedMin,onPause,onResume,onSet}){
+  const calisiyor=tp.status===TS.IN_PROGRESS;   // durdur/devam yalnızca devam eden görevde
+  const[now,setNow]=useState(Date.now());
+  const[dk,setDk]=useState("");
+  const[busy,setBusy]=useState(false);
+  const[msg,setMsg]=useState(null);
+  const duraklandi=sayacDurdu(tp);
+
+  useEffect(()=>{
+    if(duraklandi)return;
+    const iv=setInterval(()=>setNow(Date.now()),1000);
+    return ()=>clearInterval(iv);
+  },[duraklandi]);
+
+  const gecen=gecenSure(tp,now);
+  const gecenDk=Math.floor(gecen/60000);
+  const gecenSn=Math.floor(gecen/1000)%60;
+
+  const calistir=async(fn,basariMesaji)=>{
+    setBusy(true);setMsg(null);
+    try{ await fn(); setMsg({t:"ok",m:basariMesaji}); }
+    catch(e){ setMsg({t:"err",m:e.message||"İşlem başarısız"}); }
+    setBusy(false);
+  };
+
+  const ayarla=async(deger)=>{
+    const v=Number(deger);
+    if(!Number.isFinite(v)||v<0){setMsg({t:"err",m:"Geçerli bir dakika gir (0 veya üstü)."});return;}
+    await calistir(()=>onSet(v), v===0?"Sayaç sıfırlandı.":`Sayaç ${v} dakikadan devam ediyor.`);
+    setDk("");
+  };
+
+  return(<div style={{
+    margin:"2px 0 10px 34px",padding:14,borderRadius:12,
+    background:T.dark,border:`1px solid ${duraklandi?T.warn+"66":T.border}`,
+  }}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap",marginBottom:12}}>
+      <div>
+        <div style={{fontSize:11,color:T.tm,fontWeight:800,letterSpacing:1.5,textTransform:"uppercase"}}>
+          {duraklandi?"⏸ Duraklatıldı":(calisiyor?"⏱ Çalışıyor":"✓ Kayıtlı süre")}
+        </div>
+        <div style={{fontSize:26,fontWeight:900,fontFamily:"monospace",color:duraklandi?T.warn:T.cyan,lineHeight:1.2}}>
+          {String(gecenDk).padStart(2,"0")}:{String(gecenSn).padStart(2,"0")}
+        </div>
+      </div>
+      <div style={{textAlign:"right",fontSize:12,color:T.tm}}>
+        <div>Hedef: {expectedMin} dk</div>
+        {(tp.pausedMs||0)>0&&<div style={{color:T.warn}}>Duraklamada: {fd(tp.pausedMs)}</div>}
+      </div>
+    </div>
+
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}}>
+      {!calisiyor&&<div style={{fontSize:12,color:T.tm,alignSelf:"center"}}>
+        Görev teslim edilmiş — sayaç durdurulamaz, ama kayıtlı süreyi düzeltebilirsin.
+      </div>}
+      {calisiyor&&(duraklandi?(
+        <button onClick={()=>calistir(onResume,"Sayaç devam ediyor.")} disabled={busy} style={{
+          padding:"9px 18px",borderRadius:9,border:"none",
+          background:`linear-gradient(135deg,${T.ok},#22a55a)`,color:"#fff",
+          fontSize:13,fontWeight:800,cursor:busy?"wait":"pointer",
+        }}>▶ Devam ettir</button>
+      ):(
+        <button onClick={()=>calistir(onPause,"Sayaç durdu. Öğrencinin ekranında da dondu.")} disabled={busy} style={{
+          padding:"9px 18px",borderRadius:9,border:"none",
+          background:`linear-gradient(135deg,${T.warn},#d97706)`,color:"#1a1035",
+          fontSize:13,fontWeight:800,cursor:busy?"wait":"pointer",
+        }}>⏸ Durdur</button>
+      ))}
+      {calisiyor&&<button onClick={()=>ayarla(0)} disabled={busy} style={{
+        padding:"9px 18px",borderRadius:9,border:`1px solid ${T.border}`,
+        background:T.input,color:T.tp,fontSize:13,fontWeight:700,cursor:busy?"wait":"pointer",
+      }}>↺ Sıfırla</button>}
+    </div>
+
+    <div style={{borderTop:`1px solid ${T.border}`,paddingTop:12}}>
+      <div style={{fontSize:12,color:T.ts,marginBottom:8}}>
+        {calisiyor
+          ?"Sayacı istediğin süreden başlat — öğrenci geç geldiyse veya sayaç boşa işlediyse."
+          :"Kayıtlı süreyi düzelt — puanı bu süreye göre yeniden hesaplanır."}
+      </div>
+      <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+        {[5,10,15,20].map(v=>(
+          <button key={v} onClick={()=>ayarla(v)} disabled={busy} style={{
+            padding:"6px 12px",borderRadius:8,border:`1px solid ${T.border}`,
+            background:T.input,color:T.ts,fontSize:12,fontWeight:700,cursor:busy?"wait":"pointer",
+          }}>{v} dk</button>
+        ))}
+        <input value={dk} onChange={e=>setDk(e.target.value)} placeholder="dk"
+          onKeyDown={e=>{if(e.key==="Enter"&&dk!=="")ayarla(dk);}}
+          inputMode="numeric"
+          style={{
+            width:70,padding:"7px 10px",borderRadius:8,border:`1px solid ${T.border}`,
+            background:T.input,color:T.tp,fontSize:13,outline:"none",
+          }}/>
+        <button onClick={()=>ayarla(dk)} disabled={busy||dk===""} style={{
+          padding:"7px 16px",borderRadius:8,border:"none",
+          background:dk===""?T.input:`linear-gradient(135deg,${T.orange},${T.od})`,
+          color:dk===""?T.tm:"#fff",fontSize:13,fontWeight:800,
+          cursor:busy||dk===""?"not-allowed":"pointer",
+        }}>Ayarla</button>
+      </div>
+    </div>
+
+    {msg&&<div style={{marginTop:10,fontSize:12,fontWeight:600,color:msg.t==="err"?T.err:T.ok}}>{msg.m}</div>}
+
+    <div style={{marginTop:10,fontSize:11,color:T.tm,lineHeight:1.5}}>
+      Duraklamada geçen süre performans puanına yansımaz. Yaptığın her değişiklik Audit'e kaydedilir.
+    </div>
+  </div>);
+}
+
+// ═══════════════════════════════════════
 //  STUDENT DETAIL
 // ═══════════════════════════════════════
-function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,onApprove,onReject,onBack,customTasks}){
+function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,onApprove,onReject,onBack,customTasks,onPauseTimer,onResumeTimer,onSetTimer}){
   const[note,setNote]=useState("");
+  const[acikSayac,setAcikSayac]=useState(null);   // sayaç paneli açık olan görev id'si
+  const sayacYonetimi=!!(onPauseTimer&&onResumeTimer&&onSetTimer);
   // DB'den kit'e ait görevleri al
   const kit = s.kit || "berrybot";
   const fromDb = (t) => ({
@@ -3557,10 +3753,15 @@ function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,o
     </div>}
 
     <Card>{TLIST.map(t=>{const tp=sp[t.id]||{};const lk=tp.status===TS.LOCKED;const pn=tp.status===TS.PENDING;
-      const started=tp.startedAt;const completed=tp.completedAt||tp.approvedAt;
-      const dur=(started&&completed)?fd(completed-started):null;
+      const netSure=tamamlanmaSuresi(tp);
+      const dur=netSure!==null?fd(netSure):null;
       const unlocked=unlockedSet.has(t.id);
-      return(<div key={t.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:8,marginBottom:4,opacity:lk?.4:1,background:pn?T.purple+"15":"transparent"}}>
+      const duraklandi=sayacDurdu(tp);
+      // Sayaç yalnızca başlamış ve henüz onaylanmamış görevlerde ayarlanabilir
+      const sayacAyarlanabilir=sayacYonetimi&&!lk&&tp.status!==TS.APPROVED;
+      const sayacAcik=acikSayac===t.id;
+      return(<div key={t.id}>
+      <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:8,marginBottom:4,opacity:lk?.4:1,background:duraklandi?T.warn+"12":(pn?T.purple+"15":"transparent")}}>
         <span style={{width:26,fontSize:13,fontFamily:"monospace",color:T.tm,textAlign:"center"}}>#{t.id}</span>
         {t.image_url ? (
           <img src={t.image_url} alt="" style={{width:30,height:30,objectFit:"cover",borderRadius:5}}
@@ -3571,6 +3772,7 @@ function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,o
         <div style={{flex:1,minWidth:0}}>
           <span style={{fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{t.title}</span>
           {dur&&<span style={{fontSize:11,color:T.ok}}><I.Clock/> {dur}</span>}
+          {duraklandi&&<span style={{fontSize:11,color:T.warn,fontWeight:700}}>⏸ sayaç durduruldu</span>}
         </div>
         <span style={{fontSize:12,color:T.warn,fontWeight:600}}>+{t.xp}</span>
         <Badge s={tp.status}/>
@@ -3584,10 +3786,26 @@ function StudentDetail({s,prog,users,canReview,answerUnlocks=[],onToggleUnlock,o
             color:unlocked?T.ok:T.tm,
             cursor:"pointer",fontSize:13,fontWeight:700,
           }}>{unlocked?"🔓":"🔒"}</button>}
+        {sayacAyarlanabilir&&<button
+          onClick={()=>setAcikSayac(sayacAcik?null:t.id)}
+          title="Görev süresini yönet"
+          style={{
+            padding:"4px 10px",borderRadius:6,border:"none",
+            background:sayacAcik?T.cyan+"33":(duraklandi?T.warn+"33":T.tm+"22"),
+            color:sayacAcik?T.cyan:(duraklandi?T.warn:T.tm),
+            cursor:"pointer",fontSize:13,fontWeight:700,
+          }}>{duraklandi?"⏸":"⏱"}</button>}
         {canReview&&pn&&<>
           <button onClick={()=>onApprove(s.id,t.id,note||"OK")} style={{padding:"4px 10px",borderRadius:6,border:"none",background:"#1a4a2e",color:T.ok,cursor:"pointer",fontSize:12,fontWeight:600}}>✓</button>
           <button onClick={()=>onReject(s.id,t.id,note||"Tekrar dene")} style={{padding:"4px 10px",borderRadius:6,border:"none",background:"#5c1a1a",color:T.err,cursor:"pointer",fontSize:12,fontWeight:600}}>✕</button>
         </>}
+      </div>
+      {sayacAcik&&sayacAyarlanabilir&&<TimerControl
+        studentName={s.name} taskTitle={t.title} tp={tp} expectedMin={t.expectedMin||15}
+        onPause={()=>onPauseTimer(s.id,t.id)}
+        onResume={()=>onResumeTimer(s.id,t.id)}
+        onSet={(dk)=>onSetTimer(s.id,t.id,dk)}
+      />}
       </div>);
     })}
     {canReview&&<input value={note} onChange={e=>setNote(e.target.value)} placeholder="Not yaz..." style={{width:"100%",marginTop:8,padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",boxSizing:"border-box"}}/>}
@@ -3629,7 +3847,7 @@ function PendingReviews({user,users,prog,onApprove,onReject,customTasks}){
     {items.length===0?<Card><div style={{textAlign:"center",padding:40,color:T.tm,fontSize:18}}>✓ Tüm görevler incelendi!</div></Card>:
     items.map(({s,t,d})=>{
       const k=`${s.id}_${t.id}`;
-      const dur=(d.startedAt&&d.completedAt)?fd(d.completedAt-d.startedAt):null;
+      const dur=tamamlanmaSuresi(d)!==null?fd(tamamlanmaSuresi(d)):null;
       // Photo bir URL ise göster, yoksa fallback "öğrenci yükledi"
       const hasPhotoUrl = d.photo && (d.photo.startsWith('http') || d.photo.startsWith('data:'));
       const isUploading = d.photo === 'uploading';
@@ -4182,7 +4400,7 @@ function DailyShow({users,prog,logs,onSel}){
       return ts&&ts>=filterStart;
     }).map(t=>{
       const tp=sp[t.id];
-      const dur=(tp.startedAt&&tp.completedAt)?(tp.completedAt-tp.startedAt):null;
+      const dur=tamamlanmaSuresi(tp);
       const score=dur?calcTaskScore(dur,t.expectedMin):null;
       return{...t,dur,score,tp};
     }).sort((a,b)=>(b.tp.approvedAt||0)-(a.tp.approvedAt||0));
@@ -4458,7 +4676,7 @@ function ParentView({parent,users,prog,classLayout,logs,initialTab="class",custo
 
   // Total time spent
   let totalMs=0;
-  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+  completed.forEach(t=>{const tp=sp[t.id];totalMs+=tamamlanmaSuresi(tp)||0;});
 
   return(<div>
     <style>{`
@@ -5012,7 +5230,7 @@ function ParentLearningsView({child,sp,childTasks}){
   const completed=TLIST.filter(t=>sp[t.id]?.status===TS.APPROVED);
   const xp=completed.reduce((a,t)=>a+t.xp,0);
   let totalMs=0;
-  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+  completed.forEach(t=>{const tp=sp[t.id];totalMs+=tamamlanmaSuresi(tp)||0;});
   const allLearnings=[...new Set(completed.flatMap(t=>t.learnings||[]))];
   const avgScore=calcAvgScore(sp);
 
@@ -5241,8 +5459,9 @@ function ParentLearningsView({child,sp,childTasks}){
       <div style={{padding:"0 14px 14px",borderTop:`1px solid ${T.border}`}}>
         {completed.map(t=>{
           const tp=sp[t.id];
-          const dur=(tp.startedAt&&tp.completedAt)?fd(tp.completedAt-tp.startedAt):null;
-          const taskScore=tp.startedAt&&tp.completedAt?calcTaskScore(tp.completedAt-tp.startedAt,t.expectedMin):null;
+          const netSure=tamamlanmaSuresi(tp);
+          const dur=netSure!==null?fd(netSure):null;
+          const taskScore=netSure!==null?calcTaskScore(netSure,t.expectedMin):null;
           return(<div key={t.id} style={{
             display:"flex",alignItems:"center",gap:8,
             padding:"8px 10px",borderRadius:8,marginTop:6,
@@ -5271,7 +5490,7 @@ function ParentCVView({child,sp,childTasks}){
   const xp=completed.reduce((a,t)=>a+t.xp,0);
   const lv=getLevel(xp);
   let totalMs=0;
-  completed.forEach(t=>{const tp=sp[t.id];if(tp.startedAt&&tp.completedAt)totalMs+=Math.max(0,tp.completedAt-tp.startedAt);});
+  completed.forEach(t=>{const tp=sp[t.id];totalMs+=tamamlanmaSuresi(tp)||0;});
   const avgScore=calcAvgScore(sp);
 
   // 3 ana alan

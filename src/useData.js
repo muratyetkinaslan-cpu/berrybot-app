@@ -305,9 +305,33 @@ export function useData() {
   }, []);
 
   const startTask = useCallback((sid, tid) => {
-    patch(sid, tid, { status: 'in_progress', startedAt: Date.now() });
+    patch(sid, tid, { status: 'in_progress', startedAt: Date.now(), pausedAt: null, pausedMs: 0 });
     db.startTask(sid, tid).then(after);
   }, [patch, after]);
+
+  // ═══ GÖREV SÜRESİ KONTROLÜ (eğitmen/admin) ═══
+  const pauseTimer = useCallback(async (sid, tid) => {
+    patch(sid, tid, { pausedAt: Date.now() });          // ekranda anında donsun
+    await db.pauseTaskTimer(currentUser?.id, sid, tid);
+    await loadAll();
+  }, [patch, loadAll, currentUser]);
+
+  const resumeTimer = useCallback(async (sid, tid) => {
+    patch(sid, tid, { pausedAt: null });
+    await db.resumeTaskTimer(currentUser?.id, sid, tid);
+    await loadAll();
+  }, [patch, loadAll, currentUser]);
+
+  const setTimerTo = useCallback(async (sid, tid, dakika) => {
+    await db.setTaskElapsed(currentUser?.id, sid, tid, dakika);
+    await loadAll();
+  }, [loadAll, currentUser]);
+
+  const bulkTimer = useCallback(async (studentIds, islem) => {
+    const r = await db.bulkTimerControl(currentUser?.id, studentIds, islem);
+    await loadAll();
+    return r;
+  }, [loadAll, currentUser]);
 
   const submitTask = useCallback(async (sid, tid, photoData) => {
     // Hemen lokal state'i güncelle (UX için)
@@ -543,6 +567,7 @@ export function useData() {
     hwTemplates, hwAssignments, categories,
     login, logout, addUser, startTask, submitTask, approveTask,
     rejectTask, resubmitTask, requestHelp, clearHelp, saveLayout, setProgressTo, setCurrentPage, refresh: loadAll,
+    pauseTimer, resumeTimer, setTimerTo, bulkTimer,
     recordPractice, addHomework, removeHomework, sendHomework, reviewHw,
     toggleAnswerUnlock,
     saveCustomTask, removeCustomTask, uploadMedia,
