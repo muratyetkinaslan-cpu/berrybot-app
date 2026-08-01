@@ -212,6 +212,7 @@ export function useData() {
   // Auth
   const login = useCallback(async (email, pw) => {
     const u = await db.loginUser(email, pw);
+    if (u?.arsivli) return { arsivli: true };  // arşivdeki hesap — oturum açılmaz
     if (u) {
       setCurrentUser(u);
       // Save session for 24h

@@ -4,6 +4,7 @@ import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
 import RoboArm3D from "./RoboArm3D";
 import TaskBrief, { AnswerAnim } from "./TaskBrief";
+import DataCleanup from "./DataCleanup";
 
 
 // ═══════════════════════════════════════════════════════════
@@ -535,6 +536,10 @@ export default function App() {
 
   const handleLogin=async(e,p)=>{
     const u=await doLogin(e,p);
+    if(u?.arsivli){
+      notify("Bu hesap arşive alınmış. Erişim için eğitmenine veya yöneticine başvur.","err");
+      return false;
+    }
     if(u){
       // Kit gate: if student/parent has kits assigned, the selected kit must be in their list
       const enrolledKits = Array.isArray(u.kits) && u.kits.length > 0 
@@ -902,7 +907,7 @@ export default function App() {
           )}
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {user.role===ROLES.ADMIN&&<><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="taskedit"} o={()=>nav("taskedit")}>📝 Görev Editörü</NBtn><NBtn a={page==="hwedit"} o={()=>nav("hwedit")}>📋 Ödev Şablonları</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
+          {user.role===ROLES.ADMIN&&<><NBtn a={page==="users"} o={()=>nav("users")}>Kullanıcılar</NBtn><NBtn a={page==="taskedit"} o={()=>nav("taskedit")}>📝 Görev Editörü</NBtn><NBtn a={page==="hwedit"} o={()=>nav("hwedit")}>📋 Ödev Şablonları</NBtn><NBtn a={page==="audit"} o={()=>nav("audit")}>Audit</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn><NBtn a={page==="cleanup"} o={()=>nav("cleanup")}>🧹 Veri Temizliği</NBtn></>}
           {user.role===ROLES.INSTRUCTOR&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>Panel</NBtn><NBtn a={page==="class"} o={()=>nav("class")}>🪑 Sınıf Düzeni</NBtn><NBtn a={page==="pend"} o={()=>nav("pend")}>Onay</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn><NBtn a={page==="show"} o={()=>nav("show")}>📊 Show</NBtn><NBtn a={page==="tasks"} o={()=>nav("tasks")}>Görevler</NBtn></>}
           {user.role===ROLES.STUDENT&&<><NBtn a={page==="dash"} o={()=>nav("dash")}>🗺️ Görev</NBtn><NBtn a={page==="practice"} o={()=>nav("practice")}>🧠 Practice</NBtn><NBtn a={page==="hw"} o={()=>nav("hw")}>📝 Ödev</NBtn></>}
           {user.role===ROLES.PARENT&&null}
@@ -954,6 +959,7 @@ export default function App() {
         {user.role===ROLES.ADMIN&&page==="taskedit"&&<AdminTaskEditor customTasks={customTasks} onSave={saveCustomTask} onDelete={removeCustomTask} onUpload={uploadMedia} onRefresh={refresh} categories={categories} addNewCategory={addNewCategory}/>}
         {user.role===ROLES.ADMIN&&page==="hwedit"&&<AdminHomeworkEditor hwTemplates={hwTemplates} onSave={saveHwTemplate} onDelete={removeHwTemplate} onUpload={uploadHwMedia} onRefresh={refresh} categories={categories} addNewCategory={addNewCategory}/>}
         {user.role===ROLES.ADMIN&&page==="tasks"&&<TaskBrowser showAns={false} customTasks={customTasks}/>}
+        {user.role===ROLES.ADMIN&&page==="cleanup"&&<DataCleanup user={user} T={T} onRefresh={refresh}/>}
 
         {/* ──── INSTRUCTOR ──── */}
         {user.role===ROLES.INSTRUCTOR&&page==="dash"&&<InstructorDash user={user} users={users} prog={prog} onClearHelp={handleClearHelp} onSel={s=>{setSelS(s);setPage("sdi");}}/>}

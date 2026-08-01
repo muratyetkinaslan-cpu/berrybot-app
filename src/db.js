@@ -8,6 +8,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 export async function loginUser(email, password) {
   const { data, error } = await supabase.from('bb_users').select('*').eq('email', email).eq('password', password).single();
   if (error || !data) return null;
+  // Arşivdeki kayıtlar giriş yapamaz (bkz. Veri Temizliği paneli)
+  if (data.durum === 'Arşiv') return { arsivli: true };
   const user = { ...data, instructorId: data.instructor_id, classId: data.class_id, childId: data.child_id };
   if (user.role === 'student') {
     await supabase.from('bb_student_meta').update({ online: true, last_seen: Date.now() }).eq('student_id', user.id);
@@ -16,8 +18,11 @@ export async function loginUser(email, password) {
   return user;
 }
 
-export async function getUsers() {
-  const { data } = await supabase.from('bb_users').select('*').order('created_at');
+export async function getUsers({ arsivDahil = false } = {}) {
+  let q = supabase.from('bb_users').select('*').order('created_at');
+  // Arşivdekiler normal listelerde görünmez — sadece Veri Temizliği panelinde
+  if (!arsivDahil) q = q.or('durum.is.null,durum.neq.Arşiv');
+  const { data } = await q;
   return (data || []).map(u => ({ ...u, instructorId: u.instructor_id, classId: u.class_id, childId: u.child_id }));
 }
 
