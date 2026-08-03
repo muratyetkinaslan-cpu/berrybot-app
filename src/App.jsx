@@ -3,6 +3,7 @@ import { useData, getLocalPhoto } from "./useData";
 import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
 import RoboArm3D from "./RoboArm3D";
+import Tank3D from "./Tank3D";
 import TaskBrief, { AnswerAnim } from "./TaskBrief";
 import DataCleanup from "./DataCleanup";
 
@@ -66,6 +67,25 @@ const KITS = {
       // Base UI palette (sicak ahsap tonlari)
       bg: "#1c1208", card: "#281a0d", input: "#120b05", dark: "#0c0803",
       border: "#443014", tp: "#f8efe2", ts: "#c4a884", tm: "#7d6548",
+    },
+  },
+  tank: {
+    id: "tank",
+    name: "BerryTank",
+    tagline: "Çelik Palet Harekâtı",
+    desc: "Savaş temalı paletli tank. Çizgi takibinden otonom keşfe — 6 operasyon, rütbe rütbe yüksel! 🎖️",
+    icon: "🪖",
+    primaryColor: "#5C7A3B",
+    accentColor: "#D9A62E",
+    bgGradient: "linear-gradient(135deg,#0d1408,#22301a,#131c0d)",
+    Component3D: Tank3D,
+    theme: {
+      // Brand colors (askeri yeşil + altın)
+      orange: "#D9A62E", od: "#a87c18", ol: "#f0c256",
+      purple: "#7FA050", pl: "#a8c47e", pd: "#4f6a30",
+      // Base UI palette (gece harekâtı tonları)
+      bg: "#121a0c", card: "#1b2612", input: "#0c1207", dark: "#080d05",
+      border: "#324422", tp: "#eef4e4", ts: "#a8bb90", tm: "#647a4e",
     },
   },
 };
