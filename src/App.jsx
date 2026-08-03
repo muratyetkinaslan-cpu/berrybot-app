@@ -4182,9 +4182,9 @@ function UserManager({users,prog,onAddUser,onSetProgress,onRefresh,customTasks})
           <option value="Büyük">Büyük</option><option value="Kids">Kids</option>
         </select>}
         {role==="student"&&<select value={kit} onChange={e=>setKit(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`2px solid ${KITS[kit]?.primaryColor||T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",fontWeight:700,gridColumn:"span 2"}}>
-          <option value="berrybot">🍓 BerryBot</option>
-          <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
-          
+          {Object.values(KITS).map(k=>(
+            <option key={k.id} value={k.id} disabled={DEMO_MODE&&k.id!=="berrybot"}>{k.icon} {k.name}{DEMO_MODE&&k.id!=="berrybot"?" (Demo'da kapalı)":""}</option>
+          ))}
         </select>}
         {role==="parent"&&<select value={childId} onChange={e=>setChildId(e.target.value)} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,background:T.input,color:T.tp,fontSize:14,outline:"none",gridColumn:"span 2"}}>
           <option value="">Çocuk seç...</option>
@@ -6956,9 +6956,9 @@ function AdminTaskEditor({ customTasks, onSave, onDelete, onUpload, onRefresh, c
               onChange={e => setEditing({ ...editing, kit: e.target.value })}
               style={{ ...inputStyle, fontWeight: 700, fontSize: 16, color: KITS[editing.kit]?.primaryColor || T.tp, borderColor: KITS[editing.kit]?.primaryColor || T.border }}
             >
-              <option value="berrybot">🍓 BerryBot</option>
-              <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
-              
+              {Object.values(KITS).map(k => (
+                <option key={k.id} value={k.id} disabled={DEMO_MODE && k.id !== "berrybot"}>{k.icon} {k.name}{DEMO_MODE && k.id !== "berrybot" ? " (Demo'da kapalı)" : ""}</option>
+              ))}
             </select>
           </div>
           {/* Basic info */}
@@ -7314,9 +7314,9 @@ function AdminHomeworkEditor({ hwTemplates, onSave, onDelete, onUpload, onRefres
               <div style={{ fontSize: 11, color: KITS[editing.kit]?.primaryColor, fontWeight: 800, marginBottom: 6 }}>🎯 KİT</div>
               <select value={editing.kit} onChange={e => setEditing({ ...editing, kit: e.target.value })}
                 style={{ ...inputStyle, fontWeight: 700, fontSize: 16 }}>
-                <option value="berrybot">🍓 BerryBot</option>
-                <option value="roboarm" disabled={DEMO_MODE}>🦾 RoboArm{DEMO_MODE ? " (Demo'da kapalı)" : ""}</option>
-                
+                {Object.values(KITS).map(k => (
+                  <option key={k.id} value={k.id} disabled={DEMO_MODE && k.id !== "berrybot"}>{k.icon} {k.name}{DEMO_MODE && k.id !== "berrybot" ? " (Demo'da kapalı)" : ""}</option>
+                ))}
               </select>
             </div>
 
@@ -7564,9 +7564,9 @@ function InstructorHomeworkV2({ user, users, hwTemplates, hwAssignments, onAssig
                 padding: "6px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.input, color: T.tp, fontSize: 12,
               }}>
                 <option value="all">🌐 Tüm Kitler</option>
-                <option value="berrybot">🍓 BerryBot</option>
-                <option value="roboarm">🦾 RoboArm</option>
-                
+                {Object.values(KITS).map(k => (
+                  <option key={k.id} value={k.id}>{k.icon} {k.name}</option>
+                ))}
               </select>
               <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={{
                 padding: "6px 10px", borderRadius: 8, border: `1px solid ${T.border}`, background: T.input, color: T.tp, fontSize: 12,

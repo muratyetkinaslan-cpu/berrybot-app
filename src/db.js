@@ -71,10 +71,74 @@ export async function createUser(userData) {
 
 // ═══ PROGRESS ═══
 
-const PROGRESS_COLS = 'student_id,task_id,status,started_at,completed_at,approved_at,instructor_note,photo,paused_at,paused_ms';
+const PROGRESS_COLS = 'student_id,task_id,status,started_at,completed_at,approved_at,instructor_note,photo,paused_at,paused_ms,kit';
+
+// ═══ KIT ÇÖZÜMLEME ═══
+// Çok kitli öğrencilerde aynı task_id iki kitte de var (örn. berrybot 5 + tank 5).
+// Tüm okuma/yazma işlemleri artık kit ile filtrelenir.
+const _kitCache = new Map();
+export async function getStudentKit(studentId) {
+  if (_kitCache.has(studentId)) return _kitCache.get(studentId);
+  const { data } = await supabase.from('bb_users').select('kit').eq('id', studentId).maybeSingle();
+  const kit = data?.kit || 'berrybot';
+  _kitCache.set(studentId, kit);
+  return kit;
+}
+export function invalidateKitCache(studentId) {
+  if (studentId) _kitCache.delete(studentId); else _kitCache.clear();
+}
+
+/**
+ * SELF-HEAL: Öğrencinin kit'i için eksik progress satırlarını tamamlar.
+ * - Hiç satır yoksa: tam seed (ilk görev active, kalanı locked)
+ * - Kısmen varsa: yalnızca eksik task_id'ler locked olarak eklenir
+ *   (örn. kamera görevleri 31-36 sonradan aktive edilince). Girişte otomatik çağrılır.
+ */
+export async function ensureKitProgress(studentId, kit) {
+  const k = kit || await getStudentKit(studentId);
+
+  const { data: kt } = await supabase.from('bb_tasks')
+    .select('task_id').eq('kit', k).eq('active', true);
+  let ids = (kt || []).map(x => parseInt(x.task_id));
+  if (k === 'berrybot') {
+    const hardcoded = Array.from({ length: 36 }, (_, i) => i + 1);
+    ids = [...new Set([...hardcoded, ...ids.filter(i => i > 36)])];
+  }
+  ids.sort((a, b) => a - b);
+  if (ids.length === 0) {
+    console.warn(`ensureKitProgress: '${k}' kiti için bb_tasks boş — SQL seed çalıştırıldı mı?`);
+    return false;
+  }
+
+  const { data: existing, error: exErr } = await supabase.from('bb_progress')
+    .select('task_id').eq('student_id', studentId).eq('kit', k);
+  if (exErr) { console.warn('ensureKitProgress select:', exErr.message); return false; }
+  const have = new Set((existing || []).map(r => parseInt(r.task_id)));
+  const missing = ids.filter(tid => !have.has(tid));
+  if (missing.length === 0) return false;  // eksik yok
+
+  const firstEver = have.size === 0;  // hiç satır yoksa ilk görev active
+  const rows = missing.map((tid, i) => ({
+    student_id: studentId, task_id: tid,
+    status: (firstEver && i === 0) ? 'active' : 'locked', kit: k,
+  }));
+  let { error } = await supabase.from('bb_progress')
+    .upsert(rows, { onConflict: 'student_id,kit,task_id', ignoreDuplicates: true });
+  if (error) {
+    // Migration (009) henüz koşmadıysa eski kısıtla dene
+    console.warn('ensureKitProgress upsert (yeni kısıt):', error.message, '— eski kısıtla deneniyor');
+    ({ error } = await supabase.from('bb_progress')
+      .upsert(rows, { onConflict: 'student_id,task_id', ignoreDuplicates: true }));
+    if (error) { console.error('ensureKitProgress:', error.message); return false; }
+  }
+  console.log(`🩹 ensureKitProgress: ${rows.length} eksik görev eklendi → ${studentId} / ${k}`);
+  return true;
+}
 
 // Fetch ALL progress with pagination
-export async function getAllProgress() {
+export async function getAllProgress(primaryKitByStudent = null) {
+  // primaryKitByStudent: { studentId: 'tank', ... } — verilirse her öğrencinin
+  // yalnızca kendi ana kit'ine ait satırları haritaya girer (kit çakışmasını önler).
   const map = {};
   let from = 0;
   const PAGE = 1000;
@@ -90,11 +154,13 @@ export async function getAllProgress() {
     if (!data || data.length === 0) break;
     
     data.forEach(r => {
+      const pk = primaryKitByStudent ? primaryKitByStudent[r.student_id] : null;
+      if (pk && r.kit && r.kit !== pk) return;  // başka kitin satırı — atla
       if (!map[r.student_id]) map[r.student_id] = {};
       map[r.student_id][r.task_id] = {
         status: r.status, startedAt: r.started_at, completedAt: r.completed_at,
         approvedAt: r.approved_at, instructorNote: r.instructor_note, photo: r.photo,
-        pausedAt: r.paused_at, pausedMs: r.paused_ms || 0,
+        pausedAt: r.paused_at, pausedMs: r.paused_ms || 0, kit: r.kit,
       };
     });
     
@@ -107,12 +173,16 @@ export async function getAllProgress() {
   return map;
 }
 
-// Fetch ONLY one student's progress
-export async function getStudentProgress(studentId) {
-  const { data, error } = await supabase
+// Fetch ONLY one student's progress — kit verilirse o kit'e filtrelenir
+// ('auto' → öğrencinin ana kit'i çözülür; null → eski davranış, tüm satırlar)
+export async function getStudentProgress(studentId, kit = 'auto') {
+  const k = kit === 'auto' ? await getStudentKit(studentId) : kit;
+  let q = supabase
     .from('bb_progress')
     .select(PROGRESS_COLS)
     .eq('student_id', studentId);
+  if (k) q = q.eq('kit', k);
+  const { data, error } = await q;
   
   if (error) { console.error('🔴 getStudentProgress error:', error.message); return {}; }
   
@@ -121,26 +191,34 @@ export async function getStudentProgress(studentId) {
     map[r.task_id] = {
       status: r.status, startedAt: r.started_at, completedAt: r.completed_at,
       approvedAt: r.approved_at, instructorNote: r.instructor_note, photo: r.photo,
-      pausedAt: r.paused_at, pausedMs: r.paused_ms || 0,
+      pausedAt: r.paused_at, pausedMs: r.paused_ms || 0, kit: r.kit,
     };
   });
   return map;
 }
 
-// Simple update — small payload only
+// Simple update — small payload only. Kit filtreli: çok kitli öğrencide
+// aynı task_id'nin başka kitteki satırına dokunmaz.
 async function updateStatus(studentId, taskId, fields) {
-  console.log('🔵 DB.updateStatus CALLED:', { studentId, taskId, fields });
-  const { data, error, count } = await supabase.from('bb_progress')
+  const kit = await getStudentKit(studentId);
+  console.log('🔵 DB.updateStatus CALLED:', { studentId, taskId, kit, fields });
+  const { data, error } = await supabase.from('bb_progress')
     .update({ ...fields, updated_at: new Date().toISOString() })
-    .eq('student_id', studentId).eq('task_id', taskId)
+    .eq('student_id', studentId).eq('task_id', taskId).eq('kit', kit)
     .select();
   if (error) {
     console.error('🔴 DB.updateStatus FAILED:', error.message, error.details, error.hint);
     return false;
   }
-  console.log('🟢 DB.updateStatus OK:', { matched: data?.length, data });
+  console.log('🟢 DB.updateStatus OK:', { matched: data?.length });
   if (!data || data.length === 0) {
-    console.error('🔴 DB.updateStatus: NO ROWS MATCHED! student_id=', studentId, 'task_id=', taskId);
+    // Eski (kit'siz/null) satırlar için geriye uyumlu deneme
+    const { data: d2, error: e2 } = await supabase.from('bb_progress')
+      .update({ ...fields, kit, updated_at: new Date().toISOString() })
+      .eq('student_id', studentId).eq('task_id', taskId).is('kit', null)
+      .select();
+    if (!e2 && d2 && d2.length > 0) return true;
+    console.error('🔴 DB.updateStatus: NO ROWS MATCHED! student_id=', studentId, 'task_id=', taskId, 'kit=', kit);
     return false;
   }
   return true;
@@ -163,8 +241,9 @@ export async function submitTask(studentId, taskId, photoUrl) {
 
   // Sayaç duraklatılmış halde teslim edilirse, açık duraklamayı kapat ki
   // duraklamada geçen süre öğrencinin performans puanına yansımasın.
+  const _kit = await getStudentKit(studentId);
   const { data: mevcut } = await supabase.from('bb_progress')
-    .select('paused_at, paused_ms').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+    .select('paused_at, paused_ms').eq('student_id', studentId).eq('task_id', taskId).eq('kit', _kit).maybeSingle();
 
   const alanlar = {
     status: 'pending_review',
@@ -194,7 +273,7 @@ export async function submitTask(studentId, taskId, photoUrl) {
 /** Sayacı duraklat. Öğrencinin ekranında donar. */
 export async function pauseTaskTimer(instructorId, studentId, taskId) {
   const { data: tp } = await supabase.from('bb_progress')
-    .select('started_at, paused_at, status').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+    .select('started_at, paused_at, status').eq('student_id', studentId).eq('task_id', taskId).eq('kit', await getStudentKit(studentId)).maybeSingle();
 
   if (!tp?.started_at) throw new Error('Görev henüz başlamamış, duraklatılacak sayaç yok.');
   if (tp.status !== 'in_progress') throw new Error('Sadece devam eden görevin sayacı durdurulabilir.');
@@ -211,7 +290,7 @@ export async function pauseTaskTimer(instructorId, studentId, taskId) {
 /** Sayacı devam ettir. Duraklamada geçen süre toplama eklenir, puana sayılmaz. */
 export async function resumeTaskTimer(instructorId, studentId, taskId) {
   const { data: tp } = await supabase.from('bb_progress')
-    .select('paused_at, paused_ms').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+    .select('paused_at, paused_ms').eq('student_id', studentId).eq('task_id', taskId).eq('kit', await getStudentKit(studentId)).maybeSingle();
 
   if (!tp?.paused_at) return true;  // zaten çalışıyor
 
@@ -236,7 +315,7 @@ export async function setTaskElapsed(instructorId, studentId, taskId, dakika) {
   if (dk > 24 * 60) throw new Error('Süre 24 saatten uzun olamaz.');
 
   const { data: tp } = await supabase.from('bb_progress')
-    .select('status, paused_at, completed_at').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+    .select('status, paused_at, completed_at').eq('student_id', studentId).eq('task_id', taskId).eq('kit', await getStudentKit(studentId)).maybeSingle();
   if (!tp) throw new Error('Görev kaydı bulunamadı.');
 
   const simdi = Date.now();
@@ -308,7 +387,7 @@ export async function uploadProgressPhoto(path, blob) {
 export async function approveTask(instructorId, studentId, taskId, note) {
   // Önce mevcut foto URL'sini al (Storage'dan silmek için)
   const { data: prog } = await supabase.from('bb_progress')
-    .select('photo').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+    .select('photo').eq('student_id', studentId).eq('task_id', taskId).eq('kit', await getStudentKit(studentId)).maybeSingle();
   
   await updateStatus(studentId, taskId, { 
     status: 'approved', 
@@ -349,12 +428,12 @@ export async function approveTask(instructorId, studentId, taskId, note) {
     // First try update (task row should exist from seed)
     const { data } = await supabase.from('bb_progress')
       .update({ status: 'active', updated_at: new Date().toISOString() })
-      .eq('student_id', studentId).eq('task_id', nextId)
+      .eq('student_id', studentId).eq('task_id', nextId).eq('kit', kit)
       .neq('status', 'approved').neq('status', 'in_progress').neq('status', 'pending_review')
       .select();
     if (!data || data.length === 0) {
       await supabase.from('bb_progress')
-        .upsert({ student_id: studentId, task_id: nextId, status: 'active', kit, updated_at: new Date().toISOString() }, { onConflict: 'student_id,task_id' })
+        .upsert({ student_id: studentId, task_id: nextId, status: 'active', kit, updated_at: new Date().toISOString() }, { onConflict: 'student_id,kit,task_id' })
         .then(({ error }) => { if (error) console.warn('unlock next:', error.message); });
     }
     console.log('🔓 Unlocked task', nextId, 'for', studentId, 'kit', kit);
@@ -365,7 +444,7 @@ export async function approveTask(instructorId, studentId, taskId, note) {
 export async function rejectTask(instructorId, studentId, taskId, note) {
   // Önce mevcut foto URL'sini al
   const { data: prog } = await supabase.from('bb_progress')
-    .select('photo').eq('student_id', studentId).eq('task_id', taskId).maybeSingle();
+    .select('photo').eq('student_id', studentId).eq('task_id', taskId).eq('kit', await getStudentKit(studentId)).maybeSingle();
 
   await updateStatus(studentId, taskId, { 
     status: 'rejected', 
@@ -511,20 +590,20 @@ export async function setStudentProgressTo(studentId, fromTask) {
   if (beforeIds.length > 0) {
     await supabase.from('bb_progress')
       .update({ status: 'approved', started_at: now - 300000, completed_at: now - 60000, approved_at: now, updated_at: ts })
-      .eq('student_id', studentId)
+      .eq('student_id', studentId).eq('kit', kit)
       .in('task_id', beforeIds);
   }
   
   // 2. fromTask'ı active yap
   await supabase.from('bb_progress')
     .update({ status: 'active', started_at: null, completed_at: null, approved_at: null, instructor_note: null, photo: null, updated_at: ts })
-    .eq('student_id', studentId).eq('task_id', fromTask);
+    .eq('student_id', studentId).eq('task_id', fromTask).eq('kit', kit);
   
   // 3. Sonrakileri locked yap
   if (afterIds.length > 0) {
     await supabase.from('bb_progress')
       .update({ status: 'locked', started_at: null, completed_at: null, approved_at: null, instructor_note: null, photo: null, updated_at: ts })
-      .eq('student_id', studentId)
+      .eq('student_id', studentId).eq('kit', kit)
       .in('task_id', afterIds);
   }
   
@@ -922,7 +1001,7 @@ export async function addKitToUser(userId, kitToAdd) {
       const rows = allIds.map((tid, i) => ({
         student_id: userId, task_id: tid, status: i === 0 ? 'active' : 'locked', kit: 'berrybot',
       }));
-      await supabase.from('bb_progress').upsert(rows, { onConflict: 'student_id,task_id', ignoreDuplicates: true });
+      await supabase.from('bb_progress').upsert(rows, { onConflict: 'student_id,kit,task_id', ignoreDuplicates: true });
     }
   } else {
     const { data: kitTasks } = await supabase.from('bb_tasks')
@@ -932,10 +1011,15 @@ export async function addKitToUser(userId, kitToAdd) {
       const rows = ids.map((tid, i) => ({
         student_id: userId, task_id: tid, status: i === 0 ? 'active' : 'locked', kit: kitToAdd,
       }));
-      await supabase.from('bb_progress').upsert(rows, { onConflict: 'student_id,task_id', ignoreDuplicates: true });
+      const { error: seedErr } = await supabase.from('bb_progress')
+        .upsert(rows, { onConflict: 'student_id,kit,task_id', ignoreDuplicates: true });
+      if (seedErr) console.error('addKitToUser seed:', seedErr.message);
+    } else {
+      console.warn(`addKitToUser: '${kitToAdd}' kiti için bb_tasks boş — önce görev SQL'ini çalıştırın!`);
     }
   }
 
+  invalidateKitCache(userId);
   addLog({ type: 'kit_added', userId, detail: `${user.name} → +${kitToAdd}` });
   return { added: true, newKits };
 }
@@ -960,6 +1044,7 @@ export async function removeKitFromUser(userId, kitToRemove) {
   await supabase.from('bb_users')
     .update({ kits: newKits, kit: newPrimary })
     .eq('id', userId);
+  invalidateKitCache(userId);
 
   // Optional: also delete progress for that kit (uncomment if needed)
   // await supabase.from('bb_progress').delete().eq('student_id', userId).eq('kit', kitToRemove);
@@ -1134,7 +1219,7 @@ export async function upsertTask(t) {
 
           if (newRows.length > 0) {
             const { error: progErr } = await supabase.from('bb_progress')
-              .upsert(newRows, { onConflict: 'student_id,task_id' });
+              .upsert(newRows, { onConflict: 'student_id,kit,task_id' });
             if (progErr) console.error(`seed progress for ${s.id}:`, progErr);
           }
         }

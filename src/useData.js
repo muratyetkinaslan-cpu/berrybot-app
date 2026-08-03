@@ -66,8 +66,9 @@ export function useData() {
     try {
       if (u?.role === 'student') {
         const studentKit = u.kit || 'berrybot';
+        await db.ensureKitProgress(u.id, studentKit);  // self-heal: kit görevleri seed'lenmemişse tamamla
         const [sp, m, pp, hw, hs, au, ct, hwt, hwa, cats] = await Promise.all([
-          db.getStudentProgress(u.id),
+          db.getStudentProgress(u.id, studentKit),
           db.getAllMeta(),
           db.fetchPracticeProgress(u.id),
           db.fetchHomework(),
@@ -109,8 +110,12 @@ export function useData() {
         setCategories(cats);
       } else {
         // Admin/instructor: fetch everything
+        // Önce kullanıcılar — progress her öğrencinin ANA kit'ine filtrelenir (kit çakışması önlenir)
+        const us0 = await db.getUsers();
+        const primaryKitMap = {};
+        us0.forEach(x => { if (x.role === 'student') primaryKitMap[x.id] = x.kit || 'berrybot'; });
         const [us, p, m, l, cl, hw, hs, au, ct, hwt, hwa, cats] = await Promise.all([
-          db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
+          Promise.resolve(us0), db.getAllProgress(primaryKitMap), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
           db.fetchHomework(), db.fetchHomeworkSubmissions(),
           db.fetchAnswerUnlocks(),
           db.fetchCustomTasks(),
@@ -151,7 +156,8 @@ export function useData() {
                 setCurrentUser(restored);
                 // Load data based on role
                 if (restored.role === 'student') {
-                  const [sp, m] = await Promise.all([db.getStudentProgress(restored.id), db.getAllMeta()]);
+                  await db.ensureKitProgress(restored.id, restored.kit || 'berrybot');
+                  const [sp, m] = await Promise.all([db.getStudentProgress(restored.id, restored.kit || 'berrybot'), db.getAllMeta()]);
                   setProgress({[restored.id]: sp});
                   setMeta(m);
                 } else if (restored.role === 'parent' && restored.childId) {
@@ -166,7 +172,9 @@ export function useData() {
                   setLogs(l.filter(lg => lg.userId === restored.childId || lg.targetUser === restored.childId));
                   if (cl.length > 0) setClassLayout(cl);
                 } else {
-                  const [p, m, l] = await Promise.all([db.getAllProgress(), db.getAllMeta(), db.getLogs(200)]);
+                  const pkMap = {};
+                  u.forEach(x => { if (x.role === 'student') pkMap[x.id] = x.kit || 'berrybot'; });
+                  const [p, m, l] = await Promise.all([db.getAllProgress(pkMap), db.getAllMeta(), db.getLogs(200)]);
                   setProgress(p); setMeta(m); setLogs(l);
                 }
               } else {
@@ -219,8 +227,9 @@ export function useData() {
       localStorage.setItem('bb_session', JSON.stringify({ userId: u.id, ts: Date.now() }));
       // Load full data for this user's role — all fetches IN PARALLEL for speed
       if (u.role === 'student') {
+        await db.ensureKitProgress(u.id, u.kit || 'berrybot');  // self-heal
         const [sp, m, pp, hw, hs, au, ct, hwt, hwa, cats] = await Promise.all([
-          db.getStudentProgress(u.id),
+          db.getStudentProgress(u.id, u.kit || 'berrybot'),
           db.getAllMeta(),
           db.fetchPracticeProgress(u.id),
           db.fetchHomework(),
@@ -261,8 +270,11 @@ export function useData() {
         setHwAssignments(hwa);
         setCategories(cats);
       } else {
+        const us0 = await db.getUsers();
+        const primaryKitMap = {};
+        us0.forEach(x => { if (x.role === 'student') primaryKitMap[x.id] = x.kit || 'berrybot'; });
         const [us, p, m, l, cl, hw, hs, au, ct, hwt, hwa, cats] = await Promise.all([
-          db.getUsers(), db.getAllProgress(), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
+          Promise.resolve(us0), db.getAllProgress(primaryKitMap), db.getAllMeta(), db.getLogs(200), db.getClassLayouts(),
           db.fetchHomework(), db.fetchHomeworkSubmissions(),
           db.fetchAnswerUnlocks(),
           db.fetchCustomTasks(),
