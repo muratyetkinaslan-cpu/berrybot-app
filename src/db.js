@@ -1249,3 +1249,119 @@ export async function uploadTaskMedia({ kit, taskId, type, file }) {
   const { data } = supabase.storage.from('task-media').getPublicUrl(path);
   return data.publicUrl;
 }
+// ═══════════════════════════════════════════════════════════════════
+// 🔧 KİT TAKİP SİSTEMİ — bb_kit_units + bb_kit_events
+// ═══════════════════════════════════════════════════════════════════
+
+const KIT_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 0/O, 1/I karışmaz
+function genKitCode() {
+  const bytes = new Uint8Array(6);
+  (window.crypto || {}).getRandomValues
+    ? window.crypto.getRandomValues(bytes)
+    : bytes.forEach((_, i) => (bytes[i] = Math.floor(Math.random() * 256)));
+  return 'KT-' + Array.from(bytes).map(b => KIT_CODE_CHARS[b % 32]).join('');
+}
+
+/** Tüm kit ünitelerini getir (admin listesi). */
+export async function getKitUnits() {
+  const { data, error } = await supabase.from('bb_kit_units')
+    .select('*').order('updated_at', { ascending: false });
+  if (error) { console.error('getKitUnits:', error.message); return []; }
+  return data || [];
+}
+
+/** Bir ünitenin olay geçmişi (yeniden eskiye). */
+export async function getKitEvents(unitId) {
+  const { data, error } = await supabase.from('bb_kit_events')
+    .select('*').eq('unit_id', unitId)
+    .order('event_date', { ascending: false }).order('id', { ascending: false });
+  if (error) { console.error('getKitEvents:', error.message); return []; }
+  return data || [];
+}
+
+/** Tüm olayları getir (liste ekranında son olay/maliyet özetleri için). */
+export async function getAllKitEvents() {
+  const { data, error } = await supabase.from('bb_kit_events')
+    .select('*').order('event_date', { ascending: false });
+  if (error) { console.error('getAllKitEvents:', error.message); return []; }
+  return data || [];
+}
+
+/**
+ * SELF-HEAL: her öğrencinin her kayıtlı kiti için ünite kaydı garanti et.
+ * Kit Takip sekmesi açılırken çağrılır; eksikler oluşturulur.
+ */
+export async function ensureKitUnits(students) {
+  const { data: existing } = await supabase.from('bb_kit_units').select('student_id, kit');
+  const have = new Set((existing || []).map(u => `${u.student_id}|${u.kit}`));
+  const ms = Date.now();
+  const rows = [];
+  (students || []).forEach(s => {
+    if (s.role !== 'student') return;
+    const kits = Array.isArray(s.kits) && s.kits.length ? s.kits : (s.kit ? [s.kit] : []);
+    [...new Set(kits)].forEach(k => {
+      if (!k || have.has(`${s.id}|${k}`)) return;
+      rows.push({ code: genKitCode(), student_id: s.id, kit: k, status: 'saglam', created_at: ms, updated_at: ms });
+    });
+  });
+  if (rows.length === 0) return 0;
+  const { data, error } = await supabase.from('bb_kit_units')
+    .upsert(rows, { onConflict: 'student_id,kit', ignoreDuplicates: true }).select('id');
+  if (error) { console.error('ensureKitUnits:', error.message); return 0; }
+  // açılış olayları
+  const evRows = (data || []).map(u => ({
+    unit_id: u.id, type: 'teslim', description: 'Kit takibe alındı (otomatik kayıt)',
+    cost: 0, event_date: ms, created_by: 'sistem', created_at: ms,
+  }));
+  if (evRows.length) await supabase.from('bb_kit_events').insert(evRows);
+  console.log(`🔧 ensureKitUnits: ${rows.length} yeni kit kaydı`);
+  return rows.length;
+}
+
+/** Ünite alanlarını güncelle (status, serial_no, note). */
+export async function updateKitUnit(unitId, fields) {
+  const { error } = await supabase.from('bb_kit_units')
+    .update({ ...fields, updated_at: Date.now() }).eq('id', unitId);
+  if (error) { console.error('updateKitUnit:', error.message); return false; }
+  return true;
+}
+
+/**
+ * Olay ekle; istenirse ünite durumunu da aynı işlemde değiştir.
+ * ev: { type, description, cost, event_date, created_by }
+ */
+export async function addKitEvent(unitId, ev, newStatus = null) {
+  const ms = Date.now();
+  const { error } = await supabase.from('bb_kit_events').insert({
+    unit_id: unitId,
+    type: ev.type || 'not',
+    description: ev.description || '',
+    cost: Number(ev.cost) || 0,
+    event_date: ev.event_date || ms,
+    created_by: ev.created_by || null,
+    created_at: ms,
+  });
+  if (error) { console.error('addKitEvent:', error.message); return false; }
+  if (newStatus) return updateKitUnit(unitId, { status: newStatus });
+  return true;
+}
+
+export async function deleteKitEvent(eventId) {
+  const { error } = await supabase.from('bb_kit_events').delete().eq('id', eventId);
+  if (error) { console.error('deleteKitEvent:', error.message); return false; }
+  return true;
+}
+
+/**
+ * QR sayfası (login gerekmez): kod → ünite + öğrenci adı + olay geçmişi.
+ */
+export async function getKitByCode(code) {
+  const { data: unit, error } = await supabase.from('bb_kit_units')
+    .select('*').eq('code', (code || '').trim().toUpperCase()).maybeSingle();
+  if (error || !unit) return null;
+  const [{ data: student }, events] = await Promise.all([
+    supabase.from('bb_users').select('name').eq('id', unit.student_id).maybeSingle(),
+    getKitEvents(unit.id),
+  ]);
+  return { unit, studentName: student?.name || 'Öğrenci', events };
+}
