@@ -717,6 +717,7 @@ export function KitPublicView({ code }) {
 export function QrLoginScanner({ onToken, onClose }) {
   const videoRef = useRef(null);
   const [err, setErr] = useState(null);
+  const [found, setFound] = useState(false);
   const stopRef = useRef(false);
 
   useEffect(() => {
@@ -724,35 +725,51 @@ export function QrLoginScanner({ onToken, onClose }) {
     let stream = null;
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    const detector = ("BarcodeDetector" in window)
-      ? new window.BarcodeDetector({ formats: ["qr_code"] }) : null;
+    // DİKKAT: Masaüstü Chrome'da BarcodeDetector API'si "var" görünür ama çoğu
+    // PC'de detect() hiç sonuç döndürmez. Bu yüzden jsQR HER ZAMAN çalışır;
+    // BarcodeDetector sadece ek bir şans olarak denenir.
+    let detector = null;
+    try {
+      if ("BarcodeDetector" in window) detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+    } catch { detector = null; }
 
     const extract = (raw) => {
       const m = String(raw || "").match(/LG-[A-Z2-9]{6,}/i);
       return m ? m[0].toUpperCase() : null;
     };
 
+    const hit = (token) => {
+      stopRef.current = true;
+      setFound(true);
+      setTimeout(() => onToken(token), 350);   // yeşil çerçeveyi görsün
+    };
+
     const tick = async () => {
       if (stopRef.current) return;
       const v = videoRef.current;
-      if (v && v.readyState === 4) {
+      if (v && v.readyState >= 2 && v.videoWidth > 0) {
         try {
-          let raw = null;
-          if (detector) {
-            const codes = await detector.detect(v);
-            raw = codes[0]?.rawValue;
-          } else {
-            canvas.width = v.videoWidth; canvas.height = v.videoHeight;
-            ctx.drawImage(v, 0, 0);
-            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const q = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
-            raw = q?.data;
+          // 1) jsQR — güvenilir yol (performans için 640px'e küçült)
+          const scale = Math.min(1, 640 / v.videoWidth);
+          canvas.width = Math.round(v.videoWidth * scale);
+          canvas.height = Math.round(v.videoHeight * scale);
+          ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+          const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const q = jsQR(img.data, img.width, img.height, { inversionAttempts: "attemptBoth" });
+          let token = extract(q?.data);
+
+          // 2) BarcodeDetector — varsa ek deneme
+          if (!token && detector) {
+            try {
+              const codes = await detector.detect(v);
+              token = extract(codes?.[0]?.rawValue);
+            } catch { /* masaüstünde desteksiz olabilir */ }
           }
-          const token = extract(raw);
-          if (token) { stopRef.current = true; onToken(token); return; }
+
+          if (token) { hit(token); return; }
         } catch { /* kare atla */ }
       }
-      setTimeout(tick, 250);
+      setTimeout(tick, 200);
     };
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 } } })
@@ -779,7 +796,10 @@ export function QrLoginScanner({ onToken, onClose }) {
           : (
             <div style={{ position: "relative", borderRadius: 14, overflow: "hidden", background: "#000" }}>
               <video ref={videoRef} muted playsInline style={{ width: "100%", display: "block", transform: "scaleX(-1)" }} />
-              <div style={{ position: "absolute", inset: "12%", border: "3px solid #F5922A88", borderRadius: 14, pointerEvents: "none" }} />
+              <div style={{ position: "absolute", inset: "12%", border: `3px solid ${found ? "#4ade80" : "#F5922A88"}`, borderRadius: 14, pointerEvents: "none", transition: "border-color .2s" }} />
+              <div style={{ position: "absolute", bottom: 8, left: 0, right: 0, textAlign: "center", fontSize: 12, fontWeight: 800, color: found ? "#4ade80" : "#f0ecffcc", textShadow: "0 1px 4px #000" }}>
+                {found ? "✅ Okundu — giriş yapılıyor..." : "QR aranıyor..."}
+              </div>
             </div>
           )}
         <button onClick={onClose} style={{ marginTop: 14, padding: "10px 24px", borderRadius: 10, border: "1px solid #332e52", background: "transparent", color: "#a79dd0", fontWeight: 700, cursor: "pointer" }}>Vazgeç</button>
