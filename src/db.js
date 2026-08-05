@@ -1451,3 +1451,25 @@ export async function getParentReport(token) {
     logs: (logsRes.data || []).map(l => ({ id: l.id, type: l.type, detail: l.detail, ts: l.created_at })),
   };
 }
+
+/** Tüm öğrencilerin token'larını toplu garanti et; {id: {login_token, parent_token}} döndür. */
+export async function ensureAllTokens(students) {
+  const ids = (students || []).filter(u => u.role === 'student').map(u => u.id);
+  if (!ids.length) return {};
+  const { data } = await supabase.from('bb_users')
+    .select('id, login_token, parent_token').in('id', ids);
+  const map = {};
+  const fixes = [];
+  (data || []).forEach(u => {
+    const upd = {};
+    if (!u.login_token) upd.login_token = genToken('LG');
+    if (!u.parent_token) upd.parent_token = genToken('VL');
+    map[u.id] = {
+      login_token: u.login_token || upd.login_token,
+      parent_token: u.parent_token || upd.parent_token,
+    };
+    if (Object.keys(upd).length) fixes.push(supabase.from('bb_users').update(upd).eq('id', u.id));
+  });
+  if (fixes.length) await Promise.all(fixes);
+  return map;
+}

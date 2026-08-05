@@ -161,6 +161,7 @@ function useNiimbot() {
 // ADMİN SEKMESİ
 // ═════════════════════════════════════════════════════════════════════
 export function KitTrackingView({ users, T, notify, currentUserName }) {
+  const [mode, setMode] = useState("takip");     // takip | kartlar
   const [units, setUnits] = useState(null);
   const [events, setEvents] = useState([]);       // tüm olaylar (özet için)
   const [q, setQ] = useState("");
@@ -217,6 +218,14 @@ export function KitTrackingView({ users, T, notify, currentUserName }) {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: T.orange, margin: 0 }}>🔧 Kit Takip</h1>
+        <div style={{ display: "flex", gap: 4, background: T.card, borderRadius: 10, padding: 4, border: `1px solid ${T.border}` }}>
+          {[["takip", "🔧 Kit Takip"], ["kartlar", "🎫 QR Kartları"]].map(([k, l]) => (
+            <button key={k} onClick={() => setMode(k)} style={{
+              padding: "7px 14px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 800, fontSize: 13,
+              background: mode === k ? T.orange : "transparent", color: mode === k ? "#fff" : T.ts,
+            }}>{l}</button>
+          ))}
+        </div>
         <div style={{ flex: 1 }} />
         {/* NIIMBOT bağlantı durumu */}
         <button onClick={nb.connect} disabled={nb.connected} style={{
@@ -228,6 +237,7 @@ export function KitTrackingView({ users, T, notify, currentUserName }) {
       </div>
       {nb.error && <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 8, background: `${T.err}22`, color: T.err, fontSize: 13, fontWeight: 600 }}>{nb.error}</div>}
 
+      {mode === "kartlar" ? <QrCardsView users={users} T={T} notify={notify} nb={nb} /> : <>
       {/* Durum özeti */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
         {Object.entries(KIT_STATUS).map(([k, s]) => (
@@ -294,6 +304,116 @@ export function KitTrackingView({ users, T, notify, currentUserName }) {
             nb={nb} onChanged={load} onClose={() => setSel(null)} currentUserName={currentUserName} />}
         </div>
       )}
+      </>}
+    </div>
+  );
+}
+
+// ── 🎫 QR KARTLARI — herkesin giriş & veli QR'ı bir arada ──────────────
+function QrCardsView({ users, T, notify, nb }) {
+  const [tokens, setTokens] = useState(null);      // {studentId: {login_token, parent_token}}
+  const [qrImgs, setQrImgs] = useState({});        // {"id|tip": dataUrl}
+  const [q, setQ] = useState("");
+  const [bulk, setBulk] = useState(null);          // "3/12" ilerleme
+
+  const students = useMemo(
+    () => (users || []).filter(u => u.role === "student").sort((a, b) => a.name.localeCompare(b.name, "tr")),
+    [users]
+  );
+
+  useEffect(() => { db.ensureAllTokens(users || []).then(setTokens); }, [users]);
+
+  // QR görsellerini üret
+  useEffect(() => {
+    if (!tokens) return;
+    let alive = true;
+    (async () => {
+      const out = {};
+      for (const s of students) {
+        const t = tokens[s.id];
+        if (!t) continue;
+        out[s.id + "|g"] = await QRCode.toDataURL(`${window.location.origin}${window.location.pathname}?qrlogin=${t.login_token}`, { width: 160, margin: 1 });
+        out[s.id + "|v"] = await QRCode.toDataURL(`${window.location.origin}${window.location.pathname}?veliqr=${t.parent_token}`, { width: 160, margin: 1 });
+      }
+      if (alive) setQrImgs(out);
+    })();
+    return () => { alive = false; };
+  }, [tokens, students]);
+
+  const list = useMemo(() => {
+    const ql = q.trim().toLowerCase();
+    return ql ? students.filter(s => s.name.toLowerCase().includes(ql)) : students;
+  }, [students, q]);
+
+  const printOne = async (s, kind) => {
+    if (!nb.connected) { notify("Önce NIIMBOT'a bağlan (sağ üst) 🖨️", "err"); return false; }
+    const t = tokens?.[s.id];
+    if (!t) return false;
+    const cv = await buildCardLabel(kind === "g"
+      ? { name: s.name, title: "GIRIS\nKARTI", footer: "Kameraya okut", qrText: `${window.location.origin}${window.location.pathname}?qrlogin=${t.login_token}` }
+      : { name: s.name, title: "VELI\nTAKIP", footer: "Telefonla okut", qrText: `${window.location.origin}${window.location.pathname}?veliqr=${t.parent_token}` });
+    return nb.printCanvas(cv);
+  };
+
+  const printAll = async (kind) => {
+    if (!nb.connected) { notify("Önce NIIMBOT'a bağlan (sağ üst) 🖨️", "err"); return; }
+    if (!confirm(`${list.length} adet ${kind === "g" ? "GİRİŞ" : "VELİ"} kartı basılacak. Etiket rulosu yeterli mi?`)) return;
+    for (let i = 0; i < list.length; i++) {
+      setBulk(`${i + 1}/${list.length} — ${list[i].name}`);
+      const ok = await printOne(list[i], kind);
+      if (!ok) { notify(`${list[i].name} kartında durdu — yazıcıyı kontrol et`, "err"); break; }
+    }
+    setBulk(null);
+    notify("Toplu baskı bitti 🖨️✅");
+  };
+
+  const copyLink = (s, kind) => {
+    const t = tokens?.[s.id]; if (!t) return;
+    const url = `${window.location.origin}${window.location.pathname}${kind === "g" ? "?qrlogin=" + t.login_token : "?veliqr=" + t.parent_token}`;
+    navigator.clipboard?.writeText(url);
+    notify((kind === "g" ? "Giriş" : "Veli") + " linki kopyalandı 📋");
+  };
+
+  const inp = { padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, background: T.input, color: T.tp, fontSize: 14, outline: "none" };
+  const pbtn = (bg) => ({ padding: "7px 10px", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 800, fontSize: 11.5, background: bg, color: "#fff" });
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+        <input value={q} onChange={e => setQ(e.target.value)} placeholder="🔍 Öğrenci ara..." style={{ ...inp, flex: "2 1 220px" }} />
+        <button onClick={() => printAll("g")} disabled={!!bulk} style={{ ...pbtn(`linear-gradient(135deg,${T.orange},${T.od})`), padding: "10px 16px", fontSize: 13 }}>
+          🖨️ Tüm Giriş Kartları ({list.length})
+        </button>
+        <button onClick={() => printAll("v")} disabled={!!bulk} style={{ ...pbtn(`linear-gradient(135deg,${T.purple},${T.pd})`), padding: "10px 16px", fontSize: 13 }}>
+          🖨️ Tüm Veli Kartları ({list.length})
+        </button>
+      </div>
+      {bulk && <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 10, background: `${T.orange}22`, color: T.orange, fontWeight: 800, fontSize: 13 }}>🖨️ Basılıyor: {bulk}{nb.status ? ` · ${nb.status}` : ""}</div>}
+      {tokens === null && <div style={{ padding: 30, textAlign: "center", color: T.ts }}>QR kartları hazırlanıyor...</div>}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: 12 }}>
+        {list.map(s => (
+          <div key={s.id} style={{ background: T.card, border: `1.5px solid ${T.border}`, borderRadius: 14, padding: 14 }}>
+            <div style={{ fontWeight: 900, fontSize: 15, color: T.tp, marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 20 }}>{KITS[s.kit]?.icon || "🎓"}</span>{s.name}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {[["g", "🎓 Giriş QR", T.orange], ["v", "👨‍👩‍👦 Veli QR", T.purple]].map(([k, l, c]) => (
+                <div key={k} style={{ textAlign: "center", background: T.input, borderRadius: 12, padding: 10 }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 800, color: c, marginBottom: 6 }}>{l}</div>
+                  {qrImgs[s.id + "|" + k]
+                    ? <img src={qrImgs[s.id + "|" + k]} alt={l} style={{ width: 110, height: 110, borderRadius: 8, background: "#fff", padding: 3 }} />
+                    : <div style={{ width: 110, height: 110, margin: "0 auto", borderRadius: 8, background: T.dark || "#111", display: "flex", alignItems: "center", justifyContent: "center", color: T.tm, fontSize: 11 }}>...</div>}
+                  <div style={{ display: "flex", gap: 4, marginTop: 8, justifyContent: "center" }}>
+                    <button onClick={() => printOne(s, k).then(ok => ok && notify("Yazdırıldı 🖨️✅"))} style={pbtn(c)}>🖨️ Bas</button>
+                    <button onClick={() => copyLink(s, k)} style={{ ...pbtn("transparent"), border: `1.5px solid ${T.border}`, color: T.ts }}>🔗</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
