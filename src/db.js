@@ -1365,3 +1365,89 @@ export async function getKitByCode(code) {
   ]);
   return { unit, studentName: student?.name || 'Öğrenci', events };
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 🎓 QR GİRİŞ + 👨‍👩‍👦 VELİ QR RAPORU
+// ═══════════════════════════════════════════════════════════════════
+
+function genToken(prefix) {
+  const bytes = new Uint8Array(10);
+  window.crypto.getRandomValues(bytes);
+  return prefix + '-' + Array.from(bytes).map(b => KIT_CODE_CHARS[b % 32]).join('');
+}
+
+/** Öğrencinin giriş/veli token'larını garanti et; ikisini de döndür. */
+export async function ensureUserTokens(userId) {
+  const { data: u } = await supabase.from('bb_users')
+    .select('login_token, parent_token').eq('id', userId).maybeSingle();
+  if (!u) return null;
+  const upd = {};
+  if (!u.login_token) upd.login_token = genToken('LG');
+  if (!u.parent_token) upd.parent_token = genToken('VL');
+  if (Object.keys(upd).length) {
+    const { error } = await supabase.from('bb_users').update(upd).eq('id', userId);
+    if (error) { console.error('ensureUserTokens:', error.message); return u; }
+  }
+  return { login_token: u.login_token || upd.login_token, parent_token: u.parent_token || upd.parent_token };
+}
+
+/** QR ile giriş: login_token → kullanıcı (loginUser ile aynı davranış). */
+export async function loginWithToken(token) {
+  const t = (token || '').trim().toUpperCase();
+  if (!t) return null;
+  const { data, error } = await supabase.from('bb_users')
+    .select('*').eq('login_token', t).maybeSingle();
+  if (error || !data) return null;
+  if (data.durum === 'Arşiv') return { arsivli: true };
+  const user = { ...data, instructorId: data.instructor_id, classId: data.class_id, childId: data.child_id };
+  if (user.role === 'student') {
+    await supabase.from('bb_student_meta').update({ online: true, last_seen: Date.now() }).eq('student_id', user.id);
+  }
+  addLog({ type: 'login', userId: user.id, detail: `${user.name} QR ile giriş yaptı 📷` });
+  return user;
+}
+
+/**
+ * Veli QR raporu (login gerekmez): parent_token → öğrencinin tam durumu.
+ * Kit takibi + görev ilerlemesi (süreli) + ödevler + son 100 audit log.
+ */
+export async function getParentReport(token) {
+  const t = (token || '').trim().toUpperCase();
+  if (!t) return null;
+  const { data: stu, error } = await supabase.from('bb_users')
+    .select('id, name, kit, kits, created_at').eq('parent_token', t).maybeSingle();
+  if (error || !stu) return null;
+
+  const kits = [...new Set([...(Array.isArray(stu.kits) ? stu.kits : []), stu.kit].filter(Boolean))];
+
+  const [unitsRes, progRes, tasksRes, hwaRes, hwtRes, logsRes] = await Promise.all([
+    supabase.from('bb_kit_units').select('*').eq('student_id', stu.id),
+    supabase.from('bb_progress').select(PROGRESS_COLS).eq('student_id', stu.id),
+    kits.length
+      ? supabase.from('bb_tasks').select('kit, task_id, title, xp, category').in('kit', kits).eq('active', true)
+      : Promise.resolve({ data: [] }),
+    supabase.from('bb_homework_assignment').select('*').eq('student_id', stu.id).order('assigned_at', { ascending: false }),
+    supabase.from('bb_homework_templates').select('id, title'),
+    supabase.from('bb_logs').select('*')
+      .or(`user_id.eq.${stu.id},target_user.eq.${stu.id}`)
+      .order('created_at', { ascending: false }).limit(100),
+  ]);
+
+  // kit olayları (tüm ünitelerin geçmişi)
+  const unitIds = (unitsRes.data || []).map(u => u.id);
+  const { data: kitEvents } = unitIds.length
+    ? await supabase.from('bb_kit_events').select('*').in('unit_id', unitIds).order('event_date', { ascending: false })
+    : { data: [] };
+
+  return {
+    student: { id: stu.id, name: stu.name, since: stu.created_at },
+    kits,
+    kitUnits: unitsRes.data || [],
+    kitEvents: kitEvents || [],
+    progress: progRes.data || [],
+    tasks: tasksRes.data || [],
+    hwAssignments: hwaRes.data || [],
+    hwTemplates: hwtRes.data || [],
+    logs: (logsRes.data || []).map(l => ({ id: l.id, type: l.type, detail: l.detail, ts: l.created_at })),
+  };
+}

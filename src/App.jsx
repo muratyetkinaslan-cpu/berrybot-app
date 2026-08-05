@@ -4,7 +4,7 @@ import * as db from "./db";
 import BerryBot3D from "./BerryBot3D";
 import RoboArm3D from "./RoboArm3D";
 import Tank3D from "./Tank3D";
-import { KitTrackingView } from "./KitTracking";
+import { KitTrackingView, QrLoginScanner } from "./KitTracking";
 import TaskBrief, { AnswerAnim } from "./TaskBrief";
 import DataCleanup from "./DataCleanup";
 
@@ -580,6 +580,18 @@ export default function App() {
     }
   },[user,selT,setCurrentPage]);
 
+  // QR karttaki link telefonla/URL ile açılırsa otomatik giriş
+  const qrLoginTried = useRef(false);
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('qrlogin');
+    if (t && !user && !loading && !qrLoginTried.current) {
+      qrLoginTried.current = true;
+      window.history.replaceState({}, '', window.location.pathname);
+      handleLogin('QRTOKEN:' + t, '');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading]);
+
   const handleLogin=async(e,p)=>{
     const u=await doLogin(e,p);
     if(u?.arsivli){
@@ -591,7 +603,9 @@ export default function App() {
       const enrolledKits = Array.isArray(u.kits) && u.kits.length > 0 
         ? u.kits 
         : (u.kit ? [u.kit] : []);
-      if ((u.role === 'student' || u.role === 'parent') && enrolledKits.length > 0 && selectedKit && !enrolledKits.includes(selectedKit)) {
+      const qrGiris = typeof e === 'string' && e.startsWith('QRTOKEN:');
+      if (qrGiris && u.kit && KITS[u.kit]) setSelectedKit(u.kit);  // QR: öğrencinin kendi kiti açılır
+      if (!qrGiris && (u.role === 'student' || u.role === 'parent') && enrolledKits.length > 0 && selectedKit && !enrolledKits.includes(selectedKit)) {
         const kitNames = enrolledKits.map(k => KITS[k]?.name || k).join(', ');
         notify(`Bu hesap şu kit'lere kayıtlı: ${kitNames}. Lütfen onlardan birinden gir.`, "err");
         await logout();
@@ -1036,6 +1050,17 @@ export default function App() {
 function LoginPage({onLogin, kit, onChangeKit}){
   const[e,setE]=useState("");const[p,setP]=useState("");const[err,setErr]=useState("");
   const[busy,setBusy]=useState(false);
+  const[qrOpen,setQrOpen]=useState(false);
+
+  const handleQrToken = async (token) => {
+    setQrOpen(false);
+    setBusy(true); setErr("");
+    try {
+      const ok = await onLogin('QRTOKEN:' + token, '');
+      if (!ok) setErr("❌ Bu QR kart geçersiz — eğitmenine yeni kart bastır.");
+    } catch { setErr("Giriş yapılırken hata oluştu."); }
+    finally { setBusy(false); }
+  };
   const kitColor = kit?.primaryColor || T.orange;
   const kitAccent = kit?.accentColor || T.purple;
 
@@ -1242,6 +1267,12 @@ function LoginPage({onLogin, kit, onChangeKit}){
               </>
             ) : "🚀 Maceraya Başla"}
           </button>
+          <button onClick={()=>setQrOpen(true)} disabled={busy} style={{
+            width:"100%",marginTop:10,padding:"12px",borderRadius:12,
+            border:`2px dashed ${kitColor}88`,background:`${kitColor}12`,
+            color:kitColor,fontSize:14,fontWeight:800,cursor:"pointer",letterSpacing:.5,
+          }}>📷 QR Kart ile Giriş</button>
+          {qrOpen && <QrLoginScanner onToken={handleQrToken} onClose={()=>setQrOpen(false)}/>}
           <style>{`
             @keyframes spin { to { transform: rotate(360deg); } }
             @keyframes loginProgress { 

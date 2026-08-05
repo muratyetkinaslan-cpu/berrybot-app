@@ -219,7 +219,10 @@ export function useData() {
 
   // Auth
   const login = useCallback(async (email, pw) => {
-    const u = await db.loginUser(email, pw);
+    // QR girişi: 'QRTOKEN:LG-XXXX' formatı login_token ile doğrulanır
+    const u = email && email.startsWith('QRTOKEN:')
+      ? await db.loginWithToken(email.slice(8))
+      : await db.loginUser(email, pw);
     if (u?.arsivli) return { arsivli: true };  // arşivdeki hesap — oturum açılmaz
     if (u) {
       setCurrentUser(u);
