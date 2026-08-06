@@ -1440,7 +1440,7 @@ export async function getParentReport(token) {
     : { data: [] };
 
   return {
-    student: { id: stu.id, name: stu.name, since: stu.created_at },
+    student: { id: stu.id, name: stu.name, since: stu.created_at, kit: stu.kit },
     kits,
     kitUnits: unitsRes.data || [],
     kitEvents: kitEvents || [],

@@ -169,7 +169,7 @@ const WOOD = {
 };
 
 // ─── 36 TASKS — kazanımlar (learnings) velilerin görmesi için ───
-const TASKS=[
+export const TASKS=[
   {id:1,title:"RGB LED Yakma",cat:"RGB LED",diff:1,expectedMin:8,xp:10,img:"💡",desc:"Kırmızı, Yeşil, Mavi LED'leri ayrı ayrı yak.",answer:"Doğru blok: set_rgb(255,0,0)",learnings:["RGB renk sistemi","Pin çıkışı kontrolü","Temel blok kod yazımı"]},
   {id:2,title:"LED Renk Karışımı",cat:"RGB LED",diff:1,expectedMin:10,xp:10,img:"🌈",desc:"İki rengi karıştırarak yeni renk elde et.",answer:"set_rgb(255,255,0) → sarı",learnings:["Renk karışımı (additive)","RGB değer kombinasyonları","Yaratıcı düşünme"]},
   {id:3,title:"LED Yanıp Sönme",cat:"RGB LED",diff:2,expectedMin:12,xp:15,img:"✨",desc:"LED'i 1 saniye aralıkla yanıp söndür.",answer:"while true: set_rgb → wait(1) → off → wait(1)",learnings:["Sonsuz döngü kavramı","Zamanlama (delay)","Durum değişimi"]},

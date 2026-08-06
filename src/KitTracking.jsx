@@ -7,7 +7,7 @@ import QRCode from "qrcode";
 import "niimbot-web-bluetooth";
 import jsQR from "jsqr";
 import * as db from "./db";
-import { KITS } from "./App";
+import { KITS, TASKS } from "./App";
 
 // ── Sabitler ─────────────────────────────────────────────────────────
 export const KIT_STATUS = {
@@ -824,31 +824,70 @@ const fmtDur = (ms) => {
   return m < 60 ? `${m} dk` : `${Math.floor(m / 60)} sa ${m % 60} dk`;
 };
 
-// ── Kazanım sınıflandırma: 💻 Yazılım / ⚡ Elektronik / ⚙️ Mekanik ──
-const SKILL_AREAS = {
-  yazilim:    { l: "Yazılım",    e: "💻", c: "#22d3ee", desc: "Kodlama ve algoritmik düşünme" },
-  elektronik: { l: "Elektronik", e: "⚡", c: "#fbbf24", desc: "Sensörler, ışık, ses ve devreler" },
-  mekanik:    { l: "Mekanik",    e: "⚙️", c: "#fb923c", desc: "Motorlar, hareket ve fiziksel yapı" },
+// ── 📚 MÜFREDAT: bölümler (chapter) halinde kazanım haritası ──────────
+// Her bölüm, görev kazanımlarını regex ile yakalar; velinin anlayacağı
+// tek cümlelik açıklama + "kaç görevde pratik yaptı" sayısı gösterilir.
+const CURRICULUM = [
+  {
+    area: "Yazılım", e: "💻", c: "#22d3ee", desc: "Kodlama ve algoritmik düşünme",
+    chapters: [
+      { id: "s1", t: "Algoritmalar & Sıralı Komutlar", d: "Bilgisayara adım adım iş yaptırmayı öğrendi", re: /algoritma|sıralı|adım adım|planlama|akış|blok kod/i },
+      { id: "s2", t: "Döngüler", d: "Tekrarlayan işleri döngülerle otomatikleştiriyor", re: /döngü|tekrar\b|while|sonsuz/i },
+      { id: "s3", t: "Koşullar & Karar Verme", d: "Robota 'eğer... ise...' mantığıyla karar verdiriyor", re: /koşul|eğer|karşılaştırma|operatör|karar|\bif\b|öncelik/i },
+      { id: "s4", t: "Değişkenler & Sayaçlar", d: "Verileri hafızada tutup sayaçlarla takip ediyor", re: /değişken|sayaç|skor|bayrak|flag|veri (tutma|biriktirme|toplama)|birikim/i },
+      { id: "s5", t: "Fonksiyonlar", d: "Kodunu yeniden kullanılabilir parçalara bölüyor", re: /fonksiyon|modüler|kod tekrarı|parçalama|decomposition/i },
+      { id: "s6", t: "Olaylar & Gerçek Zamanlı Kontrol", d: "Tuşlara ve sensörlere anında tepki veren sistemler kuruyor", re: /olay|event|gerçek zamanlı|kesme|interrupt|zaman aşımı|timeout|tuş eşleme|kullanıcı gir/i },
+      { id: "s7", t: "Durum Makinesi & Sistem Tasarımı", d: "Karmaşık robotları modlara ayırıp yönetiyor (gerçek robotik yazılımların temeli)", re: /durum|state|strateji|mod yönetimi|entegrasyon|mimari|yapay zeka|otonom karar/i },
+      { id: "s8", t: "Optimizasyon & Hata Yönetimi", d: "Kodunu ölçüyor, iyileştiriyor ve hatalara hazırlıklı yazıyor", re: /optimizasyon|hata|savunmacı|\bpid\b|iterasyon|iyileştirme|deneme-|kalibrasyon|dayanıklılık/i },
+    ],
+  },
+  {
+    area: "Elektronik", e: "⚡", c: "#fbbf24", desc: "Sensörler, ışık, ses ve devreler",
+    chapters: [
+      { id: "e1", t: "LED & Işık Kontrolü", d: "RGB LED'lerle renk ve parlaklık kontrolü (PWM)", re: /led|rgb|renk|pwm|parlaklık|far|ışıklandırma/i },
+      { id: "e2", t: "Ekran & Göstergeler", d: "LED matriste yazı, sayaç ve göstergeler tasarlıyor", re: /matris|ekran|gösterge|görselleştirme|çubuk|dolum|kayan yazı/i },
+      { id: "e3", t: "Ses Sistemleri", d: "Buzzer ile melodi, alarm ve mors kodu üretiyor", re: /\bses\b|buzzer|nota|frekans|melodi|mors|korna|siren|müzik/i },
+      { id: "e4", t: "Sensörlerle Ölçüm", d: "Işık, mesafe ve çizgi sensörlerinden veri okuyup yorumluyor", re: /sensör|ldr|ışık (sensör|farkı)|mesafe|ultrasonik|çizgi|yansıma|analog|eşik|ham değer|ikili veri/i },
+      { id: "e5", t: "Kablosuz İletişim & Kumanda", d: "Kızılötesi kumanda ve kamera/WiFi sistemleriyle çalışıyor", re: /kumanda|kızılötesi|\bir\b|wifi|bluetooth|kablosuz|kamera|fpv|iletişim|görüntü aktarım/i },
+    ],
+  },
+  {
+    area: "Mekanik", e: "⚙️", c: "#fb923c", desc: "Motorlar, hareket ve atölye becerileri",
+    chapters: [
+      { id: "m1", t: "Motorlar & Tahrik Sistemi", d: "DC motorları sürüyor, güç ve hız dengesini ayarlıyor", re: /motor|palet|sürüş|dc |tork|diferansiyel|hız (ayar|kontrol|kademe)|kalibrasyon.*motor|motor.*dengele/i },
+      { id: "m2", t: "Manevra & Navigasyon", d: "Dönüşler, hassas park ve rota planlamayla robotu yönetiyor", re: /dönüş|pivot|manevra|kavis|slalom|navigasyon|park|geometri|açı|rota|labirent|kare|konumlan/i },
+      { id: "m3", t: "Atölye & Montaj", d: "Elleriyle robot kuruyor: montaj, kablolama ve alet kullanımı", re: /montaj|kablo|lehim|havya|matkap|şasi|kurulum|donanım|vida/i, workshop: true },
+    ],
+  },
+];
+
+// Kit kurulduğu için "yapıldı" sayılan atölye işleri (m3 bölümünde listelenir)
+const WORKSHOP_DONE = {
+  tank: ["Tank paletlerinin montajı", "Şasi ve gövde kurulumu", "BerryBot kartının montajı", "Motor ve sensör kablolaması", "Havya ile lehimleme tanıtımı", "Matkap ve el aletleri güvenliği"],
+  berrybot: ["BerryBot kartının montajı", "Motor ve tekerlek montajı", "Sensör bağlantıları ve kablolama", "Bağlantı şeması okuma", "El aletleri güvenliği"],
+  roboarm: ["Ahşap gövde parçalarının montajı", "4 eksen servo motor montajı", "Vida ve bağlantı elemanları kullanımı", "Kablo düzeni ve yönetimi"],
 };
-const ELEK_RE = /sensör|led|rgb|buzzer|ışık|ldr|mesafe|analog|pwm|parlaklık|matris|ekran|buton|kumanda|ir|pil|voltaj|devre|kablo|lehim|sinyal|kamera|wifi|bluetooth|ses|nota|frekans/i;
-const MEK_RE  = /motor|palet|sürüş|dönüş|pivot|manevra|park|hız.*(denge|kararlılık)|tork|diferansiyel|şasi|montaj|teker|fizik|yerinde dönüş|kavis|slalom|denge/i;
-function classifySkill(text) {
-  const t = String(text || "");
-  if (ELEK_RE.test(t)) return "elektronik";
-  if (MEK_RE.test(t)) return "mekanik";
-  return "yazilim";   // değişken, döngü, koşul, fonksiyon, algoritma, durum makinesi...
-}
-function skillLevel(n) {
-  if (n >= 20) return { l: "Usta 🏆", pct: 100 };
-  if (n >= 12) return { l: "İleri 🥇", pct: 80 };
-  if (n >= 6)  return { l: "Gelişiyor 🥈", pct: 55 };
-  if (n >= 1)  return { l: "Başlangıç 🥉", pct: 30 };
-  return { l: "Henüz başlamadı", pct: 5 };
-}
+
+// Görevde kullanılan fiziksel bileşenleri metinden çıkar
+const COMPONENTS = [
+  ["💡 RGB LED", /led|rgb|far|parlaklık|halka|renk/i],
+  ["🔲 LED Ekran", /matris|ekran|kayan yazı|çubuk|dolum|gösterge/i],
+  ["🔊 Buzzer", /buzzer|\bses\b|nota|melodi|siren|korna|mors|frekans|alarm/i],
+  ["⚙️ Motorlar", /motor|palet|sürüş|dönüş|manevra|park|slalom|kare|ileri|geri/i],
+  ["☀️ Işık Sensörü", /ışık|ldr|karanlık|aydınlık|karartma|tünel|radar/i],
+  ["📏 Mesafe Sensörü", /mesafe|ultrasonik|engel|sonar/i],
+  ["➖ Çizgi Sensörü", /çizgi|yansıma|\bhat\b|bang-bang|ikmal/i],
+  ["🎮 IR Kumanda", /kumanda|kızılötesi|\bir\b|tuş|şifre|vites/i],
+  ["🔘 Buton", /buton/i],
+  ["📷 Kamera", /kamera|fpv|görüntü|foto|keşif uçuş/i],
+];
 
 // BerryBot'un gömülü 36 görevi DB'de olmayabilir — başlık bulunamazsa numara gösterilir.
+
 export function VeliPublicView({ token }) {
   const [d, setD] = useState(undefined);
+  const [expandedCh, setExpandedCh] = useState(null);   // açık müfredat bölümü
+  const [expandedTask, setExpandedTask] = useState(null); // açık görev detayı
   useEffect(() => { db.getParentReport(token).then(setD); }, [token]);
 
   const card = { background: P.card, borderRadius: 18, padding: 18, marginBottom: 14 };
@@ -868,7 +907,17 @@ export function VeliPublicView({ token }) {
   if (d === undefined) return wrap(<div style={{ textAlign: "center", color: P.ts, padding: 40 }}>Rapor hazırlanıyor...</div>);
   if (d === null) return wrap(<div style={{ ...card, textAlign: "center", padding: 36 }}><div style={{ fontSize: 38 }}>🔍</div><b>Rapor bulunamadı</b><div style={{ color: P.ts, fontSize: 13, marginTop: 6 }}>QR eski olabilir — eğitmeninizle iletişime geçin.</div></div>);
 
-  const taskTitle = (kit, id) => d.tasks.find(t => t.kit === kit && Number(t.task_id) === Number(id))?.title || `Görev ${id}`;
+  // Birleşik görev arama: DB görevleri + BerryBot'un gömülü 36 görevi
+  const findTask = (kit, id) => {
+    const dbT = d.tasks.find(t => t.kit === kit && Number(t.task_id) === Number(id));
+    if (dbT) return { title: dbT.title, learnings: Array.isArray(dbT.learnings) ? dbT.learnings : [], desc: "", emoji: "", cat: dbT.category };
+    if (kit === "berrybot") {
+      const hc = TASKS.find(t => t.id === Number(id));
+      if (hc) return { title: hc.title, learnings: hc.learnings || [], desc: hc.desc || "", emoji: hc.img || "", cat: hc.cat };
+    }
+    return { title: `Görev ${id}`, learnings: [], desc: "", emoji: "", cat: "" };
+  };
+  const taskTitle = (kit, id) => findTask(kit, id).title;
   const byKit = {};
   d.progress.forEach(p => { const k = p.kit || "berrybot"; (byKit[k] = byKit[k] || []).push(p); });
 
@@ -883,18 +932,33 @@ export function VeliPublicView({ token }) {
   const activeTasks = d.progress.filter(p => p.status === "active" || p.status === "in_progress" || p.status === "pending_review");
   const toplamTamir = d.kitEvents.reduce((a, e) => a + (Number(e.cost) || 0), 0);
 
-  // 🧠 Kazanımlar: onaylanan görevlerin learnings'lerini alanlara ayır (tekrarsız)
-  const skills = { yazilim: new Set(), elektronik: new Set(), mekanik: new Set() };
-  d.progress.filter(p => p.status === "approved").forEach(p => {
-    const task = d.tasks.find(t => t.kit === (p.kit || "berrybot") && Number(t.task_id) === Number(p.task_id));
-    const ls = Array.isArray(task?.learnings) ? task.learnings : [];
-    ls.forEach(x => skills[classifySkill(x)].add(String(x)));
-  });
-  const skillTotal = skills.yazilim.size + skills.elektronik.size + skills.mekanik.size;
+  // 📚 Müfredat hesabı: her bölüm için pratik sayısı + öğrenilen kavramlar
+  const approvedTasks = d.progress.filter(p => p.status === "approved")
+    .map(p => ({ ...p, info: findTask(p.kit || "berrybot", p.task_id) }));
+  const chapterStats = {};   // {chapterId: {count, learnings:Set, tasks:[]}}
+  CURRICULUM.forEach(area => area.chapters.forEach(ch => {
+    const st = { count: 0, learnings: new Set(), tasks: [] };
+    approvedTasks.forEach(p => {
+      const text = [p.info.title, p.info.cat, ...(p.info.learnings || [])].join(" · ");
+      if (ch.re.test(text)) {
+        st.count++;
+        st.tasks.push(p.info.title);
+        (p.info.learnings || []).forEach(l => { if (ch.re.test(l)) st.learnings.add(l); });
+      }
+    });
+    chapterStats[ch.id] = st;
+  }));
+  const skillTotal = approvedTasks.length;
+  const C3D = KITS[d.student.kit]?.Component3D;
 
   return wrap(<>
     {/* Öğrenci başlığı + özet */}
     <div style={{ ...card, border: `2px solid ${P.orange}55` }}>
+      {C3D && (
+        <div style={{ margin: "-10px -10px 4px", borderRadius: 14, overflow: "hidden" }}>
+          <C3D height={230} autoRotate background="radial-gradient(ellipse at 50% 70%, #2a2545 0%, transparent 70%)" />
+        </div>
+      )}
       <div style={{ fontWeight: 900, fontSize: 20 }}>{d.student.name}</div>
       <div style={{ fontSize: 12, color: P.ts, marginBottom: 12 }}>Kayıt: {fmtDate(d.student.since)} · Kitler: {d.kits.map(k => `${KITS[k]?.icon || ""} ${KITS[k]?.name || k}`).join(" · ")}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, textAlign: "center" }}>
@@ -922,37 +986,63 @@ export function VeliPublicView({ token }) {
       ))}
     </div>
 
-    {/* 🧠 Öğrendikleri — yazılım / elektronik / mekanik */}
-    {skillTotal > 0 && (
-      <div style={{ ...card, border: `2px solid #22d3ee44` }}>
-        <div style={{ fontWeight: 900, fontSize: 15, marginBottom: 2 }}>🧠 Öğrendikleri</div>
-        <div style={{ fontSize: 11.5, color: P.tm, marginBottom: 12 }}>
-          Tamamlanan görevlerdeki teknik kazanımlardan otomatik derlenir — toplam <b style={{ color: P.ts }}>{skillTotal} beceri</b>
-        </div>
-        {Object.entries(SKILL_AREAS).map(([key, A]) => {
-          const items = [...skills[key]];
-          const lv = skillLevel(items.length);
-          return (
-            <div key={key} style={{ marginBottom: 14, padding: "12px 14px", borderRadius: 13, background: P.input, border: `1px solid ${A.c}33` }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 2 }}>
-                <div style={{ fontWeight: 900, fontSize: 14, color: A.c }}>{A.e} {A.l} <span style={{ fontSize: 11, color: P.tm, fontWeight: 600 }}>· {A.desc}</span></div>
-                <div style={{ fontSize: 12, fontWeight: 800, color: A.c, whiteSpace: "nowrap" }}>{lv.l}</div>
-              </div>
-              <div style={{ height: 7, background: P.bg, borderRadius: 5, overflow: "hidden", margin: "7px 0 10px" }}>
-                <div style={{ height: "100%", width: `${lv.pct}%`, background: A.c, transition: "width .4s" }} />
-              </div>
-              {items.length === 0
-                ? <div style={{ fontSize: 11.5, color: P.tm }}>Bu alandaki görevler yaklaşan bölümlerde 🚀</div>
-                : <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                    {items.map((x, i) => (
-                      <span key={i} style={{ fontSize: 10.5, fontWeight: 700, padding: "4px 9px", borderRadius: 20, background: `${A.c}1a`, color: A.c, border: `1px solid ${A.c}44` }}>{x}</span>
-                    ))}
-                  </div>}
-            </div>
-          );
-        })}
+    {/* 📚 Müfredat — bölümler halinde neler öğrendi */}
+    <div style={{ ...card, border: `2px solid #22d3ee44` }}>
+      <div style={{ fontWeight: 900, fontSize: 15, marginBottom: 2 }}>📚 Neler Öğrendi?</div>
+      <div style={{ fontSize: 11.5, color: P.tm, marginBottom: 12 }}>
+        Robotik müfredatı bölüm bölüm — tamamlanan {skillTotal} görevden otomatik derlenir. Bölüme dokunarak detay görebilirsiniz.
       </div>
-    )}
+      {CURRICULUM.map(area => {
+        const doneCh = area.chapters.filter(ch => ch.workshop ? d.kits.some(k => WORKSHOP_DONE[k]) : chapterStats[ch.id].count > 0).length;
+        return (
+          <div key={area.area} style={{ marginBottom: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+              <div style={{ fontWeight: 900, fontSize: 14, color: area.c }}>{area.e} {area.area} <span style={{ fontSize: 11, color: P.tm, fontWeight: 600 }}>· {area.desc}</span></div>
+              <div style={{ fontSize: 11.5, fontWeight: 800, color: area.c }}>{doneCh}/{area.chapters.length} bölüm</div>
+            </div>
+            <div style={{ height: 6, background: P.input, borderRadius: 5, overflow: "hidden", marginBottom: 8 }}>
+              <div style={{ height: "100%", width: `${Math.round(doneCh / area.chapters.length * 100)}%`, background: area.c }} />
+            </div>
+            {area.chapters.map((ch, ci) => {
+              const st = chapterStats[ch.id];
+              const wsItems = ch.workshop ? d.kits.flatMap(k => WORKSHOP_DONE[k] || []) : [];
+              const learned = ch.workshop ? wsItems.length > 0 : st.count > 0;
+              const open = expandedCh === ch.id;
+              return (
+                <div key={ch.id} onClick={() => setExpandedCh(open ? null : ch.id)} style={{
+                  padding: "9px 12px", borderRadius: 10, marginBottom: 5, cursor: "pointer",
+                  background: P.input, border: `1px solid ${learned ? area.c + "44" : P.border}`,
+                  opacity: learned ? 1 : 0.55,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 15 }}>{learned ? "✅" : "🔒"}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 800 }}>Bölüm {ci + 1}: {ch.t}</div>
+                      <div style={{ fontSize: 11, color: learned ? P.ts : P.tm }}>
+                        {learned
+                          ? (ch.workshop ? `Atölyede tamamlandı · ${wsItems.length} uygulama` : `${ch.d} · ${st.count} görevde pratik yaptı`)
+                          : "Bu bölüm ilerleyen derslerde 🚀"}
+                      </div>
+                    </div>
+                    {learned && <span style={{ fontSize: 11, color: P.tm }}>{open ? "▲" : "▼"}</span>}
+                  </div>
+                  {open && learned && (
+                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px dashed ${P.border}` }}>
+                      {ch.workshop ? (
+                        wsItems.map((w, i) => <div key={i} style={{ fontSize: 11.5, color: P.ts, padding: "3px 0" }}>🔩 {w}</div>)
+                      ) : (<>
+                        {[...st.learnings].map((l, i) => <div key={i} style={{ fontSize: 11.5, color: P.ts, padding: "3px 0" }}>✔ {l}</div>)}
+                        <div style={{ fontSize: 10.5, color: P.tm, marginTop: 6 }}>Pratik yaptığı görevler: {[...new Set(st.tasks)].slice(0, 6).join(", ")}{st.tasks.length > 6 ? "..." : ""}</div>
+                      </>)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
 
     {/* Kit durumu */}
     <div style={card}>
@@ -989,13 +1079,41 @@ export function VeliPublicView({ token }) {
             <div style={{ height: "100%", width: `${rows.length ? Math.round(done.length / rows.length * 100) : 0}%`, background: `linear-gradient(90deg,${P.orange},#4ade80)` }} />
           </div>
           {done.length === 0 && <div style={{ color: P.tm, fontSize: 12 }}>Henüz tamamlanan görev yok.</div>}
-          {done.map(p => (
-            <div key={p.task_id} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "7px 10px", borderRadius: 9, background: P.input, marginBottom: 4, fontSize: 12 }}>
-              <span style={{ fontWeight: 700, flex: 1 }}>✅ {taskTitle(k, p.task_id)}</span>
-              <span style={{ color: P.ts, whiteSpace: "nowrap" }}>⏱ {fmtDur(p.completed_at && p.started_at ? p.completed_at - p.started_at - (p.paused_ms || 0) : 0)}</span>
-              <span style={{ color: P.tm, whiteSpace: "nowrap" }}>{fmtDate(p.approved_at)}</span>
-            </div>
-          ))}
+          {done.map(p => {
+            const info = findTask(k, p.task_id);
+            const key = `${k}-${p.task_id}`;
+            const open = expandedTask === key;
+            const text = [info.title, info.cat, info.desc, ...(info.learnings || [])].join(" · ");
+            const comps = COMPONENTS.filter(([, re]) => re.test(text)).map(([n]) => n);
+            return (
+              <div key={key} onClick={() => setExpandedTask(open ? null : key)} style={{
+                padding: "8px 10px", borderRadius: 9, background: P.input, marginBottom: 4,
+                cursor: "pointer", border: open ? `1px solid ${P.orange}55` : "1px solid transparent",
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 12, alignItems: "center" }}>
+                  <span style={{ fontWeight: 700, flex: 1 }}>✅ {info.emoji} {info.title}</span>
+                  <span style={{ color: P.ts, whiteSpace: "nowrap" }}>⏱ {fmtDur(p.completed_at && p.started_at ? p.completed_at - p.started_at - (p.paused_ms || 0) : 0)}</span>
+                  <span style={{ color: P.tm, whiteSpace: "nowrap" }}>{fmtDate(p.approved_at)}</span>
+                  <span style={{ color: P.tm, fontSize: 10 }}>{open ? "▲" : "▼"}</span>
+                </div>
+                {open && (
+                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px dashed ${P.border}`, fontSize: 11.5 }}>
+                    {info.desc && <div style={{ color: P.ts, marginBottom: 8, lineHeight: 1.5 }}>{info.desc.length > 220 ? info.desc.slice(0, 220) + "..." : info.desc}</div>}
+                    {comps.length > 0 && (<>
+                      <div style={{ fontWeight: 800, color: P.tp, marginBottom: 4 }}>🔧 Kullandığı bileşenler:</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+                        {comps.map(c => <span key={c} style={{ padding: "3px 8px", borderRadius: 14, background: `${P.orange}18`, color: P.orange, fontWeight: 700, fontSize: 10.5, border: `1px solid ${P.orange}44` }}>{c}</span>)}
+                      </div>
+                    </>)}
+                    {(info.learnings || []).length > 0 && (<>
+                      <div style={{ fontWeight: 800, color: P.tp, marginBottom: 4 }}>🎓 Bu görevde öğrendikleri:</div>
+                      {info.learnings.map((l, i) => <div key={i} style={{ color: P.ts, padding: "2px 0" }}>✔ {l}</div>)}
+                    </>)}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       );
     })}
