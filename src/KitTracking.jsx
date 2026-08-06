@@ -824,6 +824,28 @@ const fmtDur = (ms) => {
   return m < 60 ? `${m} dk` : `${Math.floor(m / 60)} sa ${m % 60} dk`;
 };
 
+// ── Kazanım sınıflandırma: 💻 Yazılım / ⚡ Elektronik / ⚙️ Mekanik ──
+const SKILL_AREAS = {
+  yazilim:    { l: "Yazılım",    e: "💻", c: "#22d3ee", desc: "Kodlama ve algoritmik düşünme" },
+  elektronik: { l: "Elektronik", e: "⚡", c: "#fbbf24", desc: "Sensörler, ışık, ses ve devreler" },
+  mekanik:    { l: "Mekanik",    e: "⚙️", c: "#fb923c", desc: "Motorlar, hareket ve fiziksel yapı" },
+};
+const ELEK_RE = /sensör|led|rgb|buzzer|ışık|ldr|mesafe|analog|pwm|parlaklık|matris|ekran|buton|kumanda|ir|pil|voltaj|devre|kablo|lehim|sinyal|kamera|wifi|bluetooth|ses|nota|frekans/i;
+const MEK_RE  = /motor|palet|sürüş|dönüş|pivot|manevra|park|hız.*(denge|kararlılık)|tork|diferansiyel|şasi|montaj|teker|fizik|yerinde dönüş|kavis|slalom|denge/i;
+function classifySkill(text) {
+  const t = String(text || "");
+  if (ELEK_RE.test(t)) return "elektronik";
+  if (MEK_RE.test(t)) return "mekanik";
+  return "yazilim";   // değişken, döngü, koşul, fonksiyon, algoritma, durum makinesi...
+}
+function skillLevel(n) {
+  if (n >= 20) return { l: "Usta 🏆", pct: 100 };
+  if (n >= 12) return { l: "İleri 🥇", pct: 80 };
+  if (n >= 6)  return { l: "Gelişiyor 🥈", pct: 55 };
+  if (n >= 1)  return { l: "Başlangıç 🥉", pct: 30 };
+  return { l: "Henüz başlamadı", pct: 5 };
+}
+
 // BerryBot'un gömülü 36 görevi DB'de olmayabilir — başlık bulunamazsa numara gösterilir.
 export function VeliPublicView({ token }) {
   const [d, setD] = useState(undefined);
@@ -861,6 +883,15 @@ export function VeliPublicView({ token }) {
   const activeTasks = d.progress.filter(p => p.status === "active" || p.status === "in_progress" || p.status === "pending_review");
   const toplamTamir = d.kitEvents.reduce((a, e) => a + (Number(e.cost) || 0), 0);
 
+  // 🧠 Kazanımlar: onaylanan görevlerin learnings'lerini alanlara ayır (tekrarsız)
+  const skills = { yazilim: new Set(), elektronik: new Set(), mekanik: new Set() };
+  d.progress.filter(p => p.status === "approved").forEach(p => {
+    const task = d.tasks.find(t => t.kit === (p.kit || "berrybot") && Number(t.task_id) === Number(p.task_id));
+    const ls = Array.isArray(task?.learnings) ? task.learnings : [];
+    ls.forEach(x => skills[classifySkill(x)].add(String(x)));
+  });
+  const skillTotal = skills.yazilim.size + skills.elektronik.size + skills.mekanik.size;
+
   return wrap(<>
     {/* Öğrenci başlığı + özet */}
     <div style={{ ...card, border: `2px solid ${P.orange}55` }}>
@@ -890,6 +921,38 @@ export function VeliPublicView({ token }) {
         </div>
       ))}
     </div>
+
+    {/* 🧠 Öğrendikleri — yazılım / elektronik / mekanik */}
+    {skillTotal > 0 && (
+      <div style={{ ...card, border: `2px solid #22d3ee44` }}>
+        <div style={{ fontWeight: 900, fontSize: 15, marginBottom: 2 }}>🧠 Öğrendikleri</div>
+        <div style={{ fontSize: 11.5, color: P.tm, marginBottom: 12 }}>
+          Tamamlanan görevlerdeki teknik kazanımlardan otomatik derlenir — toplam <b style={{ color: P.ts }}>{skillTotal} beceri</b>
+        </div>
+        {Object.entries(SKILL_AREAS).map(([key, A]) => {
+          const items = [...skills[key]];
+          const lv = skillLevel(items.length);
+          return (
+            <div key={key} style={{ marginBottom: 14, padding: "12px 14px", borderRadius: 13, background: P.input, border: `1px solid ${A.c}33` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 2 }}>
+                <div style={{ fontWeight: 900, fontSize: 14, color: A.c }}>{A.e} {A.l} <span style={{ fontSize: 11, color: P.tm, fontWeight: 600 }}>· {A.desc}</span></div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: A.c, whiteSpace: "nowrap" }}>{lv.l}</div>
+              </div>
+              <div style={{ height: 7, background: P.bg, borderRadius: 5, overflow: "hidden", margin: "7px 0 10px" }}>
+                <div style={{ height: "100%", width: `${lv.pct}%`, background: A.c, transition: "width .4s" }} />
+              </div>
+              {items.length === 0
+                ? <div style={{ fontSize: 11.5, color: P.tm }}>Bu alandaki görevler yaklaşan bölümlerde 🚀</div>
+                : <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                    {items.map((x, i) => (
+                      <span key={i} style={{ fontSize: 10.5, fontWeight: 700, padding: "4px 9px", borderRadius: 20, background: `${A.c}1a`, color: A.c, border: `1px solid ${A.c}44` }}>{x}</span>
+                    ))}
+                  </div>}
+            </div>
+          );
+        })}
+      </div>
+    )}
 
     {/* Kit durumu */}
     <div style={card}>

@@ -1424,7 +1424,7 @@ export async function getParentReport(token) {
     supabase.from('bb_kit_units').select('*').eq('student_id', stu.id),
     supabase.from('bb_progress').select(PROGRESS_COLS).eq('student_id', stu.id),
     kits.length
-      ? supabase.from('bb_tasks').select('kit, task_id, title, xp, category').in('kit', kits).eq('active', true)
+      ? supabase.from('bb_tasks').select('kit, task_id, title, xp, category, learnings').in('kit', kits).eq('active', true)
       : Promise.resolve({ data: [] }),
     supabase.from('bb_homework_assignment').select('*').eq('student_id', stu.id).order('assigned_at', { ascending: false }),
     supabase.from('bb_homework_templates').select('id, title'),
